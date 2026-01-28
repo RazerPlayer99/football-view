@@ -167,7 +167,7 @@ def home():
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Baby Futmob v0</title>
+        <title>Football View</title>
         <style>
             body {
                 font-family: Arial, sans-serif;
@@ -198,7 +198,7 @@ def home():
     </head>
     <body>
         <div class="container">
-            <h1>⚽ Baby Futmob v0 <span class="live-badge">LIVE DATA</span></h1>
+            <h1>⚽ Football View <span class="live-badge">LIVE DATA</span></h1>
             <p class="status">✓ Server is running - fetching live data from API-Football</p>
             <h2>UI Pages:</h2>
             <ul>
@@ -446,7 +446,7 @@ def search_ui():
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Search - Baby Futmob v0</title>
+        <title>Search - Football View</title>
         <style>
             * { box-sizing: border-box; }
             body {
@@ -784,7 +784,7 @@ def team_dashboard_ui(team_id: int, season: str = Query(default="2025")):
         <!DOCTYPE html>
         <html>
         <head>
-            <title>{view.name} - Baby Futmob v0</title>
+            <title>{view.name} - Football View</title>
             <style>
                 * {{ box-sizing: border-box; }}
                 body {{
@@ -1554,7 +1554,7 @@ def standings_ui(season: str = Query(default="2025", description="Season year"))
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Standings - Baby Futmob v0</title>
+            <title>Standings - Football View</title>
             <style>
                 * {{ box-sizing: border-box; }}
                 body {{
@@ -1815,7 +1815,7 @@ def matches_ui(
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Matches - Baby Futmob v0</title>
+            <title>Matches - Football View</title>
             <style>
                 * {{ box-sizing: border-box; }}
                 body {{
@@ -2087,7 +2087,7 @@ def top_scorers_ui(
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Top Scorers - Baby Futmob v0</title>
+            <title>Top Scorers - Football View</title>
             <style>
                 * {{ box-sizing: border-box; }}
                 body {{
