@@ -1,0 +1,457 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-01-27",
+  "assets": {
+    "api_football": [
+      {
+        "asset_id": "standings",
+        "bucket": "competition",
+        "endpoint": "/standings",
+        "params": {
+          "required": ["league", "season"],
+          "optional": []
+        },
+        "response_shape": "Array of team standings with position, points, form, W/D/L, GF/GA, home/away splits",
+        "cache_policy": "WARM",
+        "ttl_seconds": 300,
+        "ttl_off_matchday_seconds": 14400,
+        "refresh_trigger": "cron",
+        "dependencies": [],
+        "priority": "P0",
+        "status": "implemented"
+      },
+      {
+        "asset_id": "fixtures_by_date",
+        "bucket": "competition",
+        "endpoint": "/fixtures",
+        "params": {
+          "required": ["league", "season"],
+          "optional": ["from", "to", "date"]
+        },
+        "response_shape": "Array of fixtures with teams, score, status, venue, referee",
+        "cache_policy": "WARM",
+        "ttl_seconds": 900,
+        "refresh_trigger": "cron",
+        "dependencies": [],
+        "priority": "P0",
+        "status": "implemented"
+      },
+      {
+        "asset_id": "fixtures_by_team",
+        "bucket": "team",
+        "endpoint": "/fixtures",
+        "params": {
+          "required": ["team", "season"],
+          "optional": ["league"]
+        },
+        "response_shape": "All fixtures for a team in season (past + future)",
+        "cache_policy": "WARM",
+        "ttl_seconds": 3600,
+        "refresh_trigger": "on_demand",
+        "dependencies": ["team_id"],
+        "priority": "P0",
+        "status": "implemented"
+      },
+      {
+        "asset_id": "fixture_detail",
+        "bucket": "match",
+        "endpoint": "/fixtures",
+        "params": {
+          "required": ["id"],
+          "optional": []
+        },
+        "response_shape": "Single fixture with full detail: score, status, elapsed, venue, referee",
+        "cache_policy": "HOT",
+        "ttl_seconds": 45,
+        "refresh_trigger": "match_start",
+        "dependencies": ["fixture_id"],
+        "priority": "P0",
+        "status": "implemented"
+      },
+      {
+        "asset_id": "fixture_events",
+        "bucket": "match",
+        "endpoint": "/fixtures/events",
+        "params": {
+          "required": ["fixture"],
+          "optional": []
+        },
+        "response_shape": "Array of events: goals, cards, subs, VAR with minute and player",
+        "cache_policy": "HOT",
+        "ttl_seconds": 60,
+        "refresh_trigger": "match_start",
+        "dependencies": ["fixture_id"],
+        "priority": "P0",
+        "status": "implemented"
+      },
+      {
+        "asset_id": "fixture_lineups",
+        "bucket": "match",
+        "endpoint": "/fixtures/lineups",
+        "params": {
+          "required": ["fixture"],
+          "optional": []
+        },
+        "response_shape": "Formation, starting XI, subs, coach for both teams",
+        "cache_policy": "WARM",
+        "ttl_seconds": 300,
+        "refresh_trigger": "match_start",
+        "dependencies": ["fixture_id"],
+        "priority": "P0",
+        "status": "implemented"
+      },
+      {
+        "asset_id": "fixture_statistics",
+        "bucket": "match",
+        "endpoint": "/fixtures/statistics",
+        "params": {
+          "required": ["fixture"],
+          "optional": []
+        },
+        "response_shape": "Possession, shots, corners, fouls, passes for both teams",
+        "cache_policy": "HOT",
+        "ttl_seconds": 120,
+        "refresh_trigger": "match_start",
+        "dependencies": ["fixture_id"],
+        "priority": "P0",
+        "status": "implemented"
+      },
+      {
+        "asset_id": "fixture_players",
+        "bucket": "match",
+        "endpoint": "/fixtures/players",
+        "params": {
+          "required": ["fixture"],
+          "optional": []
+        },
+        "response_shape": "Per-player stats for a specific match (minutes, rating, etc)",
+        "cache_policy": "WARM",
+        "ttl_seconds": 14400,
+        "refresh_trigger": "on_demand",
+        "dependencies": ["fixture_id"],
+        "priority": "P1",
+        "status": "implemented"
+      },
+      {
+        "asset_id": "team_info",
+        "bucket": "team",
+        "endpoint": "/teams",
+        "params": {
+          "required": ["id"],
+          "optional": []
+        },
+        "response_shape": "Team name, logo, venue, city, founded year",
+        "cache_policy": "COLD",
+        "ttl_seconds": 86400,
+        "refresh_trigger": "on_demand",
+        "dependencies": [],
+        "priority": "P0",
+        "status": "implemented"
+      },
+      {
+        "asset_id": "team_squad",
+        "bucket": "team",
+        "endpoint": "/players",
+        "params": {
+          "required": ["team", "season"],
+          "optional": ["league"]
+        },
+        "response_shape": "All players with season stats: apps, goals, assists, cards",
+        "cache_policy": "WARM",
+        "ttl_seconds": 14400,
+        "refresh_trigger": "cron",
+        "dependencies": ["team_id"],
+        "priority": "P0",
+        "status": "implemented"
+      },
+      {
+        "asset_id": "team_statistics",
+        "bucket": "team",
+        "endpoint": "/teams/statistics",
+        "params": {
+          "required": ["team", "league", "season"],
+          "optional": []
+        },
+        "response_shape": "Aggregated stats: clean sheets, failed to score, form, biggest win/loss, H/A breakdown",
+        "cache_policy": "WARM",
+        "ttl_seconds": 14400,
+        "refresh_trigger": "cron",
+        "dependencies": ["team_id", "league_id"],
+        "priority": "P1",
+        "status": "not_implemented"
+      },
+      {
+        "asset_id": "player_profile",
+        "bucket": "player",
+        "endpoint": "/players",
+        "params": {
+          "required": ["id", "season"],
+          "optional": []
+        },
+        "response_shape": "Player bio + stats across all competitions played",
+        "cache_policy": "WARM",
+        "ttl_seconds": 14400,
+        "refresh_trigger": "on_demand",
+        "dependencies": ["player_id"],
+        "priority": "P0",
+        "status": "implemented"
+      },
+      {
+        "asset_id": "top_scorers",
+        "bucket": "player",
+        "endpoint": "/players/topscorers",
+        "params": {
+          "required": ["league", "season"],
+          "optional": []
+        },
+        "response_shape": "Top 20 scorers with goals, penalties, apps",
+        "cache_policy": "WARM",
+        "ttl_seconds": 14400,
+        "refresh_trigger": "cron",
+        "dependencies": [],
+        "priority": "P0",
+        "status": "implemented"
+      },
+      {
+        "asset_id": "top_assists",
+        "bucket": "player",
+        "endpoint": "/players/topassists",
+        "params": {
+          "required": ["league", "season"],
+          "optional": []
+        },
+        "response_shape": "Top 20 assist providers",
+        "cache_policy": "WARM",
+        "ttl_seconds": 14400,
+        "refresh_trigger": "cron",
+        "dependencies": [],
+        "priority": "P0",
+        "status": "implemented"
+      },
+      {
+        "asset_id": "injuries_by_league",
+        "bucket": "player",
+        "endpoint": "/injuries",
+        "params": {
+          "required": ["league", "season"],
+          "optional": []
+        },
+        "response_shape": "Array: player object, team object, fixture object, injury type, reason, start/end dates",
+        "cache_policy": "WARM",
+        "ttl_seconds": 21600,
+        "refresh_trigger": "cron",
+        "dependencies": [],
+        "priority": "P1",
+        "status": "not_implemented"
+      },
+      {
+        "asset_id": "injuries_by_team",
+        "bucket": "player",
+        "endpoint": "/injuries",
+        "params": {
+          "required": ["team", "season"],
+          "optional": []
+        },
+        "response_shape": "Injuries for specific team",
+        "cache_policy": "WARM",
+        "ttl_seconds": 21600,
+        "refresh_trigger": "on_demand",
+        "dependencies": ["team_id"],
+        "priority": "P1",
+        "status": "not_implemented"
+      },
+      {
+        "asset_id": "live_fixtures",
+        "bucket": "match",
+        "endpoint": "/fixtures",
+        "params": {
+          "required": [],
+          "optional": ["live"]
+        },
+        "response_shape": "All currently live fixtures across all leagues",
+        "cache_policy": "HOT",
+        "ttl_seconds": 30,
+        "refresh_trigger": "cron",
+        "dependencies": [],
+        "priority": "P1",
+        "status": "not_implemented"
+      },
+      {
+        "asset_id": "venues",
+        "bucket": "meta",
+        "endpoint": "/venues",
+        "params": {
+          "required": ["id"],
+          "optional": []
+        },
+        "response_shape": "Venue name, city, capacity, surface, image, coordinates",
+        "cache_policy": "COLD",
+        "ttl_seconds": 604800,
+        "refresh_trigger": "on_demand",
+        "dependencies": [],
+        "priority": "P2",
+        "status": "not_implemented"
+      },
+      {
+        "asset_id": "transfers",
+        "bucket": "meta",
+        "endpoint": "/transfers",
+        "params": {
+          "required": ["team"],
+          "optional": []
+        },
+        "response_shape": "Transfer history: player, from/to teams, date, fee (nullable)",
+        "cache_policy": "WARM",
+        "ttl_seconds": 86400,
+        "refresh_trigger": "on_demand",
+        "dependencies": ["team_id"],
+        "priority": "P2",
+        "status": "not_implemented"
+      }
+    ],
+    "understat": [
+      {
+        "asset_id": "league_team_xg",
+        "bucket": "team",
+        "url_pattern": "/league/{league_slug}/{season}",
+        "params": {
+          "required": ["league_slug", "season"],
+          "optional": []
+        },
+        "extraction_method": "Parse <script> containing 'teamsData' JSON",
+        "response_shape": "All teams with xG, xGA, xPts, deep completions",
+        "cache_policy": "WARM",
+        "ttl_seconds": 86400,
+        "refresh_trigger": "cron_daily",
+        "dependencies": ["understat_league_mapping"],
+        "priority": "P1",
+        "status": "not_implemented"
+      },
+      {
+        "asset_id": "match_xg_shots",
+        "bucket": "match",
+        "url_pattern": "/match/{match_id}",
+        "params": {
+          "required": ["match_id"],
+          "optional": []
+        },
+        "extraction_method": "Parse <script> containing 'shotsData' JSON",
+        "response_shape": "Shot-by-shot xG, player, minute, result (goal/saved/blocked)",
+        "cache_policy": "COLD",
+        "ttl_seconds": 604800,
+        "refresh_trigger": "on_demand",
+        "dependencies": ["understat_match_id_mapping"],
+        "priority": "P2",
+        "status": "not_implemented"
+      },
+      {
+        "asset_id": "player_xg_season",
+        "bucket": "player",
+        "url_pattern": "/player/{player_id}",
+        "params": {
+          "required": ["player_id"],
+          "optional": []
+        },
+        "extraction_method": "Parse <script> containing 'groupsData' JSON",
+        "response_shape": "Season-by-season xG, xA, shots, key passes",
+        "cache_policy": "WARM",
+        "ttl_seconds": 86400,
+        "refresh_trigger": "on_demand",
+        "dependencies": ["understat_player_id_mapping"],
+        "priority": "P2",
+        "status": "not_implemented"
+      }
+    ],
+    "fbref": [
+      {
+        "asset_id": "team_season_xg",
+        "bucket": "team",
+        "url_pattern": "/en/comps/{comp_id}/{season}/stats/{league_slug}-Stats",
+        "params": {
+          "required": ["comp_id", "season", "league_slug"],
+          "optional": []
+        },
+        "extraction_method": "Parse table#stats_squads_standard_for",
+        "target_columns": ["squad", "xg", "xga", "npxg", "npxga", "progressive_passes", "progressive_carries"],
+        "response_shape": "Team xG, xGA, xGD, npxG, npxGA per team for season",
+        "cache_policy": "WARM",
+        "ttl_seconds": 86400,
+        "refresh_trigger": "cron_daily",
+        "dependencies": ["fbref_comp_id_mapping"],
+        "priority": "P2",
+        "status": "not_implemented"
+      },
+      {
+        "asset_id": "player_season_advanced",
+        "bucket": "player",
+        "url_pattern": "/en/comps/{comp_id}/{season}/stats/{league_slug}-Stats",
+        "params": {
+          "required": ["comp_id", "season", "league_slug"],
+          "optional": []
+        },
+        "extraction_method": "Parse table#stats_standard",
+        "target_columns": ["player", "squad", "minutes", "xg", "xa", "npxg", "progressive_passes"],
+        "response_shape": "Player xG, xA, npxG, progressive passes/carries",
+        "cache_policy": "WARM",
+        "ttl_seconds": 86400,
+        "refresh_trigger": "cron_daily",
+        "dependencies": ["fbref_comp_id_mapping", "player_id_mapping"],
+        "priority": "P2",
+        "status": "not_implemented"
+      }
+    ],
+    "openweather": [
+      {
+        "asset_id": "current_weather",
+        "bucket": "meta",
+        "endpoint": "/weather",
+        "params": {
+          "required": ["lat", "lon", "appid"],
+          "optional": ["units"]
+        },
+        "response_shape": "Current: temp, humidity, wind_speed, weather_description, icon",
+        "cache_policy": "WARM",
+        "ttl_seconds": 3600,
+        "refresh_trigger": "on_demand",
+        "dependencies": ["venue_coordinates"],
+        "priority": "P2",
+        "status": "not_implemented"
+      },
+      {
+        "asset_id": "weather_forecast",
+        "bucket": "meta",
+        "endpoint": "/forecast",
+        "params": {
+          "required": ["lat", "lon", "appid"],
+          "optional": ["units"]
+        },
+        "response_shape": "3-hour forecasts for 5 days",
+        "cache_policy": "WARM",
+        "ttl_seconds": 10800,
+        "refresh_trigger": "on_demand",
+        "dependencies": ["venue_coordinates"],
+        "priority": "P2",
+        "status": "not_implemented"
+      }
+    ],
+    "football_data_org": [
+      {
+        "asset_id": "standings_backup",
+        "bucket": "competition",
+        "endpoint": "/competitions/{comp_code}/standings",
+        "params": {
+          "required": ["comp_code"],
+          "optional": []
+        },
+        "comp_codes": ["PL", "CL", "BL1", "SA", "FL1", "PD", "ELC", "DED"],
+        "response_shape": "Standings table with position, team, points, W/D/L",
+        "cache_policy": "WARM",
+        "ttl_seconds": 3600,
+        "refresh_trigger": "fallback_only",
+        "dependencies": ["fd_comp_code_mapping"],
+        "priority": "P2",
+        "status": "not_implemented"
+      }
+    ]
+  }
+}

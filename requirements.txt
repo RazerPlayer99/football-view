@@ -1,0 +1,25 @@
+# Football View (Pre-Alpha) - Dependencies
+# Install with: pip install -r requirements.txt
+
+# Web framework
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+
+# Core dependencies
+pandas>=2.0.0
+requests>=2.31.0
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+diskcache>=5.6.0
+tenacity>=8.2.0
+
+# LLM for search fallback
+anthropic>=0.18.0
+
+# Database
+sqlalchemy>=2.0.23
+
+# Testing
+pytest>=7.4.3
+httpx>=0.25.1

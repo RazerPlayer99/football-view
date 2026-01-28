@@ -1,0 +1,189 @@
+{
+  "teams": {
+    "man utd": {"canonical": "Manchester United", "id": 33},
+    "man united": {"canonical": "Manchester United", "id": 33},
+    "united": {"canonical": "Manchester United", "id": 33},
+    "mufc": {"canonical": "Manchester United", "id": 33},
+    "red devils": {"canonical": "Manchester United", "id": 33},
+
+    "man city": {"canonical": "Manchester City", "id": 50},
+    "city": {"canonical": "Manchester City", "id": 50},
+    "mcfc": {"canonical": "Manchester City", "id": 50},
+    "cityzens": {"canonical": "Manchester City", "id": 50},
+
+    "liverpool": {"canonical": "Liverpool", "id": 40},
+    "lfc": {"canonical": "Liverpool", "id": 40},
+    "the reds": {"canonical": "Liverpool", "id": 40},
+    "pool": {"canonical": "Liverpool", "id": 40},
+
+    "arsenal": {"canonical": "Arsenal", "id": 42},
+    "afc": {"canonical": "Arsenal", "id": 42},
+    "gunners": {"canonical": "Arsenal", "id": 42},
+    "ars": {"canonical": "Arsenal", "id": 42},
+
+    "chelsea": {"canonical": "Chelsea", "id": 49},
+    "cfc": {"canonical": "Chelsea", "id": 49},
+    "blues": {"canonical": "Chelsea", "id": 49},
+
+    "spurs": {"canonical": "Tottenham", "id": 47},
+    "tottenham": {"canonical": "Tottenham", "id": 47},
+    "thfc": {"canonical": "Tottenham", "id": 47},
+    "tottenham hotspur": {"canonical": "Tottenham", "id": 47},
+
+    "newcastle": {"canonical": "Newcastle", "id": 34},
+    "nufc": {"canonical": "Newcastle", "id": 34},
+    "toon": {"canonical": "Newcastle", "id": 34},
+    "magpies": {"canonical": "Newcastle", "id": 34},
+    "newcastle united": {"canonical": "Newcastle", "id": 34},
+
+    "west ham": {"canonical": "West Ham", "id": 48},
+    "whu": {"canonical": "West Ham", "id": 48},
+    "hammers": {"canonical": "West Ham", "id": 48},
+    "west ham united": {"canonical": "West Ham", "id": 48},
+
+    "villa": {"canonical": "Aston Villa", "id": 66},
+    "aston villa": {"canonical": "Aston Villa", "id": 66},
+    "avfc": {"canonical": "Aston Villa", "id": 66},
+
+    "brighton": {"canonical": "Brighton", "id": 51},
+    "bha": {"canonical": "Brighton", "id": 51},
+    "seagulls": {"canonical": "Brighton", "id": 51},
+    "brighton hove albion": {"canonical": "Brighton", "id": 51},
+
+    "brentford": {"canonical": "Brentford", "id": 55},
+    "bees": {"canonical": "Brentford", "id": 55},
+
+    "fulham": {"canonical": "Fulham", "id": 36},
+    "ffc": {"canonical": "Fulham", "id": 36},
+    "cottagers": {"canonical": "Fulham", "id": 36},
+
+    "palace": {"canonical": "Crystal Palace", "id": 52},
+    "crystal palace": {"canonical": "Crystal Palace", "id": 52},
+    "cpfc": {"canonical": "Crystal Palace", "id": 52},
+    "eagles": {"canonical": "Crystal Palace", "id": 52},
+
+    "everton": {"canonical": "Everton", "id": 45},
+    "efc": {"canonical": "Everton", "id": 45},
+    "toffees": {"canonical": "Everton", "id": 45},
+
+    "wolves": {"canonical": "Wolves", "id": 39},
+    "wolverhampton": {"canonical": "Wolves", "id": 39},
+    "wolverhampton wanderers": {"canonical": "Wolves", "id": 39},
+
+    "bournemouth": {"canonical": "Bournemouth", "id": 35},
+    "afcb": {"canonical": "Bournemouth", "id": 35},
+    "cherries": {"canonical": "Bournemouth", "id": 35},
+
+    "forest": {"canonical": "Nottingham Forest", "id": 65},
+    "nottingham forest": {"canonical": "Nottingham Forest", "id": 65},
+    "nffc": {"canonical": "Nottingham Forest", "id": 65},
+
+    "burnley": {"canonical": "Burnley", "id": 44},
+    "clarets": {"canonical": "Burnley", "id": 44},
+
+    "leeds": {"canonical": "Leeds", "id": 63},
+    "leeds united": {"canonical": "Leeds", "id": 63},
+    "lufc": {"canonical": "Leeds", "id": 63},
+
+    "sunderland": {"canonical": "Sunderland", "id": 746},
+    "safc": {"canonical": "Sunderland", "id": 746},
+    "black cats": {"canonical": "Sunderland", "id": 746}
+  },
+
+  "players": {
+    "salah": {"canonical": "Salah", "id": null},
+    "mo salah": {"canonical": "Salah", "id": null},
+    "mohamed salah": {"canonical": "Salah", "id": null},
+    "egyptian king": {"canonical": "Salah", "id": null},
+
+    "haaland": {"canonical": "Haaland", "id": null},
+    "erling haaland": {"canonical": "Haaland", "id": null},
+    "the terminator": {"canonical": "Haaland", "id": null},
+
+    "kdb": {"canonical": "De Bruyne", "id": null},
+    "de bruyne": {"canonical": "De Bruyne", "id": null},
+    "kevin de bruyne": {"canonical": "De Bruyne", "id": null},
+
+    "bruno": {"canonical": "Bruno Fernandes", "id": null},
+    "bruno fernandes": {"canonical": "Bruno Fernandes", "id": null},
+
+    "saka": {"canonical": "Saka", "id": null},
+    "bukayo saka": {"canonical": "Saka", "id": null},
+    "starboy": {"canonical": "Saka", "id": null},
+
+    "odegaard": {"canonical": "Odegaard", "id": null},
+    "martin odegaard": {"canonical": "Odegaard", "id": null},
+
+    "palmer": {"canonical": "Palmer", "id": null},
+    "cole palmer": {"canonical": "Palmer", "id": null},
+    "cold palmer": {"canonical": "Palmer", "id": null},
+
+    "rice": {"canonical": "Rice", "id": null},
+    "declan rice": {"canonical": "Rice", "id": null},
+
+    "foden": {"canonical": "Foden", "id": null},
+    "phil foden": {"canonical": "Foden", "id": null},
+
+    "rashford": {"canonical": "Rashford", "id": null},
+    "marcus rashford": {"canonical": "Rashford", "id": null},
+
+    "son": {"canonical": "Son", "id": null},
+    "heung min son": {"canonical": "Son", "id": null},
+    "sonny": {"canonical": "Son", "id": null},
+
+    "isak": {"canonical": "Isak", "id": null},
+    "alexander isak": {"canonical": "Isak", "id": null},
+
+    "watkins": {"canonical": "Watkins", "id": null},
+    "ollie watkins": {"canonical": "Watkins", "id": null},
+
+    "gordon": {"canonical": "Gordon", "id": null},
+    "anthony gordon": {"canonical": "Gordon", "id": null},
+
+    "van dijk": {"canonical": "van Dijk", "id": null},
+    "virgil": {"canonical": "van Dijk", "id": null},
+    "virgil van dijk": {"canonical": "van Dijk", "id": null},
+    "vvd": {"canonical": "van Dijk", "id": null},
+
+    "ederson": {"canonical": "Ederson", "id": null},
+
+    "alisson": {"canonical": "Alisson", "id": null},
+
+    "onana": {"canonical": "Onana", "id": null},
+    "andre onana": {"canonical": "Onana", "id": null},
+
+    "raya": {"canonical": "Raya", "id": null},
+    "david raya": {"canonical": "Raya", "id": null},
+
+    "martinelli": {"canonical": "Martinelli", "id": null},
+    "gabriel martinelli": {"canonical": "Martinelli", "id": null},
+
+    "havertz": {"canonical": "Havertz", "id": null},
+    "kai havertz": {"canonical": "Havertz", "id": null},
+
+    "jota": {"canonical": "Jota", "id": null},
+    "diogo jota": {"canonical": "Jota", "id": null},
+
+    "nunez": {"canonical": "Nunez", "id": null},
+    "darwin nunez": {"canonical": "Nunez", "id": null},
+    "darwin": {"canonical": "Nunez", "id": null},
+
+    "garnacho": {"canonical": "Garnacho", "id": null},
+    "alejandro garnacho": {"canonical": "Garnacho", "id": null},
+
+    "guehi": {"canonical": "Guehi", "id": null},
+    "marc guehi": {"canonical": "Guehi", "id": null},
+
+    "eze": {"canonical": "Eze", "id": null},
+    "eberechi eze": {"canonical": "Eze", "id": null},
+
+    "bowen": {"canonical": "Bowen", "id": null},
+    "jarrod bowen": {"canonical": "Bowen", "id": null},
+
+    "mitoma": {"canonical": "Mitoma", "id": null},
+    "kaoru mitoma": {"canonical": "Mitoma", "id": null},
+
+    "thiago": {"canonical": "Thiago", "id": null},
+    "thiago brentford": {"canonical": "Thiago", "id": null}
+  }
+}

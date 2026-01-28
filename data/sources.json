@@ -1,0 +1,149 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-01-27",
+  "sources": [
+    {
+      "source_id": "api_football",
+      "name": "API-Football (RapidAPI)",
+      "type": "api",
+      "tier": 2,
+      "auth": "api_key",
+      "auth_header": "x-rapidapi-key",
+      "base_url": "https://v3.football.api-sports.io",
+      "docs_url": "https://www.api-football.com/documentation-v3",
+      "buckets_supported": ["competition", "match", "team", "player", "meta"],
+      "rate_limits": {
+        "free_tier": {
+          "requests_per_day": 100,
+          "requests_per_minute": 10
+        },
+        "pro_tier": {
+          "requests_per_day": 7500,
+          "requests_per_minute": 300
+        }
+      },
+      "reliability_notes": "Primary provider. 99%+ uptime. Live data has 45s-2min delay.",
+      "legal_notes": "Commercial license. Compliant. Attribution not required but recommended.",
+      "status": "active",
+      "integrated": true
+    },
+    {
+      "source_id": "football_data_org",
+      "name": "Football-Data.org",
+      "type": "api",
+      "tier": 2,
+      "auth": "api_key",
+      "auth_header": "X-Auth-Token",
+      "base_url": "https://api.football-data.org/v4",
+      "docs_url": "https://www.football-data.org/documentation/quickstart",
+      "buckets_supported": ["competition", "match", "team"],
+      "rate_limits": {
+        "free_tier": {
+          "requests_per_minute": 10,
+          "competitions": 12
+        }
+      },
+      "reliability_notes": "Good backup. Free tier covers 12 leagues. No live events.",
+      "legal_notes": "Free tier requires attribution. Commercial use needs paid plan.",
+      "status": "planned",
+      "integrated": false
+    },
+    {
+      "source_id": "fbref",
+      "name": "FBref (Sports Reference)",
+      "type": "scrape",
+      "tier": 2,
+      "auth": "none",
+      "base_url": "https://fbref.com",
+      "docs_url": null,
+      "buckets_supported": ["team", "player"],
+      "rate_limits": {
+        "recommended": {
+          "requests_per_minute": 3,
+          "delay_between_requests_ms": 2000
+        }
+      },
+      "reliability_notes": "StatsBomb data. Updated daily. Complex HTML tables.",
+      "legal_notes": "Public data. Scraping tolerated if polite. Attribute StatsBomb.",
+      "status": "planned",
+      "integrated": false
+    },
+    {
+      "source_id": "understat",
+      "name": "Understat",
+      "type": "scrape",
+      "tier": 3,
+      "auth": "none",
+      "base_url": "https://understat.com",
+      "docs_url": null,
+      "buckets_supported": ["match", "team", "player"],
+      "leagues_available": ["EPL", "La_Liga", "Bundesliga", "Serie_A", "Ligue_1", "RFPL"],
+      "rate_limits": {
+        "recommended": {
+          "requests_per_minute": 5,
+          "delay_between_requests_ms": 1000
+        }
+      },
+      "reliability_notes": "xG data for top 5 leagues only. Data in embedded JSON.",
+      "legal_notes": "No official API. Scraping grey area. Be polite.",
+      "status": "planned",
+      "integrated": false
+    },
+    {
+      "source_id": "transfermarkt",
+      "name": "Transfermarkt",
+      "type": "scrape",
+      "tier": 3,
+      "auth": "none",
+      "base_url": "https://www.transfermarkt.com",
+      "docs_url": null,
+      "buckets_supported": ["team", "player", "meta"],
+      "rate_limits": {
+        "recommended": {
+          "requests_per_minute": 2,
+          "delay_between_requests_ms": 3000
+        }
+      },
+      "reliability_notes": "Best for market values, transfers, contracts. Aggressive anti-scrape.",
+      "legal_notes": "Scraping discouraged. Use sparingly. High legal risk if commercial.",
+      "status": "not_planned",
+      "integrated": false
+    },
+    {
+      "source_id": "openweather",
+      "name": "OpenWeather API",
+      "type": "api",
+      "tier": 2,
+      "auth": "api_key",
+      "auth_param": "appid",
+      "base_url": "https://api.openweathermap.org/data/2.5",
+      "docs_url": "https://openweathermap.org/api",
+      "buckets_supported": ["meta"],
+      "rate_limits": {
+        "free_tier": {
+          "requests_per_day": 1000,
+          "requests_per_minute": 60
+        }
+      },
+      "reliability_notes": "Weather data. Requires venue coordinates.",
+      "legal_notes": "Free tier: 1000 calls/day. Attribution required.",
+      "status": "planned",
+      "integrated": false
+    },
+    {
+      "source_id": "statsbomb_open",
+      "name": "StatsBomb Open Data",
+      "type": "dataset",
+      "tier": 2,
+      "auth": "none",
+      "base_url": "https://github.com/statsbomb/open-data",
+      "docs_url": "https://github.com/statsbomb/open-data/blob/master/README.md",
+      "buckets_supported": ["match"],
+      "rate_limits": null,
+      "reliability_notes": "Event-level data. Limited competitions. Historical only.",
+      "legal_notes": "Free for non-commercial. Attribution required. CC BY-NC-SA 4.0.",
+      "status": "not_planned",
+      "integrated": false
+    }
+  ]
+}

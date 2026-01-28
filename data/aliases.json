@@ -1,0 +1,710 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-01-28T02:04:19.448476Z",
+  "teams": {
+    "42": {
+      "canonical": "Arsenal",
+      "aliases": [
+        "arsenal",
+        "gunners",
+        "the gunners",
+        "afc",
+        "arse",
+        "the arsenal",
+        "gooners"
+      ]
+    },
+    "33": {
+      "canonical": "Manchester United",
+      "aliases": [
+        "manchester united",
+        "man united",
+        "man u",
+        "man utd",
+        "mufc",
+        "united",
+        "red devils",
+        "manu",
+        "the reds"
+      ]
+    },
+    "50": {
+      "canonical": "Manchester City",
+      "aliases": [
+        "manchester city",
+        "man city",
+        "city",
+        "mcfc",
+        "cityzens",
+        "the citizens"
+      ]
+    },
+    "40": {
+      "canonical": "Liverpool",
+      "aliases": [
+        "liverpool",
+        "lfc",
+        "the reds",
+        "pool",
+        "liverpoo"
+      ]
+    },
+    "49": {
+      "canonical": "Chelsea",
+      "aliases": [
+        "chelsea",
+        "cfc",
+        "the blues",
+        "chels"
+      ]
+    },
+    "47": {
+      "canonical": "Tottenham",
+      "aliases": [
+        "tottenham",
+        "spurs",
+        "thfc",
+        "tottenham hotspur",
+        "the lilywhites"
+      ]
+    },
+    "66": {
+      "canonical": "Aston Villa",
+      "aliases": [
+        "aston villa",
+        "villa",
+        "avfc",
+        "the villans"
+      ]
+    },
+    "34": {
+      "canonical": "Newcastle",
+      "aliases": [
+        "newcastle",
+        "newcastle united",
+        "nufc",
+        "the magpies",
+        "toon",
+        "the toon"
+      ]
+    },
+    "51": {
+      "canonical": "Brighton",
+      "aliases": [
+        "brighton",
+        "bhafc",
+        "brighton and hove albion",
+        "the seagulls",
+        "albion"
+      ]
+    },
+    "48": {
+      "canonical": "West Ham",
+      "aliases": [
+        "west ham",
+        "west ham united",
+        "whu",
+        "the hammers",
+        "irons"
+      ]
+    },
+    "52": {
+      "canonical": "Crystal Palace",
+      "aliases": [
+        "crystal palace",
+        "palace",
+        "cpfc",
+        "the eagles"
+      ]
+    },
+    "35": {
+      "canonical": "Bournemouth",
+      "aliases": [
+        "bournemouth",
+        "afc bournemouth",
+        "the cherries",
+        "afcb"
+      ]
+    },
+    "36": {
+      "canonical": "Fulham",
+      "aliases": [
+        "fulham",
+        "ffc",
+        "the cottagers"
+      ]
+    },
+    "39": {
+      "canonical": "Wolves",
+      "aliases": [
+        "wolves",
+        "wolverhampton",
+        "wolverhampton wanderers",
+        "wwfc"
+      ]
+    },
+    "45": {
+      "canonical": "Everton",
+      "aliases": [
+        "everton",
+        "efc",
+        "the toffees",
+        "everton fc"
+      ]
+    },
+    "55": {
+      "canonical": "Brentford",
+      "aliases": [
+        "brentford",
+        "the bees",
+        "bfc"
+      ]
+    },
+    "65": {
+      "canonical": "Nottingham Forest",
+      "aliases": [
+        "nottingham forest",
+        "forest",
+        "nffc",
+        "notts forest"
+      ]
+    },
+    "46": {
+      "canonical": "Leicester",
+      "aliases": [
+        "leicester",
+        "leicester city",
+        "lcfc",
+        "the foxes"
+      ]
+    },
+    "57": {
+      "canonical": "Ipswich",
+      "aliases": [
+        "ipswich",
+        "ipswich town",
+        "itfc",
+        "the tractor boys"
+      ]
+    },
+    "41": {
+      "canonical": "Southampton",
+      "aliases": [
+        "southampton",
+        "saints",
+        "the saints",
+        "soton"
+      ]
+    },
+    "63": {
+      "canonical": "Leeds",
+      "aliases": [
+        "leeds",
+        "leeds united",
+        "lufc",
+        "the whites"
+      ]
+    },
+    "62": {
+      "canonical": "Sheffield United",
+      "aliases": [
+        "sheffield united",
+        "sheff utd",
+        "the blades",
+        "sufc"
+      ]
+    },
+    "44": {
+      "canonical": "Burnley",
+      "aliases": [
+        "burnley",
+        "the clarets",
+        "bfc"
+      ]
+    },
+    "529": {
+      "canonical": "Barcelona",
+      "aliases": [
+        "barcelona",
+        "barca",
+        "fcb",
+        "fc barcelona",
+        "blaugrana"
+      ]
+    },
+    "541": {
+      "canonical": "Real Madrid",
+      "aliases": [
+        "real madrid",
+        "real",
+        "madrid",
+        "rmcf",
+        "los blancos",
+        "los merengues"
+      ]
+    },
+    "530": {
+      "canonical": "Atletico Madrid",
+      "aliases": [
+        "atletico madrid",
+        "atletico",
+        "atleti",
+        "atm",
+        "los colchoneros"
+      ]
+    },
+    "157": {
+      "canonical": "Bayern Munich",
+      "aliases": [
+        "bayern munich",
+        "bayern",
+        "fcb",
+        "fc bayern",
+        "bavarians"
+      ]
+    },
+    "165": {
+      "canonical": "Borussia Dortmund",
+      "aliases": [
+        "borussia dortmund",
+        "dortmund",
+        "bvb",
+        "die schwarzgelben"
+      ]
+    },
+    "85": {
+      "canonical": "Paris Saint-Germain",
+      "aliases": [
+        "paris saint-germain",
+        "psg",
+        "paris",
+        "les parisiens"
+      ]
+    },
+    "489": {
+      "canonical": "AC Milan",
+      "aliases": [
+        "ac milan",
+        "milan",
+        "rossoneri",
+        "acm"
+      ]
+    },
+    "505": {
+      "canonical": "Inter Milan",
+      "aliases": [
+        "inter milan",
+        "inter",
+        "internazionale",
+        "nerazzurri"
+      ]
+    },
+    "496": {
+      "canonical": "Juventus",
+      "aliases": [
+        "juventus",
+        "juve",
+        "the old lady",
+        "bianconeri"
+      ]
+    },
+    "492": {
+      "canonical": "Napoli",
+      "aliases": [
+        "napoli",
+        "ssc napoli",
+        "partenopei",
+        "gli azzurri"
+      ]
+    },
+    "211": {
+      "canonical": "Benfica",
+      "aliases": [
+        "benfica",
+        "slb",
+        "sl benfica",
+        "the eagles"
+      ]
+    },
+    "212": {
+      "canonical": "Porto",
+      "aliases": [
+        "porto",
+        "fc porto",
+        "the dragons",
+        "dragoes"
+      ]
+    },
+    "194": {
+      "canonical": "Ajax",
+      "aliases": [
+        "ajax",
+        "afc ajax",
+        "godenzonen"
+      ]
+    },
+    "197": {
+      "canonical": "PSV",
+      "aliases": [
+        "psv",
+        "psv eindhoven",
+        "de boeren"
+      ]
+    }
+  },
+  "players": {
+    "306": {
+      "canonical": "Mohamed Salah",
+      "aliases": [
+        "salah",
+        "mo salah",
+        "m. salah",
+        "egyptian king"
+      ],
+      "team_id": 40
+    },
+    "1100": {
+      "canonical": "Erling Haaland",
+      "aliases": [
+        "haaland",
+        "erling haaland",
+        "the terminator",
+        "haaland9"
+      ],
+      "team_id": 50
+    },
+    "874": {
+      "canonical": "Cristiano Ronaldo",
+      "aliases": [
+        "ronaldo",
+        "cristiano ronaldo",
+        "cr7",
+        "cristiano"
+      ],
+      "team_id": 45
+    },
+    "1465": {
+      "canonical": "Cole Palmer",
+      "aliases": [
+        "palmer",
+        "cole palmer",
+        "cold palmer"
+      ],
+      "team_id": 49
+    },
+    "186": {
+      "canonical": "Harry Kane",
+      "aliases": [
+        "kane",
+        "harry kane",
+        "hk"
+      ],
+      "team_id": 157
+    },
+    "154": {
+      "canonical": "Kevin De Bruyne",
+      "aliases": [
+        "de bruyne",
+        "kdb",
+        "kevin de bruyne"
+      ],
+      "team_id": 50
+    },
+    "1467": {
+      "canonical": "Marcus Rashford",
+      "aliases": [
+        "rashford",
+        "marcus rashford",
+        "beans",
+        "rashy"
+      ],
+      "team_id": 33
+    },
+    "284": {
+      "canonical": "Bruno Fernandes",
+      "aliases": [
+        "bruno",
+        "bruno fernandes",
+        "b. fernandes"
+      ],
+      "team_id": 33
+    },
+    "882": {
+      "canonical": "Martin Odegaard",
+      "aliases": [
+        "odegaard",
+        "martin odegaard",
+        "ode"
+      ],
+      "team_id": 42
+    },
+    "903": {
+      "canonical": "Phil Foden",
+      "aliases": [
+        "foden",
+        "phil foden",
+        "the stockport iniesta"
+      ],
+      "team_id": 50
+    },
+    "547": {
+      "canonical": "Virgil van Dijk",
+      "aliases": [
+        "van dijk",
+        "vvd",
+        "virgil van dijk"
+      ],
+      "team_id": 40
+    },
+    "1485": {
+      "canonical": "Declan Rice",
+      "aliases": [
+        "rice",
+        "declan rice",
+        "dec"
+      ],
+      "team_id": 42
+    },
+    "2295": {
+      "canonical": "Jude Bellingham",
+      "aliases": [
+        "bellingham",
+        "jude bellingham",
+        "jude"
+      ],
+      "team_id": 541
+    },
+    "278": {
+      "canonical": "Kylian Mbappe",
+      "aliases": [
+        "mbappe",
+        "kylian mbappe",
+        "kylian"
+      ],
+      "team_id": 541
+    },
+    "276": {
+      "canonical": "Vinicius Junior",
+      "aliases": [
+        "vinicius",
+        "vini jr",
+        "vinicius junior",
+        "vini"
+      ],
+      "team_id": 541
+    },
+    "521": {
+      "canonical": "Lionel Messi",
+      "aliases": [
+        "messi",
+        "leo messi",
+        "lionel messi",
+        "la pulga",
+        "goat"
+      ],
+      "team_id": 85
+    }
+  },
+  "competitions": {
+    "39": {
+      "canonical": "Premier League",
+      "aliases": [
+        "premier league",
+        "prem",
+        "epl",
+        "pl",
+        "english premier league",
+        "the prem",
+        "premiership"
+      ]
+    },
+    "2": {
+      "canonical": "Champions League",
+      "aliases": [
+        "champions league",
+        "ucl",
+        "cl",
+        "european cup",
+        "champions",
+        "uefa champions league"
+      ]
+    },
+    "3": {
+      "canonical": "Europa League",
+      "aliases": [
+        "europa league",
+        "uel",
+        "el",
+        "europa",
+        "uefa europa league"
+      ]
+    },
+    "140": {
+      "canonical": "La Liga",
+      "aliases": [
+        "la liga",
+        "laliga",
+        "spanish league",
+        "primera division",
+        "spain"
+      ]
+    },
+    "78": {
+      "canonical": "Bundesliga",
+      "aliases": [
+        "bundesliga",
+        "german league",
+        "buli",
+        "germany"
+      ]
+    },
+    "135": {
+      "canonical": "Serie A",
+      "aliases": [
+        "serie a",
+        "italian league",
+        "calcio",
+        "italy"
+      ]
+    },
+    "61": {
+      "canonical": "Ligue 1",
+      "aliases": [
+        "ligue 1",
+        "french league",
+        "ligue1",
+        "france"
+      ]
+    },
+    "848": {
+      "canonical": "Conference League",
+      "aliases": [
+        "conference league",
+        "uecl",
+        "ecl",
+        "europa conference league"
+      ]
+    },
+    "45": {
+      "canonical": "FA Cup",
+      "aliases": [
+        "fa cup",
+        "the fa cup",
+        "emirates fa cup"
+      ]
+    },
+    "46": {
+      "canonical": "EFL Cup",
+      "aliases": [
+        "efl cup",
+        "league cup",
+        "carabao cup",
+        "capital one cup"
+      ]
+    }
+  },
+  "metrics": {
+    "goals": [
+      "goals",
+      "goal",
+      "scored",
+      "scores",
+      "g",
+      "scoring"
+    ],
+    "assists": [
+      "assists",
+      "assist",
+      "assisted",
+      "a",
+      "assisting"
+    ],
+    "xg": [
+      "xg",
+      "expected goals",
+      "xgoals",
+      "x goals"
+    ],
+    "xa": [
+      "xa",
+      "expected assists",
+      "x assists"
+    ],
+    "xgi": [
+      "xgi",
+      "expected goal involvement"
+    ],
+    "possession": [
+      "possession",
+      "poss",
+      "ball retention"
+    ],
+    "shots": [
+      "shots",
+      "shot",
+      "attempts",
+      "shooting"
+    ],
+    "shots_on_target": [
+      "shots on target",
+      "sot",
+      "on target"
+    ],
+    "clean_sheets": [
+      "clean sheets",
+      "clean sheet",
+      "cs",
+      "shutouts",
+      "shutout"
+    ],
+    "yellow_cards": [
+      "yellow cards",
+      "yellows",
+      "bookings",
+      "cautions"
+    ],
+    "red_cards": [
+      "red cards",
+      "reds",
+      "sending offs",
+      "dismissals"
+    ],
+    "minutes": [
+      "minutes",
+      "mins",
+      "playing time",
+      "game time"
+    ],
+    "appearances": [
+      "appearances",
+      "apps",
+      "games played",
+      "matches"
+    ],
+    "passes": [
+      "passes",
+      "pass",
+      "passing"
+    ],
+    "tackles": [
+      "tackles",
+      "tackle",
+      "tackling"
+    ],
+    "interceptions": [
+      "interceptions",
+      "interception",
+      "intercepts"
+    ],
+    "saves": [
+      "saves",
+      "save",
+      "saving"
+    ],
+    "form": [
+      "form",
+      "recent form",
+      "current form"
+    ]
+  }
+}
