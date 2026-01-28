@@ -2208,7 +2208,7 @@ def match_center_ui(
 ):
     """
     Live Match Center page with events, lineups, and statistics.
-    FotMob-style layout with scoreboard header and tabbed content.
+    Scoreboard header with tabbed content layout.
     """
     from app.live_match import get_live_match_provider
     from app.view_models import MatchDetailView

@@ -889,7 +889,7 @@ class MatchDetailView:
         return len(self.statistics) > 0
 
     def to_scoreboard_html(self) -> str:
-        """Render FotMob-style scoreboard header."""
+        """Render scoreboard header."""
         halftime_html = f'<div class="halftime">{self.halftime_display}</div>' if self.halftime_display else ''
 
         return f"""

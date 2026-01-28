@@ -29,7 +29,7 @@ The AI is expected to behave like a co-founder-level partner:
 This product is a **football intelligence system**, not just a football data app.
 
 It must be able to:
-- answer normal match/team/player questions fast (FotMob/SofaScore style)
+- answer normal match/team/player questions fast
 - handle messy human inputs (aliases, nicknames, misspellings)
 - generate higher-level analysis when asked
 - produce clear visuals and artifacts when the user requests them
@@ -62,7 +62,7 @@ If the user asks something simple (e.g., “Man Utd vs Leeds”), return:
 - competition context (league, round, table position if available)
 - links/IDs for drill-down (internally, for follow-up queries)
 
-This should feel like FotMob/SofaScore/ESPN: fast, clean, useful.
+This should feel fast, clean, and useful.
 
 ### Mode B — Chart / Artifact Output (ONLY WHEN ASKED OR IMPLIED)
 If the user explicitly requests visuals or analysis artifacts (e.g., “chart,” “graph,” “heatmap,” “shot map,” “trend,” “plot,” “visualize,” “compare stats”), then generate the artifact(s).

@@ -203,7 +203,7 @@ python scripts/import_data.py
 ```
 
 **What it does:**
-- Creates `futmob.db` SQLite database
+- Creates `football_view.db` SQLite database
 - Scans all CSV files in `output/` folder
 - Imports teams, standings, matches, and players
 - Safe to run multiple times (updates existing data)
@@ -211,7 +211,7 @@ python scripts/import_data.py
 **Success looks like:**
 ```
 ============================================================
-Baby Futmob v0 - Data Import Script
+Football View - Data Import Script
 ============================================================
 
 1. Initializing database...
@@ -239,7 +239,7 @@ Standings: 20 new, 0 updated
 Matches:   380 new, 0 updated
 Players:   500 new, 0 updated
 
-✓ Import complete! Database ready at: futmob.db
+✓ Import complete! Database ready at: football_view.db
 ============================================================
 ```
 

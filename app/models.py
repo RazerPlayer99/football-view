@@ -1,5 +1,5 @@
 """
-Database models for Baby Futmob v0
+Database models for Football View
 SQLAlchemy ORM models for teams, standings, matches, and players
 """
 from datetime import datetime

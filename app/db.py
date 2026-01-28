@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from app.models import Base
 
 # Database file path - SQLite file in the project root
-DATABASE_URL = "sqlite:///./futmob.db"
+DATABASE_URL = "sqlite:///./football_view.db"
 
 # Create engine with echo=False (set to True for SQL debugging)
 engine = create_engine(
