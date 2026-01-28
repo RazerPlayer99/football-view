@@ -227,7 +227,6 @@ When uncertain, prioritize:
 
 ## Current Implementation Notes (Legacy / Local MVP)
 
-This section documents the original “Baby Futmob v0” local web app.
 It represents an early implementation stage and is not the long-term vision.
 
 See: LOCAL_DEV_GUIDE.md
