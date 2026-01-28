@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     premier_league_id: int = 39
 
     # Current season (single source of truth)
-    current_season: int = 2024
+    current_season: int = 2025
 
     class Config:
         env_file = ".env"
