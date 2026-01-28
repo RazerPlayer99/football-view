@@ -35,9 +35,9 @@ env/
 # Environment variables
 .env
 
-# Cache and output directories
-cache/
-output/
+# Cache and output directories (root level only, not app/cache)
+/cache/
+/output/
 
 # OS
 .DS_Store
