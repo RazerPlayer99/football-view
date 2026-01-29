@@ -265,7 +265,9 @@ class QueryExecutor:
         with ThreadPoolExecutor(max_workers=4) as executor:
             team_future = executor.submit(api_client.get_team_by_id, team_id)
             standings_future = executor.submit(api_client.get_standings, season)
-            fixtures_future = executor.submit(api_client.get_matches, season, None, team_id, 10)
+            fixtures_future = executor.submit(
+                api_client.get_matches, season, league_id=None, team_id=team_id, limit=10
+            )
             squad_future = executor.submit(api_client.get_team_players, team_id, season)
 
         try:
@@ -277,8 +279,9 @@ class QueryExecutor:
         try:
             standings_data = standings_future.result()
             standings = standings_data.get("standings", [])
+            # Team ID is nested under team.id, not team_id
             team_standing = next(
-                (s for s in standings if s.get("team_id") == team_id),
+                (s for s in standings if s.get("team", {}).get("id") == team_id),
                 None
             )
             sources.append("api_football:standings")
@@ -294,22 +297,28 @@ class QueryExecutor:
 
         try:
             squad_data = squad_future.result()
-            squad = squad_data.get("players", [])[:5]  # Top 5 players
+            # Sort players by goals to get actual top scorers
+            players = squad_data.get("players", [])
+            top_scorers = sorted(players, key=lambda p: p.get("goals", 0), reverse=True)[:5]
             sources.append("api_football:players")
         except Exception:
-            squad = []
+            top_scorers = []
 
         # Check for xG data (not yet implemented)
         missing.append("xG statistics not yet available")
+
+        # Fixture status is the long form, not short codes
+        finished_statuses = ("Match Finished", "After Extra Time", "Penalties")
+        upcoming_statuses = ("Not Started", "Time to be defined", "TBD")
 
         return ExecutionResult(
             success=True,
             data={
                 "team": team_data,
                 "standing": team_standing,
-                "recent_fixtures": [f for f in fixtures if f.get("status") in ("FT", "AET", "PEN")][:5],
-                "upcoming_fixtures": [f for f in fixtures if f.get("status") in ("NS", "TBD")][:3],
-                "top_players": squad,
+                "recent_fixtures": [f for f in fixtures if f.get("status") in finished_statuses][:5],
+                "upcoming_fixtures": [f for f in fixtures if f.get("status") in upcoming_statuses][:3],
+                "top_players": top_scorers,
                 "season": season,
             },
             sources_used=sources,
@@ -440,8 +449,9 @@ class QueryExecutor:
             standings = standings_data.get("standings", [])
             sources.append("api_football:standings")
 
-            team1_standing = next((s for s in standings if s.get("team_id") == team1.team_id), {})
-            team2_standing = next((s for s in standings if s.get("team_id") == team2.team_id), {})
+            # Team ID is nested under team.id, not team_id
+            team1_standing = next((s for s in standings if s.get("team", {}).get("id") == team1.team_id), {})
+            team2_standing = next((s for s in standings if s.get("team", {}).get("id") == team2.team_id), {})
 
             return ExecutionResult(
                 success=True,

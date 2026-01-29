@@ -239,30 +239,37 @@ def api_search_suggest(
     # Search players in aliases
     for player_id, player_data in alias_db.players.items():
         canonical = player_data["canonical"]
+        best_match = 0.0
+
+        # Check canonical name
         ratio = fuzzy_match(query, canonical)
-        if ratio >= threshold:
+        best_match = max(best_match, ratio)
+
+        # PRIORITY: Check last name match (for "Shaw" -> "Luke Shaw")
+        name_parts = canonical.lower().split()
+        if len(name_parts) > 1:
+            last_name = name_parts[-1]
+            if query == last_name:
+                best_match = max(best_match, 0.95)  # High confidence for exact last name
+            elif last_name.startswith(query) and len(query) >= 3:
+                best_match = max(best_match, 0.85)
+
+        # Also check aliases
+        for alias in player_data.get("aliases", []):
+            alias_ratio = fuzzy_match(query, alias)
+            if query in alias.lower():
+                alias_ratio = max(alias_ratio, 0.90)  # Boost for containment
+            best_match = max(best_match, alias_ratio)
+
+        if best_match >= threshold and f"player_{player_id}" not in seen_ids:
             suggestions.append({
                 "id": int(player_id),
                 "name": canonical,
                 "type": "player",
                 "team_id": player_data.get("team_id"),
-                "confidence": round(ratio, 3),
+                "confidence": round(best_match, 3),
             })
             seen_ids.add(f"player_{player_id}")
-
-        # Also check aliases
-        for alias in player_data.get("aliases", []):
-            if query in alias.lower() or fuzzy_match(query, alias) >= threshold:
-                if f"player_{player_id}" not in seen_ids:
-                    suggestions.append({
-                        "id": int(player_id),
-                        "name": canonical,
-                        "type": "player",
-                        "team_id": player_data.get("team_id"),
-                        "confidence": round(fuzzy_match(query, alias), 3),
-                    })
-                    seen_ids.add(f"player_{player_id}")
-                break
 
     # Search teams in aliases
     for team_id, team_data in alias_db.teams.items():
@@ -1124,9 +1131,16 @@ def search_ui():
             function selectSuggestion(index) {
                 const s = suggestions[index];
                 if (s) {
-                    searchInput.value = s.name;
                     hideDropdown();
-                    doSearch(s.name);
+                    // Navigate directly to entity page instead of searching
+                    if (s.id && s.type) {
+                        const entityPath = s.type === 'player' ? 'players' : 'teams';
+                        window.location.href = `/ui/${entityPath}/${s.id}`;
+                    } else {
+                        // Fallback to search if no ID
+                        searchInput.value = s.name;
+                        doSearch(s.name);
+                    }
                 }
             }
 

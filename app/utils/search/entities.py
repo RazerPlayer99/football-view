@@ -59,7 +59,7 @@ def fuzzy_match(query: str, target: str) -> float:
     Calculate fuzzy match ratio between two strings.
 
     Uses Levenshtein distance if available, otherwise SequenceMatcher.
-    Also checks for last-name-only matches.
+    Also checks for last-name-only matches with priority for players.
     """
     query_lower = query.lower().strip()
     target_lower = target.lower().strip()
@@ -78,6 +78,13 @@ def fuzzy_match(query: str, target: str) -> float:
         first_name = target_parts[0]
         if query_lower == first_name:
             return 0.90  # Slightly lower for first name only
+
+        # Check if query matches abbreviated format (e.g., "shaw" matches "l. shaw")
+        # Handle "X. Lastname" format common in API
+        if target_parts[0].endswith('.') and len(target_parts) >= 2:
+            api_last_name = target_parts[-1]
+            if query_lower == api_last_name:
+                return 0.95  # Exact last name match
 
     # Check if query is contained in target (partial match)
     if len(query_lower) >= 3 and query_lower in target_lower:

@@ -383,7 +383,7 @@
       ],
       "team_id": 45
     },
-    "1465": {
+    "152982": {
       "canonical": "Cole Palmer",
       "aliases": [
         "palmer",
@@ -420,7 +420,7 @@
       ],
       "team_id": 33
     },
-    "284": {
+    "1485": {
       "canonical": "Bruno Fernandes",
       "aliases": [
         "bruno",
@@ -429,16 +429,17 @@
       ],
       "team_id": 33
     },
-    "882": {
+    "37127": {
       "canonical": "Martin Odegaard",
       "aliases": [
         "odegaard",
         "martin odegaard",
-        "ode"
+        "ode",
+        "m. odegaard"
       ],
       "team_id": 42
     },
-    "903": {
+    "631": {
       "canonical": "Phil Foden",
       "aliases": [
         "foden",
@@ -447,7 +448,7 @@
       ],
       "team_id": 50
     },
-    "547": {
+    "290": {
       "canonical": "Virgil van Dijk",
       "aliases": [
         "van dijk",
@@ -456,7 +457,7 @@
       ],
       "team_id": 40
     },
-    "1485": {
+    "2937": {
       "canonical": "Declan Rice",
       "aliases": [
         "rice",
@@ -503,6 +504,88 @@
         "goat"
       ],
       "team_id": 85
+    },
+    "891": {
+      "canonical": "Luke Shaw",
+      "aliases": [
+        "shaw",
+        "luke shaw",
+        "l. shaw"
+      ],
+      "team_id": 33
+    },
+    "1460": {
+      "canonical": "Bukayo Saka",
+      "aliases": [
+        "saka",
+        "bukayo saka",
+        "b. saka",
+        "starboy"
+      ],
+      "team_id": 42
+    },
+    "342970": {
+      "canonical": "Leny Yoro",
+      "aliases": [
+        "yoro",
+        "leny yoro",
+        "l. yoro"
+      ],
+      "team_id": 33
+    },
+    "978": {
+      "canonical": "Kai Havertz",
+      "aliases": [
+        "havertz",
+        "kai havertz",
+        "k. havertz"
+      ],
+      "team_id": 42
+    },
+    "18979": {
+      "canonical": "Viktor Gyokeres",
+      "aliases": [
+        "gyokeres",
+        "viktor gyokeres",
+        "v. gyokeres"
+      ],
+      "team_id": 42
+    },
+    "22090": {
+      "canonical": "William Saliba",
+      "aliases": [
+        "saliba",
+        "william saliba",
+        "w. saliba"
+      ],
+      "team_id": 42
+    },
+    "127769": {
+      "canonical": "Gabriel Martinelli",
+      "aliases": [
+        "martinelli",
+        "gabriel martinelli",
+        "gabi"
+      ],
+      "team_id": 42
+    },
+    "284322": {
+      "canonical": "Kobbie Mainoo",
+      "aliases": [
+        "mainoo",
+        "kobbie mainoo",
+        "k. mainoo"
+      ],
+      "team_id": 33
+    },
+    "157052": {
+      "canonical": "Riccardo Calafiori",
+      "aliases": [
+        "calafiori",
+        "riccardo calafiori",
+        "r. calafiori"
+      ],
+      "team_id": 42
     }
   },
   "competitions": {
