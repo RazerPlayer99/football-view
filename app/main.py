@@ -18,7 +18,7 @@ from app.view_models import (
 from config.settings import settings
 
 # Version tracking
-APP_VERSION = "v0.1.0"
+APP_VERSION = "v0.2.0"
 APP_NAME = "Football View"
 APP_STAGE = "Pre-Alpha"
 
@@ -37,6 +37,56 @@ def parse_season(season_str: str) -> int:
     if "-" in season_str:
         return int(season_str.split("-")[0])
     return int(season_str)
+
+
+def get_refresh_interval(status_short: str, elapsed: Optional[int], is_live: bool, is_finished: bool, match_date: str) -> Optional[int]:
+    """
+    Calculate adaptive refresh interval in seconds based on match state.
+
+    Returns None if no refresh needed.
+    """
+    from datetime import datetime, timezone, timedelta
+
+    # Finished matches: brief refresh for final stats, then stop
+    if is_finished:
+        return None  # No auto-refresh for finished matches
+
+    # Live match refresh based on elapsed time
+    if is_live:
+        # Halftime: slower refresh
+        if status_short in ("HT",):
+            return 30
+        # High action periods (start, end of halves)
+        if elapsed is not None:
+            if elapsed <= 15 or (elapsed >= 40 and elapsed <= 45):
+                return 10
+            elif elapsed >= 75:
+                return 10
+            elif elapsed >= 45 and elapsed <= 50:
+                return 10  # Start of second half
+        return 15  # Default live refresh
+
+    # Pre-match refresh based on time to kickoff
+    if match_date:
+        try:
+            kickoff = datetime.fromisoformat(match_date.replace("Z", "+00:00"))
+            now = datetime.now(timezone.utc)
+            minutes_to_kickoff = (kickoff - now).total_seconds() / 60
+
+            if minutes_to_kickoff > 60:
+                return 300  # 5 minutes (waiting)
+            elif minutes_to_kickoff > 30:
+                return 120  # 2 minutes (lineups may appear)
+            elif minutes_to_kickoff > 15:
+                return 60  # 1 minute (lineups likely)
+            elif minutes_to_kickoff > 0:
+                return 30  # 30 seconds (imminent kickoff)
+            else:
+                return 15  # Past kickoff time, waiting for live status
+        except:
+            return 60  # Fallback
+
+    return None
 
 
 @app.get("/health")
@@ -158,6 +208,115 @@ def api_search_get(
         )
 
     return response.to_dict()
+
+
+@app.get("/api/search/suggest")
+def api_search_suggest(
+    q: str = Query(..., min_length=2, description="Partial search query"),
+    limit: int = Query(8, ge=1, le=20, description="Max suggestions"),
+):
+    """
+    Autocomplete suggestions endpoint.
+
+    Returns quick suggestions for players and teams based on partial query.
+    Searches both aliases database and API player search.
+
+    Example: /api/search/suggest?q=ses
+    Returns: {"suggestions": [{"name": "Benjamin Sesko", "type": "player", ...}]}
+    """
+    from app.utils.search.entities import (
+        AliasDatabase, fuzzy_match, get_fuzzy_threshold, normalize_for_matching
+    )
+
+    query = q.strip().lower()
+    suggestions = []
+    seen_ids = set()
+
+    # Load alias database
+    alias_db = AliasDatabase()
+    threshold = get_fuzzy_threshold(query)
+
+    # Search players in aliases
+    for player_id, player_data in alias_db.players.items():
+        canonical = player_data["canonical"]
+        ratio = fuzzy_match(query, canonical)
+        if ratio >= threshold:
+            suggestions.append({
+                "id": int(player_id),
+                "name": canonical,
+                "type": "player",
+                "team_id": player_data.get("team_id"),
+                "confidence": round(ratio, 3),
+            })
+            seen_ids.add(f"player_{player_id}")
+
+        # Also check aliases
+        for alias in player_data.get("aliases", []):
+            if query in alias.lower() or fuzzy_match(query, alias) >= threshold:
+                if f"player_{player_id}" not in seen_ids:
+                    suggestions.append({
+                        "id": int(player_id),
+                        "name": canonical,
+                        "type": "player",
+                        "team_id": player_data.get("team_id"),
+                        "confidence": round(fuzzy_match(query, alias), 3),
+                    })
+                    seen_ids.add(f"player_{player_id}")
+                break
+
+    # Search teams in aliases
+    for team_id, team_data in alias_db.teams.items():
+        canonical = team_data["canonical"]
+        ratio = fuzzy_match(query, canonical)
+        if ratio >= threshold:
+            suggestions.append({
+                "id": int(team_id),
+                "name": canonical,
+                "type": "team",
+                "confidence": round(ratio, 3),
+            })
+            seen_ids.add(f"team_{team_id}")
+
+        # Check aliases
+        for alias in team_data.get("aliases", []):
+            if query in alias.lower() or fuzzy_match(query, alias) >= threshold:
+                if f"team_{team_id}" not in seen_ids:
+                    suggestions.append({
+                        "id": int(team_id),
+                        "name": canonical,
+                        "type": "team",
+                        "confidence": round(fuzzy_match(query, alias), 3),
+                    })
+                    seen_ids.add(f"team_{team_id}")
+                break
+
+    # Also search API for players (catches players not in aliases)
+    if len(query) >= 3:
+        try:
+            # Use API search for broader coverage
+            result = api_client.search_players(query, season=CURRENT_SEASON, limit=10)
+            api_players = result.get("players", [])
+            for p in api_players:
+                player_id = p.get("id")
+                if f"player_{player_id}" not in seen_ids:
+                    suggestions.append({
+                        "id": player_id,
+                        "name": p.get("name"),
+                        "type": "player",
+                        "team": p.get("team", {}).get("name"),
+                        "team_id": p.get("team", {}).get("id"),
+                        "photo": p.get("photo"),
+                        "confidence": 0.85,  # API match
+                    })
+                    seen_ids.add(f"player_{player_id}")
+        except Exception:
+            pass  # API search is best-effort
+
+    # Sort by confidence and limit
+    suggestions.sort(key=lambda x: x.get("confidence", 0), reverse=True)
+    suggestions = suggestions[:limit]
+
+    return {"suggestions": suggestions, "query": q}
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -441,7 +600,7 @@ def search(
 
 @app.get("/ui/search", response_class=HTMLResponse)
 def search_ui():
-    """Search UI page."""
+    """Search UI page with unified search support."""
     html_content = """
     <!DOCTYPE html>
     <html>
@@ -450,17 +609,17 @@ def search_ui():
         <style>
             * { box-sizing: border-box; }
             body {
-                font-family: Arial, sans-serif;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
                 max-width: 900px;
                 margin: 0 auto;
                 padding: 20px;
-                background-color: #f5f5f5;
+                background-color: #f0f2f5;
             }
             .container {
                 background: white;
                 padding: 30px;
-                border-radius: 8px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                border-radius: 12px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             }
             h1 { color: #2c3e50; margin-bottom: 20px; }
             .live-badge {
@@ -469,73 +628,267 @@ def search_ui():
                 padding: 4px 8px;
                 border-radius: 4px;
                 font-size: 12px;
+                animation: pulse 2s infinite;
+            }
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.7; }
             }
             .search-box {
                 display: flex;
                 gap: 10px;
                 margin-bottom: 20px;
             }
-            #search-input {
+            .search-wrapper {
+                position: relative;
                 flex: 1;
-                padding: 12px 16px;
+                min-width: 0;
+            }
+            #search-input {
+                display: block;
+                width: 100%;
+                padding: 14px 18px;
                 font-size: 16px;
                 border: 2px solid #ddd;
-                border-radius: 6px;
+                border-radius: 8px;
                 outline: none;
+                transition: border-color 0.2s;
+                box-sizing: border-box;
             }
             #search-input:focus { border-color: #3498db; }
+            .autocomplete-dropdown {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: white;
+                border: 1px solid #ddd;
+                border-top: none;
+                border-radius: 0 0 8px 8px;
+                max-height: 300px;
+                overflow-y: auto;
+                z-index: 1000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                display: none;
+            }
+            .autocomplete-dropdown.active { display: block; }
+            .autocomplete-item {
+                padding: 12px 16px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            .autocomplete-item:last-child { border-bottom: none; }
+            .autocomplete-item:hover, .autocomplete-item.selected {
+                background: #f5f8fa;
+            }
+            .autocomplete-item img {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                object-fit: cover;
+            }
+            .autocomplete-item .name {
+                font-weight: 500;
+                color: #2c3e50;
+            }
+            .autocomplete-item .meta {
+                font-size: 12px;
+                color: #7f8c8d;
+            }
+            .autocomplete-item .type-badge {
+                font-size: 10px;
+                padding: 2px 6px;
+                border-radius: 4px;
+                text-transform: uppercase;
+                margin-left: auto;
+            }
+            .autocomplete-item .type-badge.player { background: #e8f5e9; color: #2e7d32; }
+            .autocomplete-item .type-badge.team { background: #e3f2fd; color: #1565c0; }
             #search-btn {
-                padding: 12px 24px;
+                padding: 14px 28px;
                 background: #3498db;
                 color: white;
                 border: none;
-                border-radius: 6px;
+                border-radius: 8px;
                 cursor: pointer;
                 font-size: 16px;
+                font-weight: 500;
+                transition: background 0.2s;
             }
             #search-btn:hover { background: #2980b9; }
+            .search-hints {
+                font-size: 13px;
+                color: #7f8c8d;
+                margin-bottom: 20px;
+            }
+            .search-hints code {
+                background: #ecf0f1;
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-family: monospace;
+            }
+
+            /* Results */
             .results-section { margin-top: 20px; }
             .results-section h2 {
                 color: #2c3e50;
                 border-bottom: 2px solid #eee;
                 padding-bottom: 10px;
+                font-size: 18px;
             }
             .result-item {
-                padding: 12px;
-                margin: 8px 0;
+                padding: 14px;
+                margin: 10px 0;
                 background: #f9f9f9;
-                border-radius: 4px;
-                border-left: 3px solid #3498db;
+                border-radius: 8px;
+                border-left: 4px solid #3498db;
                 display: flex;
                 align-items: center;
-                gap: 12px;
+                gap: 14px;
+                transition: background 0.2s;
             }
             .result-item:hover { background: #f0f0f0; }
             .result-item img {
-                width: 40px;
-                height: 40px;
+                width: 48px;
+                height: 48px;
                 object-fit: contain;
             }
-            .team-name, .player-name { font-weight: bold; color: #2c3e50; }
-            .player-info { color: #666; font-size: 14px; margin-top: 4px; }
-            .stats { color: #27ae60; font-weight: bold; }
-            .no-results { color: #999; font-style: italic; padding: 20px; }
+            .result-item a { color: #2c3e50; text-decoration: none; font-weight: 600; }
+            .result-item a:hover { text-decoration: underline; }
+            .result-meta { color: #666; font-size: 14px; margin-top: 4px; }
+            .stats { color: #27ae60; font-weight: 600; }
+
+            /* Disambiguation */
+            .disambiguation {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                padding: 20px;
+                border-radius: 12px;
+                color: white;
+                margin-bottom: 20px;
+            }
+            .disambiguation h3 { margin: 0 0 15px 0; }
+            .disambiguation-options { display: flex; flex-wrap: wrap; gap: 10px; }
+            .disambiguation-option {
+                background: white;
+                color: #2c3e50;
+                padding: 10px 16px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: 500;
+                transition: transform 0.2s;
+            }
+            .disambiguation-option:hover { transform: scale(1.02); }
+
+            /* Comparison */
+            .comparison-container { margin-top: 20px; }
+            .comparison-header {
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+            .comparison-entity {
+                text-align: center;
+            }
+            .comparison-entity img {
+                width: 80px;
+                height: 80px;
+                object-fit: contain;
+                margin-bottom: 10px;
+            }
+            .comparison-entity h3 { margin: 0; color: #2c3e50; }
+            .comparison-vs {
+                font-size: 24px;
+                font-weight: bold;
+                color: #e74c3c;
+            }
+            .comparison-metrics { margin-top: 20px; }
+            .comparison-metric {
+                display: flex;
+                align-items: center;
+                padding: 12px 0;
+                border-bottom: 1px solid #eee;
+            }
+            .metric-label {
+                flex: 1;
+                text-align: center;
+                font-weight: 500;
+                color: #7f8c8d;
+            }
+            .metric-value {
+                flex: 1;
+                text-align: center;
+                font-size: 18px;
+                font-weight: 600;
+            }
+            .metric-value.winner { color: #27ae60; }
+
+            /* Error */
+            .error-message {
+                background: #fff3cd;
+                border: 1px solid #ffc107;
+                padding: 20px;
+                border-radius: 8px;
+                color: #856404;
+            }
+            .error-message h3 { margin: 0 0 10px 0; }
+            .suggestions { margin-top: 15px; }
+            .suggestions a {
+                display: inline-block;
+                background: #3498db;
+                color: white;
+                padding: 8px 14px;
+                border-radius: 6px;
+                text-decoration: none;
+                margin: 5px 5px 5px 0;
+                font-size: 14px;
+            }
+
+            /* Table */
+            .data-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 15px;
+            }
+            .data-table th, .data-table td {
+                padding: 12px;
+                text-align: left;
+                border-bottom: 1px solid #eee;
+            }
+            .data-table th {
+                background: #f8f9fa;
+                font-weight: 600;
+                color: #2c3e50;
+            }
+            .data-table tr:hover { background: #f9f9f9; }
+
+            .no-results { color: #999; font-style: italic; padding: 20px; text-align: center; }
             .back-link { margin-bottom: 20px; }
             .back-link a { color: #3498db; text-decoration: none; }
-            #loading { display: none; color: #666; padding: 20px; }
+            #loading { display: none; color: #666; padding: 20px; text-align: center; }
         </style>
     </head>
     <body>
         <div class="container">
             <div class="back-link"><a href="/">← Back to Home</a></div>
-            <h1>Search Teams & Players <span class="live-badge">LIVE</span></h1>
+            <h1>Search <span class="live-badge">LIVE</span></h1>
+            <p class="search-hints">
+                Try: <code>Arsenal</code>, <code>Salah stats</code>, <code>top scorers</code>,
+                <code>Haaland vs Salah</code>, <code>next Arsenal match</code>
+            </p>
 
             <div class="search-box">
-                <input type="text" id="search-input" placeholder="Search for a team or player..." autofocus>
+                <div class="search-wrapper">
+                    <input type="text" id="search-input" placeholder="Ask anything about Premier League..." autofocus autocomplete="off">
+                    <div id="autocomplete-dropdown" class="autocomplete-dropdown"></div>
+                </div>
                 <button id="search-btn">Search</button>
             </div>
 
-            <div id="loading">Fetching live data...</div>
+            <div id="loading">Searching...</div>
             <div id="results"></div>
         </div>
 
@@ -545,64 +898,24 @@ def search_ui():
             const resultsDiv = document.getElementById('results');
             const loadingDiv = document.getElementById('loading');
 
-            async function doSearch() {
-                const query = searchInput.value.trim();
+            async function doSearch(query) {
+                query = query || searchInput.value.trim();
                 if (query.length < 2) {
                     resultsDiv.innerHTML = '<p class="no-results">Please enter at least 2 characters</p>';
                     return;
                 }
 
+                // Update input with query (for disambiguation clicks)
+                searchInput.value = query;
                 loadingDiv.style.display = 'block';
                 resultsDiv.innerHTML = '';
 
                 try {
-                    const response = await fetch(`/search?q=${encodeURIComponent(query)}&season=2025`);
+                    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&season=2025`);
                     const data = await response.json();
 
                     loadingDiv.style.display = 'none';
-
-                    let html = '';
-
-                    // Teams section
-                    html += '<div class="results-section">';
-                    html += `<h2>Teams (${data.team_count})</h2>`;
-                    if (data.teams.length === 0) {
-                        html += '<p class="no-results">No teams found</p>';
-                    } else {
-                        data.teams.forEach(team => {
-                            html += `<div class="result-item">
-                                <img src="${team.logo || ''}" alt="">
-                                <div>
-                                    <a href="/ui/teams/${team.id}" class="team-name">${team.name}</a>
-                                    <div class="player-info">${team.venue || ''}</div>
-                                </div>
-                            </div>`;
-                        });
-                    }
-                    html += '</div>';
-
-                    // Players section
-                    html += '<div class="results-section">';
-                    html += `<h2>Players (${data.player_count})</h2>`;
-                    if (data.players.length === 0) {
-                        html += '<p class="no-results">No players found</p>';
-                    } else {
-                        data.players.forEach(player => {
-                            html += `<div class="result-item">
-                                <img src="${player.photo || ''}" alt="">
-                                <div>
-                                    <a href="/ui/players/${player.id}" class="player-name">${player.name}</a>
-                                    <div class="player-info">
-                                        ${player.team?.name || ''} | ${player.position || ''}
-                                        <span class="stats">${player.goals} goals, ${player.assists} assists</span>
-                                    </div>
-                                </div>
-                            </div>`;
-                        });
-                    }
-                    html += '</div>';
-
-                    resultsDiv.innerHTML = html;
+                    resultsDiv.innerHTML = renderResponse(data);
 
                 } catch (error) {
                     loadingDiv.style.display = 'none';
@@ -610,9 +923,255 @@ def search_ui():
                 }
             }
 
-            searchBtn.addEventListener('click', doSearch);
+            function renderResponse(data) {
+                switch (data.type) {
+                    case 'disambiguation':
+                        return renderDisambiguation(data.data);
+                    case 'comparison':
+                        return renderComparison(data.data);
+                    case 'player_card':
+                        return renderPlayerCard(data.data);
+                    case 'team_card':
+                        return renderTeamCard(data.data);
+                    case 'table':
+                        return renderTable(data.data);
+                    case 'error':
+                        return renderError(data.data);
+                    default:
+                        return `<p class="no-results">Unknown response type: ${data.type}</p>`;
+                }
+            }
+
+            function renderDisambiguation(data) {
+                let html = `<div class="disambiguation">
+                    <h3>${data.question || 'Which did you mean?'}</h3>
+                    <div class="disambiguation-options">`;
+
+                data.options.forEach(opt => {
+                    html += `<div class="disambiguation-option" onclick="doSearch('${opt.value}')">${opt.label}</div>`;
+                });
+
+                html += '</div></div>';
+                return html;
+            }
+
+            function renderComparison(data) {
+                const e1 = data.entities[0];
+                const e2 = data.entities[1];
+                const p1 = e1.player || e1.team || {};
+                const p2 = e2.player || e2.team || {};
+
+                let html = `<div class="comparison-container">
+                    <div class="comparison-header">
+                        <div class="comparison-entity">
+                            <img src="${p1.photo || p1.logo || ''}" alt="">
+                            <h3><a href="/ui/${data.entity_type}s/${p1.id}">${p1.name}</a></h3>
+                            ${p1.team ? `<div class="result-meta">${p1.team.name || ''}</div>` : ''}
+                        </div>
+                        <div class="comparison-vs">VS</div>
+                        <div class="comparison-entity">
+                            <img src="${p2.photo || p2.logo || ''}" alt="">
+                            <h3><a href="/ui/${data.entity_type}s/${p2.id}">${p2.name}</a></h3>
+                            ${p2.team ? `<div class="result-meta">${p2.team.name || ''}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="comparison-metrics">`;
+
+                data.comparison_metrics.forEach(metric => {
+                    const v1Class = metric.winner_index === 0 ? 'winner' : '';
+                    const v2Class = metric.winner_index === 1 ? 'winner' : '';
+                    html += `<div class="comparison-metric">
+                        <div class="metric-value ${v1Class}">${metric.values[0]}</div>
+                        <div class="metric-label">${metric.label}</div>
+                        <div class="metric-value ${v2Class}">${metric.values[1]}</div>
+                    </div>`;
+                });
+
+                html += '</div></div>';
+                return html;
+            }
+
+            function renderPlayerCard(data) {
+                const p = data.player;
+                const stats = data.season_stats || {};
+                return `<div class="results-section">
+                    <div class="result-item" style="border-left-color: #27ae60;">
+                        <img src="${p.photo || ''}" alt="">
+                        <div>
+                            <a href="/ui/players/${p.id}">${p.name}</a>
+                            <div class="result-meta">
+                                ${p.team?.name || ''} | ${p.position || ''}
+                            </div>
+                            <div class="stats" style="margin-top: 8px;">
+                                ${stats.goals || p.goals || 0} goals,
+                                ${stats.assists || p.assists || 0} assists
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            function renderTeamCard(data) {
+                const t = data.team;
+                return `<div class="results-section">
+                    <div class="result-item" style="border-left-color: #9b59b6;">
+                        <img src="${t.logo || ''}" alt="">
+                        <div>
+                            <a href="/ui/teams/${t.id}">${t.name}</a>
+                            <div class="result-meta">${t.venue || ''}</div>
+                            ${data.standings_position ? `<div class="stats">Position: ${data.standings_position}</div>` : ''}
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            function renderTable(data) {
+                let html = `<div class="results-section">
+                    <h2>${data.title}</h2>
+                    <table class="data-table">
+                        <thead><tr>`;
+
+                data.columns.forEach(col => {
+                    html += `<th>${col.label}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+
+                data.rows.forEach(row => {
+                    html += '<tr>';
+                    data.columns.forEach(col => {
+                        const val = row[col.key] ?? '';
+                        // Make player/team names clickable
+                        if (col.key === 'name' && row.id) {
+                            const type = row.position ? 'players' : 'teams';
+                            html += `<td><a href="/ui/${type}/${row.id}">${val}</a></td>`;
+                        } else {
+                            html += `<td>${val}</td>`;
+                        }
+                    });
+                    html += '</tr>';
+                });
+
+                html += '</tbody></table></div>';
+                return html;
+            }
+
+            function renderError(data) {
+                let html = `<div class="error-message">
+                    <h3>${data.message}</h3>`;
+
+                if (data.suggestions && data.suggestions.length > 0) {
+                    html += '<div class="suggestions">';
+                    data.suggestions.forEach(s => {
+                        html += `<a href="#" onclick="doSearch('${s}'); return false;">${s}</a>`;
+                    });
+                    html += '</div>';
+                }
+
+                html += '</div>';
+                return html;
+            }
+
+            // Autocomplete functionality
+            const dropdown = document.getElementById('autocomplete-dropdown');
+            let debounceTimer = null;
+            let selectedIndex = -1;
+            let suggestions = [];
+
+            async function fetchSuggestions(query) {
+                if (query.length < 2) {
+                    hideDropdown();
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/search/suggest?q=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+                    suggestions = data.suggestions || [];
+                    renderSuggestions();
+                } catch (error) {
+                    hideDropdown();
+                }
+            }
+
+            function renderSuggestions() {
+                if (suggestions.length === 0) {
+                    hideDropdown();
+                    return;
+                }
+
+                dropdown.innerHTML = suggestions.map((s, i) => `
+                    <div class="autocomplete-item${i === selectedIndex ? ' selected' : ''}" data-index="${i}">
+                        ${s.photo ? `<img src="${s.photo}" alt="">` : '<div style="width:32px;height:32px;background:#ddd;border-radius:50%;"></div>'}
+                        <div>
+                            <div class="name">${s.name}</div>
+                            ${s.team ? `<div class="meta">${s.team}</div>` : ''}
+                        </div>
+                        <span class="type-badge ${s.type}">${s.type}</span>
+                    </div>
+                `).join('');
+
+                dropdown.classList.add('active');
+
+                // Add click handlers
+                dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const idx = parseInt(item.dataset.index);
+                        selectSuggestion(idx);
+                    });
+                });
+            }
+
+            function selectSuggestion(index) {
+                const s = suggestions[index];
+                if (s) {
+                    searchInput.value = s.name;
+                    hideDropdown();
+                    doSearch(s.name);
+                }
+            }
+
+            function hideDropdown() {
+                dropdown.classList.remove('active');
+                selectedIndex = -1;
+                suggestions = [];
+            }
+
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    fetchSuggestions(e.target.value.trim());
+                }, 200); // 200ms debounce
+            });
+
+            searchInput.addEventListener('keydown', (e) => {
+                if (!dropdown.classList.contains('active')) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectedIndex = Math.min(selectedIndex + 1, suggestions.length - 1);
+                    renderSuggestions();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectedIndex = Math.max(selectedIndex - 1, -1);
+                    renderSuggestions();
+                } else if (e.key === 'Enter' && selectedIndex >= 0) {
+                    e.preventDefault();
+                    selectSuggestion(selectedIndex);
+                } else if (e.key === 'Escape') {
+                    hideDropdown();
+                }
+            });
+
+            // Hide dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                    hideDropdown();
+                }
+            });
+
+            searchBtn.addEventListener('click', () => { hideDropdown(); doSearch(); });
             searchInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') doSearch();
+                if (e.key === 'Enter' && selectedIndex < 0) { hideDropdown(); doSearch(); }
             });
         </script>
     </body>
@@ -2298,10 +2857,10 @@ def match_center_ui(
             else:
                 lineups_html = '<p class="no-data">Lineups not available</p>'
 
-        # Build statistics HTML
+        # Build statistics HTML with 3-state model
         stats_html = ""
         if view.has_statistics:
-            # Order statistics by importance
+            # READY state: Stats available, show them
             priority_stats = ["Ball Possession", "Total Shots", "Shots on Goal", "Corner Kicks", "Fouls"]
             ordered_stats = []
             other_stats = []
@@ -2315,13 +2874,33 @@ def match_center_ui(
 
             for stat in all_stats[:12]:  # Limit to 12 stats
                 stats_html += stat.to_stat_bar_html()
+        elif view.is_live:
+            # WARMING_UP state: Match is live but stats not yet available
+            stats_html = '''
+            <div class="stats-warming">
+                <div class="warming-icon">📊</div>
+                <p>Collecting live statistics...</p>
+                <p class="warming-hint">Stats typically appear after the first few minutes of play</p>
+            </div>
+            '''
         else:
-            stats_html = '<p class="no-data">Statistics not available</p>'
+            # UNAVAILABLE state: Not live, no stats
+            if view.is_finished:
+                stats_html = '<p class="no-data">Statistics not available for this match</p>'
+            else:
+                stats_html = '<p class="no-data">Statistics will be available after kickoff</p>'
 
-        # Auto-refresh for live matches
+        # Adaptive auto-refresh based on match state
         auto_refresh_meta = ""
-        if view.is_live:
-            auto_refresh_meta = '<meta http-equiv="refresh" content="30">'
+        refresh_interval = get_refresh_interval(
+            status_short=view.status_short,
+            elapsed=view.elapsed,
+            is_live=view.is_live,
+            is_finished=view.is_finished,
+            match_date=view.date
+        )
+        if refresh_interval:
+            auto_refresh_meta = f'<meta http-equiv="refresh" content="{refresh_interval}">'
 
         html_content = f"""
         <!DOCTYPE html>
@@ -2644,17 +3223,39 @@ def match_center_ui(
                 }}
                 .stat-bar-home {{ background: #3498db; }}
                 .stat-bar-away {{ background: #e74c3c; }}
+                .stat-item {{
+                    margin-bottom: 18px;
+                }}
                 .stat-label {{
                     text-align: center;
                     font-size: 12px;
                     color: #7f8c8d;
-                    margin-bottom: 15px;
+                    margin-bottom: 6px;
+                    text-transform: uppercase;
+                    font-weight: 500;
                 }}
 
                 .no-data {{
                     text-align: center;
                     color: #95a5a6;
                     padding: 40px 20px;
+                }}
+                .stats-warming {{
+                    text-align: center;
+                    padding: 40px 20px;
+                    color: #7f8c8d;
+                }}
+                .stats-warming .warming-icon {{
+                    font-size: 32px;
+                    margin-bottom: 10px;
+                    animation: pulse 2s infinite;
+                }}
+                .stats-warming p {{
+                    margin: 5px 0;
+                }}
+                .stats-warming .warming-hint {{
+                    font-size: 12px;
+                    color: #bdc3c7;
                 }}
                 .refresh-info {{
                     text-align: center;
@@ -2700,7 +3301,7 @@ def match_center_ui(
 
                 <div class="refresh-info">
                     Last updated: {view.last_updated[:19].replace('T', ' ')} UTC
-                    {'| Auto-refreshing every 30s' if view.is_live else ''}
+                    {f'| Auto-refreshing every {refresh_interval}s' if refresh_interval else ''}
                     | <a href="?forceRefresh=true">Force Refresh</a>
                 </div>
             </div>
@@ -2715,6 +3316,24 @@ def match_center_ui(
                     document.getElementById(tabId).classList.add('active');
                     event.target.classList.add('active');
                 }}
+
+                // Live clock - updates seconds between API refreshes
+                (function() {{
+                    const clockEl = document.getElementById('live-clock');
+                    if (!clockEl) return;
+
+                    const elapsedMinute = parseInt(clockEl.dataset.elapsed || '0', 10);
+                    const startTime = Date.now();
+
+                    function updateClock() {{
+                        const secondsSinceLoad = Math.floor((Date.now() - startTime) / 1000);
+                        const displaySeconds = secondsSinceLoad % 60;
+                        clockEl.textContent = elapsedMinute + ':' + displaySeconds.toString().padStart(2, '0');
+                    }}
+
+                    updateClock();
+                    setInterval(updateClock, 1000);
+                }})();
             </script>
         </body>
         </html>
@@ -2724,16 +3343,40 @@ def match_center_ui(
     except ValueError as e:
         return HTMLResponse(
             content=f"""
-            <html><body style="font-family: Arial; padding: 40px; text-align: center;">
-                <h1>Match Not Found</h1>
-                <p>{str(e)}</p>
-                <a href="/ui/matches">← Back to Matches</a>
-            </body></html>
+            <!DOCTYPE html>
+            <html>
+            <head><title>Match Not Found - Football View</title></head>
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; padding: 40px; text-align: center; background: #f0f2f5;">
+                <div style="background: white; max-width: 500px; margin: 40px auto; padding: 40px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <h1 style="color: #e74c3c; margin-bottom: 20px;">Match Not Found</h1>
+                    <p style="color: #7f8c8d; margin-bottom: 30px;">{str(e)}</p>
+                    <a href="/ui/matches" style="color: #3498db; text-decoration: none;">← Back to Matches</a>
+                </div>
+            </body>
+            </html>
             """,
             status_code=404
         )
     except Exception as e:
+        import logging
+        logging.error(f"Match center error for match_id={match_id}: {e}", exc_info=True)
         return HTMLResponse(
-            content=f"<h1>Error loading match: {e}</h1>",
+            content=f"""
+            <!DOCTYPE html>
+            <html>
+            <head><title>Error - Football View</title></head>
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; padding: 40px; text-align: center; background: #f0f2f5;">
+                <div style="background: white; max-width: 500px; margin: 40px auto; padding: 40px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <h1 style="color: #e74c3c; margin-bottom: 20px;">Something went wrong</h1>
+                    <p style="color: #7f8c8d; margin-bottom: 10px;">We couldn't load this match right now.</p>
+                    <p style="color: #bdc3c7; font-size: 12px; margin-bottom: 30px;">Error: {type(e).__name__}</p>
+                    <div style="display: flex; gap: 20px; justify-content: center;">
+                        <a href="?forceRefresh=true" style="color: #3498db; text-decoration: none;">Try Again</a>
+                        <a href="/ui/matches" style="color: #3498db; text-decoration: none;">← Back to Matches</a>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """,
             status_code=500
         )

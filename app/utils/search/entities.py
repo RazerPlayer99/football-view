@@ -7,6 +7,12 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
+try:
+    from Levenshtein import ratio as levenshtein_ratio
+    HAS_LEVENSHTEIN = True
+except ImportError:
+    HAS_LEVENSHTEIN = False
+
 from .models.entities import (
     EntityMatch,
     TeamEntity,
@@ -49,8 +55,62 @@ def normalize_for_matching(text: str) -> str:
 
 
 def fuzzy_match(query: str, target: str) -> float:
-    """Calculate fuzzy match ratio between two strings."""
-    return SequenceMatcher(None, query.lower(), target.lower()).ratio()
+    """
+    Calculate fuzzy match ratio between two strings.
+
+    Uses Levenshtein distance if available, otherwise SequenceMatcher.
+    Also checks for last-name-only matches.
+    """
+    query_lower = query.lower().strip()
+    target_lower = target.lower().strip()
+
+    # Exact match
+    if query_lower == target_lower:
+        return 1.0
+
+    # Last-name-only match (e.g., "sesko" matches "Benjamin Sesko")
+    target_parts = target_lower.split()
+    if len(target_parts) > 1:
+        last_name = target_parts[-1]
+        if query_lower == last_name:
+            return 0.95  # High confidence for exact last name match
+        # Also check first name
+        first_name = target_parts[0]
+        if query_lower == first_name:
+            return 0.90  # Slightly lower for first name only
+
+    # Check if query is contained in target (partial match)
+    if len(query_lower) >= 3 and query_lower in target_lower:
+        # Give higher score for longer matches
+        containment_ratio = len(query_lower) / len(target_lower)
+        return max(0.80, containment_ratio)
+
+    # Use Levenshtein if available, combined with SequenceMatcher
+    seq_ratio = SequenceMatcher(None, query_lower, target_lower).ratio()
+
+    if HAS_LEVENSHTEIN:
+        lev_ratio = levenshtein_ratio(query_lower, target_lower)
+        # Use weighted average - Levenshtein is better for typos
+        return (lev_ratio * 0.6) + (seq_ratio * 0.4)
+
+    return seq_ratio
+
+
+def get_fuzzy_threshold(query: str) -> float:
+    """
+    Get fuzzy matching threshold based on query length.
+
+    Shorter queries need lower thresholds since they match less text.
+    """
+    query_len = len(query.strip())
+    if query_len <= 4:
+        return 0.55  # Very short - be lenient
+    elif query_len <= 6:
+        return 0.60  # Short
+    elif query_len <= 10:
+        return 0.65  # Medium
+    else:
+        return 0.70  # Long queries - be stricter
 
 
 class AliasDatabase:
@@ -129,6 +189,9 @@ class AliasDatabase:
         query_normalized = normalize_for_matching(query)
         matches: List[EntityMatch] = []
 
+        # Get dynamic threshold based on query length
+        threshold = get_fuzzy_threshold(query_normalized)
+
         # Phase 1: Exact alias lookup
         for entity_id, entity_data in entities.items():
             aliases = [a.lower() for a in entity_data.get("aliases", [])]
@@ -145,9 +208,9 @@ class AliasDatabase:
         for entity_id, entity_data in entities.items():
             canonical = entity_data["canonical"]
 
-            # Check canonical name
+            # Check canonical name (includes last-name matching now)
             ratio = fuzzy_match(query_normalized, canonical)
-            if ratio >= 0.70:
+            if ratio >= threshold:
                 matches.append(EntityMatch(
                     entity_id=entity_id,
                     name=canonical,
@@ -156,10 +219,11 @@ class AliasDatabase:
                     matched_text=query,
                 ))
 
-            # Check aliases
+            # Check aliases with slightly higher threshold
+            alias_threshold = min(threshold + 0.05, 0.75)
             for alias in entity_data.get("aliases", []):
                 ratio = fuzzy_match(query_normalized, alias)
-                if ratio >= 0.75:
+                if ratio >= alias_threshold:
                     matches.append(EntityMatch(
                         entity_id=entity_id,
                         name=canonical,

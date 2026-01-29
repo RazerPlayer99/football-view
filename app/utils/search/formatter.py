@@ -175,10 +175,10 @@ class ResponseFormatter:
         rows = [
             {
                 "rank": i + 1,
-                "player_id": s.get("player_id"),
-                "player_name": s.get("player_name"),
-                "team_id": s.get("team_id"),
-                "team_name": s.get("team_name"),
+                "player_id": s.get("id"),
+                "player_name": s.get("name"),
+                "team_id": s.get("team", {}).get("id"),
+                "team_name": s.get("team", {}).get("name"),
                 "goals": s.get("goals"),
                 "assists": s.get("assists"),
                 "appearances": s.get("appearances"),
@@ -213,10 +213,10 @@ class ResponseFormatter:
         rows = [
             {
                 "rank": i + 1,
-                "player_id": s.get("player_id"),
-                "player_name": s.get("player_name"),
-                "team_id": s.get("team_id"),
-                "team_name": s.get("team_name"),
+                "player_id": s.get("id"),
+                "player_name": s.get("name"),
+                "team_id": s.get("team", {}).get("id"),
+                "team_name": s.get("team", {}).get("name"),
                 "assists": s.get("assists"),
                 "goals": s.get("goals"),
                 "appearances": s.get("appearances"),
@@ -347,23 +347,40 @@ class ResponseFormatter:
         data = result.data
         player = data.get("player", {})
 
+        # Stats are in season_totals, not at top level
+        season_totals = player.get("season_totals", {})
+        goals = season_totals.get("goals", 0)
+        assists = season_totals.get("assists", 0)
+        appearances = season_totals.get("appearances", 0)
+        minutes = season_totals.get("minutes", 0)
+
+        # Extract team info from premier_league or first competition
+        pl_stats = player.get("premier_league") or {}
+        competitions = player.get("competitions", [])
+        first_comp = competitions[0] if competitions else {}
+
+        team_name = pl_stats.get("team") or first_comp.get("team") or ""
+        team_id = pl_stats.get("team_id") or first_comp.get("team_id")
+
+        # Add team info to player dict for display
+        player_with_team = dict(player)
+        player_with_team["team"] = {"name": team_name, "id": team_id}
+
         # Extract per-90 stats if available
         per_90 = {}
-        if player.get("minutes") and player.get("minutes") >= 450:
-            minutes = player.get("minutes", 0)
-            if minutes > 0:
-                per_90["goals_per90"] = round((player.get("goals", 0) / minutes) * 90, 2)
-                per_90["assists_per90"] = round((player.get("assists", 0) / minutes) * 90, 2)
+        if minutes and minutes >= 450:
+            per_90["goals_per90"] = round((goals / minutes) * 90, 2)
+            per_90["assists_per90"] = round((assists / minutes) * 90, 2)
 
         return SearchResponse(
             type="player_card",
             data=PlayerCardPayload(
-                player=player,
+                player=player_with_team,
                 season_stats={
-                    "goals": player.get("goals", 0),
-                    "assists": player.get("assists", 0),
-                    "appearances": player.get("appearances", 0),
-                    "minutes": player.get("minutes", 0),
+                    "goals": goals,
+                    "assists": assists,
+                    "appearances": appearances,
+                    "minutes": minutes,
                 },
                 recent_matches=data.get("recent_matches", []),
                 per_90_stats=per_90,
@@ -442,24 +459,37 @@ class ResponseFormatter:
                 ),
             ]
         else:
-            # Player comparison
+            # Player comparison - stats are in season_totals
+            def get_player_stat(entity, stat):
+                player = entity.get("player", {})
+                # Stats can be in season_totals or directly on player
+                totals = player.get("season_totals", {})
+                return totals.get(stat) or player.get(stat)
+
+            p1_goals = get_player_stat(entities[0], "goals") or 0
+            p2_goals = get_player_stat(entities[1], "goals") or 0
+            p1_assists = get_player_stat(entities[0], "assists") or 0
+            p2_assists = get_player_stat(entities[1], "assists") or 0
+            p1_apps = get_player_stat(entities[0], "appearances") or 0
+            p2_apps = get_player_stat(entities[1], "appearances") or 0
+
             metrics = [
                 ComparisonMetric(
                     metric_id="goals",
                     label="Goals",
-                    values=[e.get("player", {}).get("goals") for e in entities],
-                    winner_index=0 if (entities[0].get("player", {}).get("goals") or 0) > (entities[1].get("player", {}).get("goals") or 0) else 1,
+                    values=[p1_goals, p2_goals],
+                    winner_index=0 if p1_goals > p2_goals else (1 if p2_goals > p1_goals else None),
                 ),
                 ComparisonMetric(
                     metric_id="assists",
                     label="Assists",
-                    values=[e.get("player", {}).get("assists") for e in entities],
-                    winner_index=0 if (entities[0].get("player", {}).get("assists") or 0) > (entities[1].get("player", {}).get("assists") or 0) else 1,
+                    values=[p1_assists, p2_assists],
+                    winner_index=0 if p1_assists > p2_assists else (1 if p2_assists > p1_assists else None),
                 ),
                 ComparisonMetric(
                     metric_id="appearances",
                     label="Appearances",
-                    values=[e.get("player", {}).get("appearances") for e in entities],
+                    values=[p1_apps, p2_apps],
                 ),
             ]
 

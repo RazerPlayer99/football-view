@@ -25,6 +25,7 @@ from .formatter import format_response
 from .session import get_session_store
 from .rate_limiter import get_rate_limiter
 from .logger import log_query
+from .llm import get_llm_provider
 from .models.intent import IntentType
 from .models.responses import (
     SearchResponse,
@@ -91,8 +92,9 @@ def search(
     alias_db = get_alias_database()
     entities = extract_entities(normalized, for_matching, alias_db, session)
 
-    # Step 5: Classify intent
-    intent_result, _, _, _ = classify_intent(query, entities, session.to_dict())
+    # Step 5: Classify intent (with LLM fallback if available)
+    llm_provider = get_llm_provider()
+    intent_result, _, _, _ = classify_intent(query, entities, session.to_dict(), llm_provider)
 
     # Attach time modifier if found during normalization
     if time_modifier and not intent_result.time_modifier:

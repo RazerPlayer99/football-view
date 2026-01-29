@@ -5,7 +5,11 @@ import os
 import logging
 from typing import TYPE_CHECKING
 
+from dotenv import load_dotenv
 from .base import LLMProvider, NullLLMProvider
+
+# Ensure .env is loaded for API key access (override=True in case empty var exists)
+load_dotenv(override=True)
 
 if TYPE_CHECKING:
     from .claude import ClaudeProvider

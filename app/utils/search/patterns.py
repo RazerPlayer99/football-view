@@ -54,8 +54,10 @@ INTENT_PATTERNS: dict[IntentType, List[str]] = {
     IntentType.COMPARISON: [
         r"compare\s+(.+?)\s+(?:to|and|with|versus?)\s+(.+)",
         r"(.+?)\s+(?:versus?|vs\.?)\s+(.+?)\s+(?:comparison|stats?|statistics)",
+        r"(.+?)\s+(?:versus?|vs\.?)\s+(.+)",  # Simple "X vs Y" - check entity types later
         r"(.+?)\s+or\s+(.+?)\s*\?",  # "Salah or Haaland?"
         r"who\s*(?:'s|is)\s+better[,:]?\s+(.+?)\s+or\s+(.+)",
+        r"(?:is\s+)?(.+?)\s+better\s+than\s+(.+)",  # "is Salah better than Haaland"
     ],
 
     # Match lookup (team vs team, or "X's game/match")

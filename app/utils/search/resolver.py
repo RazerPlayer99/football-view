@@ -190,6 +190,10 @@ class Resolver:
         entities: ExtractionResult,
     ) -> Optional[DisambiguationPayload]:
         """Check if disambiguation is needed."""
+        # COMPARISON intent expects multiple entities - don't disambiguate
+        if intent.intent_type == IntentType.COMPARISON:
+            return None
+
         # Check for ambiguous teams
         if entities.has_ambiguous_teams:
             teams = sorted(entities.teams, key=lambda t: t.confidence, reverse=True)

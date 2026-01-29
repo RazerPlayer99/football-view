@@ -9,6 +9,8 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
 
+from app.utils.helpers import safe_lower
+
 
 class EventType(Enum):
     """Types of match events."""
@@ -44,23 +46,23 @@ class MatchEvent:
 
     @property
     def is_goal(self) -> bool:
-        return self.event_type.lower() == "goal"
+        return safe_lower(self.event_type) == "goal"
 
     @property
     def is_card(self) -> bool:
-        return self.event_type.lower() == "card"
+        return safe_lower(self.event_type) == "card"
 
     @property
     def is_yellow(self) -> bool:
-        return self.is_card and "yellow" in self.detail.lower()
+        return self.is_card and "yellow" in safe_lower(self.detail)
 
     @property
     def is_red(self) -> bool:
-        return self.is_card and "red" in self.detail.lower()
+        return self.is_card and "red" in safe_lower(self.detail)
 
     @property
     def is_substitution(self) -> bool:
-        return self.event_type.lower() == "subst"
+        return safe_lower(self.event_type) == "subst"
 
 
 @dataclass

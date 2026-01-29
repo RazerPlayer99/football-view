@@ -6,7 +6,19 @@ Validates that only expected fields are used.
 import logging
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+from app.utils.helpers import safe_lower, safe_str
+
+# Timezone for display (CST = UTC-6)
+CST = timezone(timedelta(hours=-6))
+
+
+def convert_utc_to_cst(dt: datetime) -> datetime:
+    """Convert UTC datetime to CST for display."""
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(CST)
 
 logger = logging.getLogger("view_models")
 
@@ -215,15 +227,16 @@ class MatchCardView:
         home_team = data.get("home_team", {})
         away_team = data.get("away_team", {})
 
-        # Parse date
+        # Parse date and convert to CST
         date_str = data.get("date", "")
         date_formatted = ""
         time_formatted = ""
         if date_str:
             try:
                 dt = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
-                date_formatted = dt.strftime("%a, %b %d")
-                time_formatted = dt.strftime("%H:%M")
+                dt_cst = convert_utc_to_cst(dt)
+                date_formatted = dt_cst.strftime("%a, %b %d")
+                time_formatted = dt_cst.strftime("%H:%M CST")
             except:
                 date_formatted = date_str[:10] if len(date_str) > 10 else date_str
                 time_formatted = ""
@@ -475,31 +488,32 @@ class MatchEventView:
 
     @property
     def is_goal(self) -> bool:
-        return self.event_type.lower() == "goal"
+        return safe_lower(self.event_type) == "goal"
 
     @property
     def is_card(self) -> bool:
-        return self.event_type.lower() == "card"
+        return safe_lower(self.event_type) == "card"
 
     @property
     def is_yellow(self) -> bool:
-        return self.is_card and "yellow" in self.detail.lower()
+        return self.is_card and "yellow" in safe_lower(self.detail)
 
     @property
     def is_red(self) -> bool:
-        return self.is_card and "red" in self.detail.lower()
+        return self.is_card and "red" in safe_lower(self.detail)
 
     @property
     def is_substitution(self) -> bool:
-        return self.event_type.lower() == "subst"
+        return safe_lower(self.event_type) == "subst"
 
     @property
     def icon_html(self) -> str:
         """Get HTML icon for event type."""
+        detail_lower = safe_lower(self.detail)
         if self.is_goal:
-            if "own" in self.detail.lower():
+            if "own" in detail_lower:
                 return '<span class="event-icon event-own-goal">OG</span>'
-            elif "penalty" in self.detail.lower():
+            elif "penalty" in detail_lower:
                 return '<span class="event-icon event-goal">P</span>'
             return '<span class="event-icon event-goal">G</span>'
         elif self.is_yellow:
@@ -512,15 +526,32 @@ class MatchEventView:
 
     def to_timeline_html(self) -> str:
         """Render as timeline event."""
-        assist_text = f" (assist: {self.assist_name})" if self.assist_name else ""
         side_class = "event-home" if self.is_home else "event-away"
+        align_class = "event-align-left" if self.is_home else "event-align-right"
+
+        # Build player display based on event type
+        if self.is_goal:
+            # Goals: show team abbreviation, scorer, and assist (if different player)
+            team_abbr = safe_str(self.team_name)[:3].upper() if self.team_name else ""
+            assist_text = ""
+            if self.assist_name and self.assist_name != self.player_name:
+                assist_text = f' <span class="assist">(assist: {self.assist_name})</span>'
+            player_html = f'<span class="team-abbr">[{team_abbr}]</span> <a href="/ui/players/{self.player_id}">{self.player_name}</a>{assist_text}'
+        elif self.is_substitution:
+            # Substitutions: assist_name is the player coming IN, player_name is going OUT
+            player_out = self.player_name or "Unknown"
+            player_in = self.assist_name or "Unknown"
+            player_html = f'<span class="sub-out">{player_out}</span> ↔ <span class="sub-in">{player_in}</span>'
+        else:
+            # Cards and other events: just show player name
+            player_html = f'<a href="/ui/players/{self.player_id}">{self.player_name}</a>'
 
         return f"""
-        <div class="timeline-event {side_class}">
+        <div class="timeline-event {side_class} {align_class}">
             <span class="event-time">{self.time_display}</span>
             {self.icon_html}
             <span class="event-player">
-                <a href="/ui/players/{self.player_id}">{self.player_name}</a>{assist_text}
+                {player_html}
             </span>
         </div>
         """
@@ -544,12 +575,12 @@ class LineupPlayerView:
 
     def to_html(self) -> str:
         """Render as lineup list item."""
-        pos_class = f"pos-{self.position.lower()}" if self.position else ""
+        pos_class = f"pos-{safe_lower(self.position)}" if self.position else ""
         return f"""
         <div class="lineup-player {pos_class}">
             <span class="player-number">{self.number or ''}</span>
             <a href="/ui/players/{self.id}" class="player-name">{self.name}</a>
-            <span class="player-position">{self.position}</span>
+            <span class="player-position">{self.position or ''}</span>
         </div>
         """
 
@@ -671,17 +702,19 @@ class MatchStatView:
         return 100 - self.home_percent
 
     def to_stat_bar_html(self) -> str:
-        """Render as comparison bar."""
+        """Render as comparison bar with label above."""
         return f"""
-        <div class="stat-row">
-            <span class="stat-value stat-home">{self.home_display}</span>
-            <div class="stat-bar-container">
-                <div class="stat-bar stat-bar-home" style="width: {self.home_percent}%"></div>
-                <div class="stat-bar stat-bar-away" style="width: {self.away_percent}%"></div>
+        <div class="stat-item">
+            <div class="stat-label">{self.label}</div>
+            <div class="stat-row">
+                <span class="stat-value stat-home">{self.home_display}</span>
+                <div class="stat-bar-container">
+                    <div class="stat-bar stat-bar-home" style="width: {self.home_percent}%"></div>
+                    <div class="stat-bar stat-bar-away" style="width: {self.away_percent}%"></div>
+                </div>
+                <span class="stat-value stat-away">{self.away_display}</span>
             </div>
-            <span class="stat-value stat-away">{self.away_display}</span>
         </div>
-        <div class="stat-label">{self.label}</div>
         """
 
 
@@ -734,15 +767,16 @@ class MatchDetailView:
     @classmethod
     def from_live_match_data(cls, data) -> "MatchDetailView":
         """Create from LiveMatchData object."""
-        # Parse date
+        # Parse date and convert to CST
         date_str = data.date or ""
         date_formatted = ""
         time_formatted = ""
         if date_str:
             try:
                 dt = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
-                date_formatted = dt.strftime("%a, %b %d, %Y")
-                time_formatted = dt.strftime("%H:%M")
+                dt_cst = convert_utc_to_cst(dt)
+                date_formatted = dt_cst.strftime("%a, %b %d, %Y")
+                time_formatted = dt_cst.strftime("%H:%M CST")
             except:
                 date_formatted = date_str[:10] if len(date_str) > 10 else date_str
 
@@ -868,9 +902,11 @@ class MatchDetailView:
 
     @property
     def status_badge_html(self) -> str:
-        """Status badge HTML."""
+        """Status badge HTML with live clock for live matches."""
         if self.is_live:
-            return f'<span class="status-badge status-live">{self.elapsed_display} LIVE</span>'
+            # Live clock shows mm:ss format, updated by JavaScript
+            elapsed = self.elapsed if self.elapsed is not None else 0
+            return f'<span class="status-badge status-live"><span id="live-clock" data-elapsed="{elapsed}">{elapsed}:00</span></span>'
         elif self.is_finished:
             return '<span class="status-badge status-finished">FT</span>'
         else:
