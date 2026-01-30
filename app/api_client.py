@@ -33,12 +33,25 @@ logger = logging.getLogger("api_client")
 
 API_KEY = os.getenv("API_FOOTBALL_KEY")
 BASE_URL = "https://v3.football.api-sports.io"
+# Top 5 European Leagues
 PREMIER_LEAGUE_ID = 39
+LA_LIGA_ID = 140
+BUNDESLIGA_ID = 78
+SERIE_A_ID = 135
+LIGUE_1_ID = 61
+
+# European Competitions
 CHAMPIONS_LEAGUE_ID = 2
 
 # All supported leagues for multi-league views
 SUPPORTED_LEAGUES = {
+    # Top 5 European Leagues
     PREMIER_LEAGUE_ID: "Premier League",
+    LA_LIGA_ID: "La Liga",
+    BUNDESLIGA_ID: "Bundesliga",
+    SERIE_A_ID: "Serie A",
+    LIGUE_1_ID: "Ligue 1",
+    # European Competitions
     CHAMPIONS_LEAGUE_ID: "Champions League",
 }
 

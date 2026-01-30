@@ -3,10 +3,12 @@ Football View (Pre-Alpha) - Main FastAPI Application
 All data fetched LIVE from API-Football - no local database
 """
 from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
 from datetime import datetime
+from pathlib import Path
 
 from app import api_client
 from app.utils.search.pipeline import search as unified_search
@@ -18,7 +20,7 @@ from app.view_models import (
 from config.settings import settings
 
 # Version tracking
-APP_VERSION = "v0.2.0"
+APP_VERSION = "v0.2.2"
 APP_NAME = "Football View"
 APP_STAGE = "Pre-Alpha"
 
@@ -110,6 +112,97 @@ def version_info():
 def cache_stats():
     """Get cache statistics."""
     return api_client.get_cache_stats()
+
+
+@app.get("/api/analytics")
+def search_analytics():
+    """
+    Get search analytics summary.
+
+    Shows failed queries, low confidence matches, etc.
+    Use this to identify areas for improvement.
+    """
+    from app.utils.search.analytics import get_analytics
+    analytics = get_analytics()
+    return analytics.get_summary()
+
+
+@app.get("/api/analytics/failed")
+def failed_searches(min_count: int = Query(1, description="Minimum failure count")):
+    """Get failed search queries for review."""
+    from app.utils.search.analytics import get_analytics
+    analytics = get_analytics()
+    return {"failed_queries": analytics.get_failed_queries(min_count=min_count)}
+
+
+@app.get("/api/analytics/low-confidence")
+def low_confidence_searches(max_confidence: float = Query(0.85, description="Maximum confidence")):
+    """Get low confidence matches for review."""
+    from app.utils.search.analytics import get_analytics
+    analytics = get_analytics()
+    return {"low_confidence_queries": analytics.get_low_confidence_queries(max_confidence=max_confidence)}
+
+
+@app.get("/api/analytics/export")
+def export_analytics():
+    """Export all analytics data for offline review."""
+    from app.utils.search.analytics import get_analytics
+    analytics = get_analytics()
+    return analytics.export_for_review()
+
+
+# =============================================================================
+# DASHBOARD API
+# =============================================================================
+
+@app.get("/api/dashboard")
+def api_dashboard(
+    date: Optional[str] = Query(None, description="Date in YYYY-MM-DD format, defaults to today"),
+    season: int = Query(default=2025, description="Season year"),
+):
+    """
+    Get dashboard data: matches for a specific date across all leagues.
+
+    Returns matches grouped by competition for the landing page.
+    """
+    from datetime import datetime, timedelta
+
+    # Parse date or use today
+    if date:
+        try:
+            target_date = datetime.strptime(date, "%Y-%m-%d").date()
+        except ValueError:
+            target_date = datetime.now().date()
+    else:
+        target_date = datetime.now().date()
+
+    date_str = target_date.strftime("%Y-%m-%d")
+
+    try:
+        # Fetch matches for all supported leagues on this date
+        result = api_client.get_matches_multi_league(
+            season=season,
+            from_date=date_str,
+            to_date=date_str,
+            limit_per_league=20,
+        )
+
+        return {
+            "date": date_str,
+            "season": season,
+            "by_competition": result.get("by_competition", {}),
+            "all_matches": result.get("all_matches", []),
+            "total_matches": len(result.get("all_matches", [])),
+        }
+    except Exception as e:
+        return {
+            "date": date_str,
+            "season": season,
+            "by_competition": {},
+            "all_matches": [],
+            "total_matches": 0,
+            "error": str(e),
+        }
 
 
 # =============================================================================
@@ -216,16 +309,17 @@ def api_search_suggest(
     limit: int = Query(8, ge=1, le=20, description="Max suggestions"),
 ):
     """
-    Autocomplete suggestions endpoint.
+    Autocomplete suggestions endpoint with token-based matching.
 
     Returns quick suggestions for players and teams based on partial query.
-    Searches both aliases database and API player search.
+    Uses forgiving token matching - tolerates typos and partial matches.
 
-    Example: /api/search/suggest?q=ses
-    Returns: {"suggestions": [{"name": "Benjamin Sesko", "type": "player", ...}]}
+    Example: /api/search/suggest?q=sho
+    Returns: {"suggestions": [{"name": "Luke Shaw", "type": "player", ...}]}
     """
     from app.utils.search.entities import (
-        AliasDatabase, fuzzy_match, get_fuzzy_threshold, normalize_for_matching
+        AliasDatabase, fuzzy_match, get_fuzzy_threshold, normalize_for_matching,
+        tokenize_query, get_entity_tokens, multi_token_match_score, token_match_score
     )
 
     query = q.strip().lower()
@@ -234,32 +328,39 @@ def api_search_suggest(
 
     # Load alias database
     alias_db = AliasDatabase()
-    threshold = get_fuzzy_threshold(query)
+    threshold = max(0.50, get_fuzzy_threshold(query) - 0.10)  # More lenient for autocomplete
 
-    # Search players in aliases
+    # Tokenize query for smarter matching
+    tokens = get_entity_tokens(query) or [query]  # Fallback to full query if no entity tokens
+
+    # Search players in aliases with token-based matching
     for player_id, player_data in alias_db.players.items():
         canonical = player_data["canonical"]
-        best_match = 0.0
+        aliases = player_data.get("aliases", [])
 
-        # Check canonical name
-        ratio = fuzzy_match(query, canonical)
-        best_match = max(best_match, ratio)
+        # Use multi-token matching (forgiving)
+        best_match = multi_token_match_score(tokens, canonical, aliases)
 
-        # PRIORITY: Check last name match (for "Shaw" -> "Luke Shaw")
-        name_parts = canonical.lower().split()
-        if len(name_parts) > 1:
-            last_name = name_parts[-1]
-            if query == last_name:
-                best_match = max(best_match, 0.95)  # High confidence for exact last name
-            elif last_name.startswith(query) and len(query) >= 3:
+        # BONUS: Direct containment check (typing partial names)
+        canonical_lower = canonical.lower()
+        for token in tokens:
+            if token in canonical_lower:
                 best_match = max(best_match, 0.85)
+            # Check last name match specifically
+            name_parts = canonical_lower.split()
+            if len(name_parts) > 1:
+                last_name = name_parts[-1]
+                if token == last_name:
+                    best_match = max(best_match, 0.95)
+                elif last_name.startswith(token) and len(token) >= 2:
+                    best_match = max(best_match, 0.80)
 
-        # Also check aliases
-        for alias in player_data.get("aliases", []):
-            alias_ratio = fuzzy_match(query, alias)
-            if query in alias.lower():
-                alias_ratio = max(alias_ratio, 0.90)  # Boost for containment
-            best_match = max(best_match, alias_ratio)
+        # Check aliases for containment
+        for alias in aliases:
+            alias_lower = alias.lower()
+            for token in tokens:
+                if token in alias_lower or alias_lower.startswith(token):
+                    best_match = max(best_match, 0.85)
 
         if best_match >= threshold and f"player_{player_id}" not in seen_ids:
             suggestions.append({
@@ -271,31 +372,35 @@ def api_search_suggest(
             })
             seen_ids.add(f"player_{player_id}")
 
-    # Search teams in aliases
+    # Search teams in aliases with token-based matching
     for team_id, team_data in alias_db.teams.items():
         canonical = team_data["canonical"]
-        ratio = fuzzy_match(query, canonical)
-        if ratio >= threshold:
+        aliases = team_data.get("aliases", [])
+
+        # Use multi-token matching
+        best_match = multi_token_match_score(tokens, canonical, aliases)
+
+        # BONUS: Direct containment check
+        canonical_lower = canonical.lower()
+        for token in tokens:
+            if token in canonical_lower:
+                best_match = max(best_match, 0.85)
+
+        # Check aliases for containment
+        for alias in aliases:
+            alias_lower = alias.lower()
+            for token in tokens:
+                if token in alias_lower or alias_lower.startswith(token):
+                    best_match = max(best_match, 0.85)
+
+        if best_match >= threshold and f"team_{team_id}" not in seen_ids:
             suggestions.append({
                 "id": int(team_id),
                 "name": canonical,
                 "type": "team",
-                "confidence": round(ratio, 3),
+                "confidence": round(best_match, 3),
             })
             seen_ids.add(f"team_{team_id}")
-
-        # Check aliases
-        for alias in team_data.get("aliases", []):
-            if query in alias.lower() or fuzzy_match(query, alias) >= threshold:
-                if f"team_{team_id}" not in seen_ids:
-                    suggestions.append({
-                        "id": int(team_id),
-                        "name": canonical,
-                        "type": "team",
-                        "confidence": round(fuzzy_match(query, alias), 3),
-                    })
-                    seen_ids.add(f"team_{team_id}")
-                break
 
     # Also search API for players (catches players not in aliases)
     if len(query) >= 3:
@@ -306,14 +411,19 @@ def api_search_suggest(
             for p in api_players:
                 player_id = p.get("id")
                 if f"player_{player_id}" not in seen_ids:
+                    # Score API results using token matching too
+                    api_name = p.get("name", "")
+                    api_score = multi_token_match_score(tokens, api_name, [])
+                    api_score = max(api_score, 0.75)  # Minimum score for API matches
+
                     suggestions.append({
                         "id": player_id,
-                        "name": p.get("name"),
+                        "name": api_name,
                         "type": "player",
                         "team": p.get("team", {}).get("name"),
                         "team_id": p.get("team", {}).get("id"),
                         "photo": p.get("photo"),
-                        "confidence": 0.85,  # API match
+                        "confidence": round(api_score, 3),
                     })
                     seen_ids.add(f"player_{player_id}")
         except Exception:
@@ -328,12 +438,23 @@ def api_search_suggest(
 
 @app.get("/", response_class=HTMLResponse)
 def home():
-    """Simple welcome page."""
+    """Dashboard landing page with matches and league stats."""
+    template_path = Path(__file__).parent / "templates" / "dashboard.html"
+    if template_path.exists():
+        return HTMLResponse(content=template_path.read_text(encoding="utf-8"))
+    else:
+        # Fallback if template doesn't exist
+        return HTMLResponse(content="<h1>Dashboard template not found</h1>", status_code=500)
+
+
+@app.get("/old-home", response_class=HTMLResponse)
+def old_home():
+    """Legacy simple welcome page with API links."""
     html_content = """
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Football View</title>
+        <title>Football View - Developer</title>
         <style>
             body {
                 font-family: Arial, sans-serif;
@@ -368,6 +489,7 @@ def home():
             <p class="status">✓ Server is running - fetching live data from API-Football</p>
             <h2>UI Pages:</h2>
             <ul>
+                <li><strong><a href="/">/ - Dashboard (NEW)</a></strong></li>
                 <li><strong><a href="/ui/search">/ui/search</a> - Search Teams & Players</strong></li>
                 <li><a href="/ui/standings">/ui/standings</a> - League Standings Table</li>
                 <li><a href="/ui/matches">/ui/matches</a> - Match Results</li>
@@ -377,6 +499,7 @@ def home():
             <ul>
                 <li><a href="/health">/health</a> - Health check</li>
                 <li><a href="/docs">/docs</a> - Interactive API documentation</li>
+                <li><a href="/api/dashboard">/api/dashboard</a> - Dashboard data (JSON)</li>
                 <li><a href="/teams?season=2025">/teams</a> - All Premier League teams (JSON)</li>
                 <li><a href="/standings?season=2025">/standings</a> - League standings (JSON)</li>
                 <li><a href="/matches?season=2025&limit=10">/matches</a> - Matches (JSON)</li>
@@ -391,21 +514,28 @@ def home():
 
 
 # ===== STANDINGS =====
+# NOTE: Standalone standings page is disabled. Standings are now accessed
+# through the search system (e.g., "premier league standings", "la liga table")
+# which returns league-specific results with proper context.
 
 @app.get("/standings")
 def get_standings(
     season: str = Query(default="2025", description="Season year (e.g., '2025' for 2025-26)"),
+    league: int = Query(default=39, description="League ID (39=PL, 140=LaLiga, 78=Bundesliga, 135=SerieA, 61=Ligue1)"),
     forceRefresh: bool = Query(default=False, description="Bypass cache and fetch fresh data"),
 ):
     """
-    Get live Premier League standings.
+    Get live standings for any supported league.
     Returns scope, season, league_id, standings list, and cache metadata.
+
+    This endpoint is primarily used by the search system. For direct access,
+    use the search: "premier league standings", "la liga table", etc.
     """
     try:
         season_year = parse_season(season)
-        result = api_client.get_standings(season_year, force_refresh=forceRefresh)
+        result = api_client.get_standings(season_year, league_id=league, force_refresh=forceRefresh)
         if not result or not result.get("standings"):
-            raise HTTPException(status_code=404, detail=f"No standings found for season {season}")
+            raise HTTPException(status_code=404, detail=f"No standings found for season {season}, league {league}")
         # Add cache metadata
         meta = api_client.get_last_cache_meta()
         if meta:
@@ -501,12 +631,13 @@ def get_match(match_id: int):
 @app.get("/players/top-scorers")
 def get_top_scorers(
     season: str = Query(default="2025", description="Season year"),
+    league: int = Query(default=39, description="League ID (39=PL, 140=LaLiga, 78=Bundesliga, 135=SerieA, 61=Ligue1)"),
     limit: int = Query(default=20, description="Number of top scorers"),
 ):
-    """Get top scorers for a season."""
+    """Get top scorers for a season and league."""
     try:
         season_year = parse_season(season)
-        result = api_client.get_top_scorers(season_year, limit=limit)
+        result = api_client.get_top_scorers(season_year, league_id=league, limit=limit)
         if not result or not result.get("players"):
             raise HTTPException(status_code=404, detail=f"No players found for season {season}")
         result["count"] = len(result.get("players", []))
@@ -606,8 +737,18 @@ def search(
 # ===== UI PAGES =====
 
 @app.get("/ui/search", response_class=HTMLResponse)
-def search_ui():
-    """Search UI page with unified search support."""
+def search_ui_v2():
+    """Search UI page - redesigned with FotMob/Apple aesthetics."""
+    template_path = Path(__file__).parent / "templates" / "search_v2.html"
+    if template_path.exists():
+        return HTMLResponse(content=template_path.read_text(encoding="utf-8"))
+    # Fallback to old search if template not found
+    return search_ui_legacy()
+
+
+@app.get("/ui/search-legacy", response_class=HTMLResponse)
+def search_ui_legacy():
+    """Legacy search UI page (old design)."""
     html_content = """
     <!DOCTYPE html>
     <html>
@@ -906,6 +1047,13 @@ def search_ui():
             const loadingDiv = document.getElementById('loading');
 
             async function doSearch(query) {
+                // Always hide dropdown when searching
+                const dd = document.getElementById('autocomplete-dropdown');
+                if (dd) {
+                    dd.classList.remove('active');
+                    dd.innerHTML = '';
+                }
+
                 query = query || searchInput.value.trim();
                 if (query.length < 2) {
                     resultsDiv.innerHTML = '<p class="no-results">Please enter at least 2 characters</p>';
@@ -1131,7 +1279,12 @@ def search_ui():
             function selectSuggestion(index) {
                 const s = suggestions[index];
                 if (s) {
-                    hideDropdown();
+                    // Hide dropdown immediately and clear state
+                    dropdown.classList.remove('active');
+                    dropdown.innerHTML = '';
+                    selectedIndex = -1;
+                    suggestions = [];
+
                     // Navigate directly to entity page instead of searching
                     if (s.id && s.type) {
                         const entityPath = s.type === 'player' ? 'players' : 'teams';
@@ -1146,6 +1299,7 @@ def search_ui():
 
             function hideDropdown() {
                 dropdown.classList.remove('active');
+                dropdown.innerHTML = '';  // Clear content to prevent stale items
                 selectedIndex = -1;
                 suggestions = [];
             }
@@ -1158,19 +1312,22 @@ def search_ui():
             });
 
             searchInput.addEventListener('keydown', (e) => {
-                if (!dropdown.classList.contains('active')) return;
-
-                if (e.key === 'ArrowDown') {
+                if (e.key === 'ArrowDown' && dropdown.classList.contains('active')) {
                     e.preventDefault();
                     selectedIndex = Math.min(selectedIndex + 1, suggestions.length - 1);
                     renderSuggestions();
-                } else if (e.key === 'ArrowUp') {
+                } else if (e.key === 'ArrowUp' && dropdown.classList.contains('active')) {
                     e.preventDefault();
                     selectedIndex = Math.max(selectedIndex - 1, -1);
                     renderSuggestions();
-                } else if (e.key === 'Enter' && selectedIndex >= 0) {
+                } else if (e.key === 'Enter') {
                     e.preventDefault();
-                    selectSuggestion(selectedIndex);
+                    hideDropdown();  // Always hide dropdown on Enter
+                    if (selectedIndex >= 0 && suggestions.length > 0) {
+                        selectSuggestion(selectedIndex);
+                    } else {
+                        doSearch();
+                    }
                 } else if (e.key === 'Escape') {
                     hideDropdown();
                 }
@@ -1183,10 +1340,17 @@ def search_ui():
                 }
             });
 
-            searchBtn.addEventListener('click', () => { hideDropdown(); doSearch(); });
-            searchInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && selectedIndex < 0) { hideDropdown(); doSearch(); }
+            // Also hide on blur (when input loses focus)
+            searchInput.addEventListener('blur', (e) => {
+                // Delay to allow click on dropdown item to register
+                setTimeout(() => {
+                    if (!dropdown.contains(document.activeElement)) {
+                        hideDropdown();
+                    }
+                }, 150);
             });
+
+            searchBtn.addEventListener('click', () => { hideDropdown(); doSearch(); });
         </script>
     </body>
     </html>
@@ -2106,194 +2270,90 @@ def player_detail_ui(player_id: int, season: str = Query(default=None)):
 
 @app.get("/ui/standings", response_class=HTMLResponse)
 def standings_ui(season: str = Query(default="2025", description="Season year")):
-    """Standings UI page with proper table rendering."""
-    try:
-        season_year = parse_season(season)
-        result = api_client.get_standings(season_year)
-        standings_data = result.get("standings", [])
+    """
+    Standings UI page - DISABLED.
+    Standings are now accessed through the search system for each specific league.
+    Use search queries like: "premier league standings", "la liga table", etc.
+    """
+    # Return a redirect/info page pointing users to search
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Standings - Football View</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                max-width: 800px;
+                margin: 100px auto;
+                padding: 20px;
+                text-align: center;
+                background-color: #f5f5f5;
+            }
+            .container {
+                background: white;
+                padding: 40px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            }
+            h1 { color: #2c3e50; margin-bottom: 20px; }
+            p { color: #666; font-size: 16px; line-height: 1.6; }
+            .search-examples {
+                background: #f8f9fa;
+                padding: 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+                text-align: left;
+            }
+            .search-examples code {
+                background: #e9ecef;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-family: monospace;
+            }
+            .search-link {
+                display: inline-block;
+                margin-top: 20px;
+                padding: 12px 24px;
+                background: #3498db;
+                color: white;
+                text-decoration: none;
+                border-radius: 6px;
+                font-weight: bold;
+            }
+            .search-link:hover { background: #2980b9; }
+            .back-link { margin-top: 20px; }
+            .back-link a { color: #3498db; text-decoration: none; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🏆 League Standings</h1>
+            <p>The standalone standings page has been redesigned!</p>
+            <p>Standings are now accessed through our <strong>unified search system</strong>,
+               allowing you to view any league's table with a simple search.</p>
 
-        # Convert to view models
-        standings = standings_to_view_models(standings_data)
-
-        # Build table rows
-        rows_html = ""
-        for standing in standings:
-            rows_html += standing.to_html_row()
-
-        if not rows_html:
-            rows_html = "<tr><td colspan='11' class='no-data'>No standings data available</td></tr>"
-
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Standings - Football View</title>
-            <style>
-                * {{ box-sizing: border-box; }}
-                body {{
-                    font-family: Arial, sans-serif;
-                    max-width: 1100px;
-                    margin: 0 auto;
-                    padding: 20px;
-                    background-color: #f5f5f5;
-                }}
-                .container {{
-                    background: white;
-                    padding: 30px;
-                    border-radius: 8px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                }}
-                h1 {{ color: #2c3e50; margin-bottom: 5px; }}
-                .live-badge {{
-                    background: #e74c3c;
-                    color: white;
-                    padding: 4px 8px;
-                    border-radius: 4px;
-                    font-size: 12px;
-                }}
-                .subtitle {{
-                    color: #666;
-                    margin-bottom: 20px;
-                }}
-                .back-link {{ margin-bottom: 20px; }}
-                .back-link a {{ color: #3498db; text-decoration: none; }}
-                table {{
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-top: 20px;
-                    font-size: 14px;
-                }}
-                th, td {{
-                    padding: 10px 8px;
-                    text-align: center;
-                    border-bottom: 1px solid #eee;
-                }}
-                th {{
-                    background: #f8f9fa;
-                    font-weight: bold;
-                    color: #2c3e50;
-                    font-size: 12px;
-                    text-transform: uppercase;
-                }}
-                tr:hover {{ background: #f9f9f9; }}
-                .pos-cell {{
-                    font-weight: bold;
-                    width: 40px;
-                }}
-                .team-cell {{
-                    text-align: left;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                }}
-                .team-mini-logo {{
-                    width: 24px;
-                    height: 24px;
-                    object-fit: contain;
-                }}
-                .pts-cell {{
-                    font-size: 16px;
-                    color: #2c3e50;
-                }}
-                .gd-cell {{
-                    color: #666;
-                }}
-                .form-cell {{
-                    display: flex;
-                    gap: 3px;
-                    justify-content: center;
-                }}
-                .form-badge {{
-                    width: 20px;
-                    height: 20px;
-                    border-radius: 3px;
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 11px;
-                    font-weight: bold;
-                    color: white;
-                }}
-                .form-win {{ background: #27ae60; }}
-                .form-draw {{ background: #95a5a6; }}
-                .form-loss {{ background: #e74c3c; }}
-                .pos-ucl {{ background: #e8f5e9; }}
-                .pos-uel {{ background: #fff3e0; }}
-                .pos-rel {{ background: #ffebee; }}
-                a {{ color: #3498db; text-decoration: none; }}
-                a:hover {{ text-decoration: underline; }}
-                .legend {{
-                    display: flex;
-                    gap: 20px;
-                    margin-top: 20px;
-                    font-size: 12px;
-                    color: #666;
-                }}
-                .legend-item {{
-                    display: flex;
-                    align-items: center;
-                    gap: 5px;
-                }}
-                .legend-box {{
-                    width: 12px;
-                    height: 12px;
-                    border-radius: 2px;
-                }}
-                .no-data {{
-                    text-align: center;
-                    color: #999;
-                    font-style: italic;
-                }}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="back-link"><a href="/">← Back to Home</a></div>
-                <h1>Premier League Standings <span class="live-badge">LIVE</span></h1>
-                <p class="subtitle">Season {season_year}-{str(season_year + 1)[-2:]}</p>
-
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Pos</th>
-                            <th style="text-align:left;">Team</th>
-                            <th>P</th>
-                            <th>W</th>
-                            <th>D</th>
-                            <th>L</th>
-                            <th>GF</th>
-                            <th>GA</th>
-                            <th>GD</th>
-                            <th>Pts</th>
-                            <th>Form</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {rows_html}
-                    </tbody>
-                </table>
-
-                <div class="legend">
-                    <div class="legend-item">
-                        <div class="legend-box" style="background:#e8f5e9;"></div>
-                        <span>Champions League</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-box" style="background:#fff3e0;"></div>
-                        <span>Europa League</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-box" style="background:#ffebee;"></div>
-                        <span>Relegation</span>
-                    </div>
-                </div>
+            <div class="search-examples">
+                <p><strong>Try searching for:</strong></p>
+                <ul>
+                    <li><code>premier league standings</code> - English Premier League</li>
+                    <li><code>la liga table</code> - Spanish La Liga</li>
+                    <li><code>bundesliga standings</code> - German Bundesliga</li>
+                    <li><code>serie a table</code> - Italian Serie A</li>
+                    <li><code>ligue 1 standings</code> - French Ligue 1</li>
+                </ul>
             </div>
-        </body>
-        </html>
-        """
-        return html_content
-    except Exception as e:
-        return HTMLResponse(content=f"<h1>Error: {e}</h1>", status_code=500)
+
+            <a href="/" class="search-link">Go to Search →</a>
+
+            <div class="back-link">
+                <a href="/">← Back to Home</a>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content)
 
 
 @app.get("/ui/matches", response_class=HTMLResponse)

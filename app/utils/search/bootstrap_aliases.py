@@ -3,13 +3,16 @@ Bootstrap script to generate aliases.json from API data and curated seed file.
 
 Usage:
     python -m app.utils.search.bootstrap_aliases
+    python -m app.utils.search.bootstrap_aliases --with-players
+    python -m app.utils.search.bootstrap_aliases --with-players --player-limit 50
 
 This script:
 1. Loads the curated seed file (data/aliases_seed.json)
 2. Fetches standings from all supported leagues to get team names/IDs
-3. Optionally fetches player data for each team (expensive, use --with-players)
-4. Merges API data with curated aliases
-5. Writes the final aliases.json
+3. Optionally fetches player data for each team (use --with-players)
+4. AUTO-GENERATES aliases for all players/teams using AI matching logic
+5. Merges API data with curated aliases
+6. Writes the final aliases.json
 
 Run periodically (e.g., start of season) to update the alias database.
 """
@@ -17,14 +20,134 @@ Run periodically (e.g., start of season) to update the alias database.
 import argparse
 import json
 import os
+import re
 import sys
+import unicodedata
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Set
 
 # Add project root to path for imports
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
+
+
+# =============================================================================
+# AUTO-ALIAS GENERATION (duplicated from entities.py to avoid circular imports)
+# =============================================================================
+
+def normalize_unicode(text: str) -> str:
+    """Remove diacritics: Šeško → sesko, Müller → muller"""
+    if not text:
+        return ""
+    text = unicodedata.normalize("NFKD", text)
+    text = "".join(ch for ch in text if not unicodedata.combining(ch))
+    return text.lower()
+
+
+def generate_person_aliases(full_name: str) -> Set[str]:
+    """
+    Auto-generate common aliases for a person's name.
+
+    "Nick Woltemade" generates:
+        - nick woltemade (full)
+        - woltemade (last name)
+        - n woltemade (initial + last)
+        - n. woltemade (initial with dot)
+
+    "Bruno Fernandes" generates:
+        - bruno fernandes
+        - fernandes
+        - b fernandes / b. fernandes
+    """
+    name = normalize_unicode(full_name)
+    name = re.sub(r"[^a-z\s\-']", "", name)  # Keep letters, spaces, hyphens, apostrophes
+    parts = [p for p in name.split() if p]
+
+    if not parts:
+        return set()
+
+    aliases = set()
+    aliases.add(name)  # Full normalized name
+
+    if len(parts) >= 2:
+        first = parts[0]
+        last = parts[-1]
+
+        # Last name only (most common search pattern)
+        aliases.add(last)
+
+        # Initial + last name (API format: "B. Fernandes")
+        aliases.add(f"{first[0]} {last}")
+        aliases.add(f"{first[0]}. {last}")
+
+        # First + last (skip middle names)
+        if len(parts) > 2:
+            aliases.add(f"{first} {last}")
+
+    # Single name (e.g., just "Neymar", "Ronaldinho")
+    if len(parts) == 1:
+        aliases.add(parts[0])
+
+    return aliases
+
+
+def generate_team_aliases(team_name: str) -> Set[str]:
+    """
+    Auto-generate common aliases for a team name.
+
+    "Manchester United" generates:
+        - manchester united
+
+    "FC Barcelona" generates:
+        - fc barcelona
+        - barcelona (without fc/cf/sc prefixes)
+    """
+    name = normalize_unicode(team_name)
+    name = re.sub(r"[^a-z0-9\s\-]", "", name)
+    parts = [p for p in name.split() if p]
+
+    if not parts:
+        return set()
+
+    aliases = set()
+    aliases.add(name)  # Full normalized name
+
+    # Remove common club markers
+    club_markers = {"fc", "cf", "sc", "ac", "cd", "afc", "fk", "sk"}
+    core = [p for p in parts if p not in club_markers]
+
+    if core and core != parts:
+        aliases.add(" ".join(core))
+
+    return aliases
+
+
+def expand_api_name(api_name: str) -> Set[str]:
+    """
+    Expand API-style names (initial + last) to searchable forms.
+
+    "N. Woltemade" -> {"n woltemade", "n. woltemade", "woltemade"}
+    """
+    name = normalize_unicode(api_name)
+    parts = name.split()
+
+    if not parts:
+        return set()
+
+    aliases = set()
+    aliases.add(name.replace(".", "").strip())
+    aliases.add(name)
+
+    if len(parts) >= 2:
+        first = parts[0].replace(".", "")
+        if len(first) <= 2:
+            last = parts[-1]
+            aliases.add(last)
+            aliases.add(f"{first} {last}")
+            aliases.add(f"{first}. {last}")
+
+    return aliases
 
 
 def load_seed_file(seed_path: Path) -> Dict[str, Any]:
@@ -45,9 +168,9 @@ def load_seed_file(seed_path: Path) -> Dict[str, Any]:
 
 def fetch_teams_from_standings(league_ids: List[int], season: int) -> Dict[str, Dict[str, Any]]:
     """
-    Fetch all teams from standings for given leagues.
+    Fetch all teams from standings for given leagues and AUTO-GENERATE aliases.
 
-    Returns dict keyed by team_id with name and league_id.
+    Returns dict keyed by team_id with name, league_id, and auto-generated aliases.
     """
     from app.api_client import get_standings
 
@@ -60,14 +183,19 @@ def fetch_teams_from_standings(league_ids: List[int], season: int) -> Dict[str, 
             standings = data.get("standings", [])
 
             for team_row in standings:
-                team_id = str(team_row.get("team_id", ""))
-                team_name = team_row.get("team_name", "")
+                # Handle both flat format (team_id, team_name) and nested format (team.id, team.name)
+                team_data = team_row.get("team", {})
+                team_id = str(team_data.get("id") or team_row.get("team_id", ""))
+                team_name = team_data.get("name") or team_row.get("team_name", "")
 
                 if team_id and team_name:
                     if team_id not in teams:
+                        # AUTO-GENERATE aliases using AI matching logic
+                        auto_aliases = generate_team_aliases(team_name)
+
                         teams[team_id] = {
                             "canonical": team_name,
-                            "aliases": [team_name.lower()],
+                            "aliases": sorted(list(auto_aliases)),
                             "league_id": league_id,
                         }
                     else:
@@ -84,7 +212,7 @@ def fetch_teams_from_standings(league_ids: List[int], season: int) -> Dict[str, 
 
 def fetch_players_for_teams(team_ids: List[str], season: int, limit: int = 50) -> Dict[str, Dict[str, Any]]:
     """
-    Fetch players for given teams (expensive operation).
+    Fetch players for given teams and AUTO-GENERATE aliases.
 
     Args:
         team_ids: List of team IDs to fetch players for
@@ -92,7 +220,7 @@ def fetch_players_for_teams(team_ids: List[str], season: int, limit: int = 50) -
         limit: Max teams to process (to limit API calls)
 
     Returns:
-        Dict keyed by player_id with name and team_id.
+        Dict keyed by player_id with name, team_id, and auto-generated aliases.
     """
     from app.api_client import get_team_players
 
@@ -106,19 +234,19 @@ def fetch_players_for_teams(team_ids: List[str], season: int, limit: int = 50) -
             player_list = data.get("players", [])
 
             for player in player_list:
-                player_id = str(player.get("player_id", ""))
-                player_name = player.get("player_name", "")
+                # Handle both formats: (id, name) and (player_id, player_name)
+                player_id = str(player.get("id") or player.get("player_id", ""))
+                player_name = player.get("name") or player.get("player_name", "")
 
                 if player_id and player_name:
-                    # Generate basic aliases (full name and last name)
-                    aliases = [player_name.lower()]
-                    name_parts = player_name.split()
-                    if len(name_parts) > 1:
-                        aliases.append(name_parts[-1].lower())  # Last name
+                    # AUTO-GENERATE aliases using AI matching logic
+                    auto_aliases = generate_person_aliases(player_name)
+                    # Also expand if name looks like API format (N. Name)
+                    auto_aliases.update(expand_api_name(player_name))
 
                     players[player_id] = {
                         "canonical": player_name,
-                        "aliases": aliases,
+                        "aliases": sorted(list(auto_aliases)),  # Sort for readability
                         "team_id": int(team_id),
                     }
 
@@ -129,6 +257,73 @@ def fetch_players_for_teams(team_ids: List[str], season: int, limit: int = 50) -
             print(f"    Error fetching players for team {team_id}: {e}")
 
     print(f"  Processed {processed} teams, found {len(players)} total players")
+    return players
+
+
+def fetch_top_players(league_ids: List[int], season: int) -> Dict[str, Dict[str, Any]]:
+    """
+    Fetch top scorers and assists to capture star players who may not be
+    in the top 20 per-team API response.
+
+    Returns dict keyed by player_id.
+    """
+    from app.api_client import get_top_scorers, get_top_assists
+
+    players = {}
+
+    for league_id in league_ids:
+        # Top scorers
+        print(f"  Fetching top scorers for league {league_id}...")
+        try:
+            data = get_top_scorers(season, league_id, limit=50)
+            # API returns 'players' key, not 'top_scorers'
+            for player in data.get("players", data.get("top_scorers", [])):
+                player_id = str(player.get("id") or player.get("player_id", ""))
+                player_name = player.get("name") or player.get("player_name", "")
+                # Team can be nested or flat
+                team_data = player.get("team", {})
+                team_id = team_data.get("id") if isinstance(team_data, dict) else player.get("team_id")
+
+                if player_id and player_name:
+                    auto_aliases = generate_person_aliases(player_name)
+                    auto_aliases.update(expand_api_name(player_name))
+
+                    players[player_id] = {
+                        "canonical": player_name,
+                        "aliases": sorted(list(auto_aliases)),
+                        "team_id": team_id,
+                    }
+
+            print(f"    Found {len(data.get('players', data.get('top_scorers', [])))} top scorers")
+        except Exception as e:
+            print(f"    Error fetching top scorers: {e}")
+
+        # Top assists
+        print(f"  Fetching top assists for league {league_id}...")
+        try:
+            data = get_top_assists(season, league_id, limit=50)
+            # API returns 'players' key, not 'top_assists'
+            for player in data.get("players", data.get("top_assists", [])):
+                player_id = str(player.get("id") or player.get("player_id", ""))
+                player_name = player.get("name") or player.get("player_name", "")
+                team_data = player.get("team", {})
+                team_id = team_data.get("id") if isinstance(team_data, dict) else player.get("team_id")
+
+                if player_id and player_name and player_id not in players:
+                    auto_aliases = generate_person_aliases(player_name)
+                    auto_aliases.update(expand_api_name(player_name))
+
+                    players[player_id] = {
+                        "canonical": player_name,
+                        "aliases": sorted(list(auto_aliases)),
+                        "team_id": team_id,
+                    }
+
+            print(f"    Found {len(data.get('players', data.get('top_assists', [])))} top assists")
+        except Exception as e:
+            print(f"    Error fetching top assists: {e}")
+
+    print(f"  Total unique players from top stats: {len(players)}")
     return players
 
 
@@ -189,8 +384,8 @@ def main():
     parser.add_argument(
         "--season",
         type=int,
-        default=2024,
-        help="Season year (default: 2024 for 2024-25)",
+        default=2025,
+        help="Season year (default: 2025 for 2024-25 season)",
     )
     parser.add_argument(
         "--with-players",
@@ -246,19 +441,28 @@ def main():
     # Optionally fetch players
     api_players = {}
     if args.with_players:
-        print("3. Fetching players...")
+        print("3. Fetching team rosters...")
         team_ids = list(api_teams.keys())
         api_players = fetch_players_for_teams(team_ids, args.season, args.player_limit)
         print()
 
+        print("4. Fetching top scorers/assists...")
+        top_players = fetch_top_players(league_ids, args.season)
+        # Merge - existing team roster data takes precedence
+        for pid, pdata in top_players.items():
+            if pid not in api_players:
+                api_players[pid] = pdata
+        print(f"   Total players after merge: {len(api_players)}")
+        print()
+
     # Merge data
-    print("4. Merging data...")
+    print("5. Merging with seed data...")
     result = merge_aliases(seed_data, api_teams, api_players)
     print(f"   Final: {len(result['teams'])} teams, {len(result['players'])} players")
     print()
 
     # Write output
-    print(f"5. Writing to {output_path}...")
+    print(f"6. Writing to {output_path}...")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(result, f, indent=2, ensure_ascii=False)

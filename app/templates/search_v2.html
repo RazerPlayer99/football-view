@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football View - Search</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* =============================================================================
+           CSS VARIABLES - Design System
+           FotMob data density + Apple minimalism
+           ============================================================================= */
+        :root {
+            /* Colors - Light Mode */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f7;
+            --bg-tertiary: #e8e8ed;
+            --bg-card: #ffffff;
+
+            --text-primary: #1d1d1f;
+            --text-secondary: #6e6e73;
+            --text-tertiary: #86868b;
+
+            --accent: #00985f;
+            --accent-light: rgba(0, 152, 95, 0.1);
+            --accent-hover: #007a4d;
+
+            --positive: #34c759;
+            --negative: #ff3b30;
+            --warning: #ff9500;
+            --info: #007aff;
+
+            --border: rgba(0, 0, 0, 0.08);
+            --border-strong: rgba(0, 0, 0, 0.12);
+
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+
+            /* Typography */
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        /* Dark Mode */
+        [data-theme="dark"] {
+            --bg-primary: #000000;
+            --bg-secondary: #1c1c1e;
+            --bg-tertiary: #2c2c2e;
+            --bg-card: #1c1c1e;
+
+            --text-primary: #f5f5f7;
+            --text-secondary: #a1a1a6;
+            --text-tertiary: #6e6e73;
+
+            --accent: #30d158;
+            --accent-light: rgba(48, 209, 88, 0.15);
+
+            --border: rgba(255, 255, 255, 0.08);
+            --border-strong: rgba(255, 255, 255, 0.12);
+
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        /* =============================================================================
+           BASE STYLES
+           ============================================================================= */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* =============================================================================
+           LAYOUT
+           ============================================================================= */
+        .app-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        /* =============================================================================
+           HEADER
+           ============================================================================= */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 0;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .logo-icon {
+            font-size: 24px;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .theme-toggle {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-tertiary);
+        }
+
+        /* =============================================================================
+           SEARCH SECTION
+           ============================================================================= */
+        .search-section {
+            padding: 32px 0 24px;
+        }
+
+        .search-title {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+        }
+
+        .search-subtitle {
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-bottom: 24px;
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 12px;
+        }
+
+        .search-input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 18px;
+            padding-left: 48px;
+            font-size: 16px;
+            font-family: inherit;
+            border: 2px solid var(--border-strong);
+            border-radius: var(--radius-lg);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-light);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-tertiary);
+            font-size: 20px;
+            pointer-events: none;
+        }
+
+        .search-btn {
+            padding: 14px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: inherit;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .search-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .search-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* =============================================================================
+           AUTOCOMPLETE DROPDOWN
+           ============================================================================= */
+        .autocomplete-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            z-index: 50;
+            display: none;
+        }
+
+        .autocomplete-dropdown.active {
+            display: block;
+        }
+
+        .autocomplete-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover,
+        .autocomplete-item.selected {
+            background: var(--bg-secondary);
+        }
+
+        .autocomplete-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .autocomplete-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .autocomplete-avatar.team {
+            border-radius: var(--radius-sm);
+        }
+
+        .autocomplete-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .autocomplete-name {
+            font-weight: 600;
+            font-size: 15px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .autocomplete-meta {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .autocomplete-badge {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+        }
+
+        .autocomplete-badge.player {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+
+        .autocomplete-badge.team {
+            background: rgba(0, 122, 255, 0.1);
+            color: var(--info);
+        }
+
+        /* =============================================================================
+           QUICK SEARCHES
+           ============================================================================= */
+        .quick-searches {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .quick-search-btn {
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-strong);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-search-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--text-tertiary);
+        }
+
+        /* =============================================================================
+           RESULTS SECTION
+           ============================================================================= */
+        .results-section {
+            padding-bottom: 40px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border-strong);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* =============================================================================
+           CARD - Base Component
+           ============================================================================= */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        /* =============================================================================
+           PLAYER CARD
+           ============================================================================= */
+        .player-card {
+            display: flex;
+            gap: 20px;
+            padding: 24px;
+        }
+
+        .player-photo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .player-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .player-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .player-name {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            margin-bottom: 4px;
+        }
+
+        .player-name a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .player-name a:hover {
+            color: var(--accent);
+        }
+
+        .player-team {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-bottom: 16px;
+        }
+
+        .player-team img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .player-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        /* =============================================================================
+           TEAM CARD
+           ============================================================================= */
+        .team-card {
+            display: flex;
+            gap: 20px;
+            padding: 24px;
+        }
+
+        .team-logo {
+            width: 72px;
+            height: 72px;
+            flex-shrink: 0;
+        }
+
+        .team-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .team-info {
+            flex: 1;
+        }
+
+        .team-name {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            margin-bottom: 4px;
+        }
+
+        .team-name a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .team-name a:hover {
+            color: var(--accent);
+        }
+
+        .team-meta {
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-bottom: 16px;
+        }
+
+        .team-position {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--accent-light);
+            color: var(--accent);
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* =============================================================================
+           COMPARISON CARD
+           ============================================================================= */
+        .comparison-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px;
+            gap: 20px;
+        }
+
+        .comparison-entity {
+            flex: 1;
+            text-align: center;
+        }
+
+        .comparison-entity img {
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+            margin-bottom: 12px;
+        }
+
+        .comparison-entity.player img {
+            border-radius: 50%;
+        }
+
+        .comparison-entity-name {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .comparison-entity-name a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .comparison-entity-name a:hover {
+            color: var(--accent);
+        }
+
+        .comparison-entity-meta {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .comparison-vs {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-tertiary);
+            padding: 8px 12px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+        }
+
+        .comparison-metrics {
+            border-top: 1px solid var(--border);
+        }
+
+        .comparison-metric {
+            display: flex;
+            align-items: center;
+            padding: 14px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .comparison-metric:last-child {
+            border-bottom: none;
+        }
+
+        .metric-value {
+            flex: 1;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .metric-value:first-child {
+            text-align: left;
+        }
+
+        .metric-value:last-child {
+            text-align: right;
+        }
+
+        .metric-value.winner {
+            color: var(--accent);
+        }
+
+        .metric-label {
+            flex: 1;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* =============================================================================
+           TABLE CARD (Standings, Top Scorers)
+           ============================================================================= */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            padding: 12px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-tertiary);
+            text-align: left;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th.numeric {
+            text-align: right;
+        }
+
+        .data-table td {
+            padding: 14px 16px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table td.numeric {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        .data-table .team-cell,
+        .data-table .player-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .data-table .team-cell img,
+        .data-table .player-cell img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+
+        .data-table .player-cell img {
+            border-radius: 50%;
+        }
+
+        .data-table a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .data-table a:hover {
+            color: var(--accent);
+        }
+
+        .position-badge {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 6px;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+        }
+
+        .position-badge.top-4 {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+
+        .position-badge.relegation {
+            background: rgba(255, 59, 48, 0.1);
+            color: var(--negative);
+        }
+
+        .form-indicator {
+            display: flex;
+            gap: 3px;
+        }
+
+        .form-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .form-dot.W { background: var(--positive); }
+        .form-dot.D { background: var(--text-tertiary); }
+        .form-dot.L { background: var(--negative); }
+
+        /* =============================================================================
+           ERROR STATE
+           ============================================================================= */
+        .error-card {
+            text-align: center;
+            padding: 40px 24px;
+        }
+
+        .error-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .error-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .error-message {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .error-suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .suggestion-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: inherit;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .suggestion-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        /* =============================================================================
+           EMPTY STATE
+           ============================================================================= */
+        .empty-state {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 15px;
+        }
+
+        /* =============================================================================
+           RESPONSIVE
+           ============================================================================= */
+        @media (max-width: 640px) {
+            .search-title {
+                font-size: 26px;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            .search-btn {
+                width: 100%;
+            }
+
+            .player-card,
+            .team-card {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .player-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .comparison-header {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .comparison-vs {
+                order: -1;
+            }
+
+            .comparison-metric {
+                padding: 12px 16px;
+            }
+
+            .metric-value {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <span class="logo-icon">⚽</span>
+                <span class="logo-text">Football View</span>
+            </a>
+            <div class="header-actions">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+                    <span id="theme-icon">🌙</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="app-container">
+        <!-- SEARCH SECTION -->
+        <section class="search-section">
+            <h1 class="search-title">Search</h1>
+            <p class="search-subtitle">Players, teams, standings, and more</p>
+
+            <div class="search-container">
+                <div class="search-box">
+                    <div class="search-input-wrapper">
+                        <span class="search-icon">🔍</span>
+                        <input
+                            type="text"
+                            id="search-input"
+                            class="search-input"
+                            placeholder="Try 'Arsenal', 'Salah stats', or 'Haaland vs Salah'"
+                            autocomplete="off"
+                            autocorrect="off"
+                            autocapitalize="off"
+                            spellcheck="false"
+                        >
+                        <div id="autocomplete-dropdown" class="autocomplete-dropdown"></div>
+                    </div>
+                    <button id="search-btn" class="search-btn">Search</button>
+                </div>
+
+                <div class="quick-searches">
+                    <button class="quick-search-btn" onclick="doSearch('standings')">Standings</button>
+                    <button class="quick-search-btn" onclick="doSearch('top scorers')">Top Scorers</button>
+                    <button class="quick-search-btn" onclick="doSearch('Arsenal')">Arsenal</button>
+                    <button class="quick-search-btn" onclick="doSearch('Haaland')">Haaland</button>
+                    <button class="quick-search-btn" onclick="doSearch('Salah vs Haaland')">Salah vs Haaland</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- RESULTS SECTION -->
+        <section class="results-section">
+            <div id="loading" class="loading">
+                <div class="loading-spinner"></div>
+                <div>Searching...</div>
+            </div>
+            <div id="results">
+                <div class="empty-state">
+                    <div class="empty-state-icon">⚽</div>
+                    <div class="empty-state-text">Search for players, teams, or try one of the quick searches above</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // =============================================================================
+        // THEME TOGGLE
+        // =============================================================================
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            document.getElementById('theme-icon').textContent = next === 'dark' ? '☀️' : '🌙';
+            localStorage.setItem('theme', next);
+        }
+
+        // Load saved theme
+        (function() {
+            const saved = localStorage.getItem('theme');
+            if (saved) {
+                document.documentElement.setAttribute('data-theme', saved);
+                document.getElementById('theme-icon').textContent = saved === 'dark' ? '☀️' : '🌙';
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.getElementById('theme-icon').textContent = '☀️';
+            }
+        })();
+
+        // =============================================================================
+        // DOM ELEMENTS
+        // =============================================================================
+        const searchInput = document.getElementById('search-input');
+        const searchBtn = document.getElementById('search-btn');
+        const resultsDiv = document.getElementById('results');
+        const loadingDiv = document.getElementById('loading');
+        const dropdown = document.getElementById('autocomplete-dropdown');
+
+        let debounceTimer = null;
+        let selectedIndex = -1;
+        let suggestions = [];
+
+        // =============================================================================
+        // SEARCH FUNCTIONALITY
+        // =============================================================================
+        async function doSearch(query) {
+            // Hide dropdown
+            hideDropdown();
+
+            query = query || searchInput.value.trim();
+            if (query.length < 2) {
+                resultsDiv.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✏️</div><div class="empty-state-text">Please enter at least 2 characters</div></div>';
+                return;
+            }
+
+            searchInput.value = query;
+            loadingDiv.classList.add('active');
+            resultsDiv.innerHTML = '';
+
+            try {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&season=2025`);
+                const data = await response.json();
+                loadingDiv.classList.remove('active');
+                resultsDiv.innerHTML = renderResponse(data);
+            } catch (error) {
+                loadingDiv.classList.remove('active');
+                resultsDiv.innerHTML = renderError({ message: 'Failed to fetch results. Please try again.' });
+            }
+        }
+
+        // =============================================================================
+        // RENDER FUNCTIONS
+        // =============================================================================
+        function renderResponse(data) {
+            switch (data.type) {
+                case 'player_card': return renderPlayerCard(data.data);
+                case 'team_card': return renderTeamCard(data.data);
+                case 'comparison': return renderComparison(data.data);
+                case 'table': return renderTable(data.data);
+                case 'disambiguation': return renderDisambiguation(data.data);
+                case 'error': return renderError(data.data);
+                default: return `<div class="empty-state"><div class="empty-state-text">Unknown result type</div></div>`;
+            }
+        }
+
+        function renderPlayerCard(data) {
+            const p = data.player;
+            const stats = p.season_totals || p.premier_league || {};
+
+            return `
+                <div class="card">
+                    <div class="player-card">
+                        <div class="player-photo">
+                            ${p.photo ? `<img src="${p.photo}" alt="${p.name}">` : ''}
+                        </div>
+                        <div class="player-info">
+                            <h2 class="player-name"><a href="/ui/players/${p.id}">${p.name}</a></h2>
+                            <div class="player-team">
+                                ${p.team?.logo ? `<img src="${p.team.logo}" alt="">` : ''}
+                                <span>${p.team?.name || p.premier_league?.team || 'Unknown Team'}</span>
+                            </div>
+                            <div class="player-stats">
+                                <div class="stat-item">
+                                    <div class="stat-value">${stats.appearances || 0}</div>
+                                    <div class="stat-label">Apps</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">${stats.goals || 0}</div>
+                                    <div class="stat-label">Goals</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">${stats.assists || 0}</div>
+                                    <div class="stat-label">Assists</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">${stats.minutes || 0}</div>
+                                    <div class="stat-label">Mins</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTeamCard(data) {
+            const t = data.team;
+            const pos = data.standings_position;
+
+            return `
+                <div class="card">
+                    <div class="team-card">
+                        <div class="team-logo">
+                            ${t.logo ? `<img src="${t.logo}" alt="${t.name}">` : ''}
+                        </div>
+                        <div class="team-info">
+                            <h2 class="team-name"><a href="/ui/teams/${t.id}">${t.name}</a></h2>
+                            <div class="team-meta">${t.venue || ''} ${t.city ? '• ' + t.city : ''}</div>
+                            ${pos ? `<span class="team-position">📊 ${pos}${getOrdinalSuffix(pos)} in League</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderComparison(data) {
+            const e1 = data.entities[0];
+            const e2 = data.entities[1];
+            const isPlayer = data.entity_type === 'player';
+            const p1 = isPlayer ? e1.player : e1.team;
+            const p2 = isPlayer ? e2.player : e2.team;
+
+            let metricsHtml = '';
+            if (data.comparison_metrics) {
+                metricsHtml = data.comparison_metrics.map(m => {
+                    const v1Class = m.winner_index === 0 ? 'winner' : '';
+                    const v2Class = m.winner_index === 1 ? 'winner' : '';
+                    return `
+                        <div class="comparison-metric">
+                            <div class="metric-value ${v1Class}">${m.values[0]}</div>
+                            <div class="metric-label">${m.label}</div>
+                            <div class="metric-value ${v2Class}">${m.values[1]}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            return `
+                <div class="card">
+                    <div class="comparison-header">
+                        <div class="comparison-entity ${isPlayer ? 'player' : ''}">
+                            <img src="${p1.photo || p1.logo || ''}" alt="${p1.name}">
+                            <div class="comparison-entity-name"><a href="/ui/${isPlayer ? 'players' : 'teams'}/${p1.id}">${p1.name}</a></div>
+                            ${isPlayer && p1.team ? `<div class="comparison-entity-meta">${p1.team.name || ''}</div>` : ''}
+                        </div>
+                        <div class="comparison-vs">VS</div>
+                        <div class="comparison-entity ${isPlayer ? 'player' : ''}">
+                            <img src="${p2.photo || p2.logo || ''}" alt="${p2.name}">
+                            <div class="comparison-entity-name"><a href="/ui/${isPlayer ? 'players' : 'teams'}/${p2.id}">${p2.name}</a></div>
+                            ${isPlayer && p2.team ? `<div class="comparison-entity-meta">${p2.team.name || ''}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="comparison-metrics">
+                        ${metricsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTable(data) {
+            const cols = data.columns || [];
+            const rows = data.rows || [];
+
+            let headerHtml = cols.map(c => `<th class="${c.type === 'number' ? 'numeric' : ''}">${c.label}</th>`).join('');
+
+            let bodyHtml = rows.map((row, idx) => {
+                let cells = cols.map(c => {
+                    let val = row[c.key] ?? '';
+                    let className = c.type === 'number' ? 'numeric' : '';
+
+                    // Special rendering for position
+                    if (c.key === 'position') {
+                        let posClass = val <= 4 ? 'top-4' : (val >= 18 ? 'relegation' : '');
+                        return `<td><span class="position-badge ${posClass}">${val}</span></td>`;
+                    }
+
+                    // Special rendering for team/player name with logo
+                    if (c.key === 'name' || c.key === 'team' || c.key === 'team_name' || c.key === 'player_name') {
+                        const logo = row.logo || row.team_logo || row.photo || '';
+                        const id = row.id || row.team_id || row.player_id;
+                        const type = row.player_id ? 'players' : 'teams';
+                        return `<td><div class="team-cell">${logo ? `<img src="${logo}" alt="">` : ''}<a href="/ui/${type}/${id}">${val}</a></div></td>`;
+                    }
+
+                    // Form indicator
+                    if (c.key === 'form' && val) {
+                        const dots = val.split('').map(f => `<span class="form-dot ${f}"></span>`).join('');
+                        return `<td><div class="form-indicator">${dots}</div></td>`;
+                    }
+
+                    return `<td class="${className}">${val}</td>`;
+                }).join('');
+
+                return `<tr>${cells}</tr>`;
+            }).join('');
+
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">${data.title || 'Results'}</span>
+                    </div>
+                    <table class="data-table">
+                        <thead><tr>${headerHtml}</tr></thead>
+                        <tbody>${bodyHtml}</tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderDisambiguation(data) {
+            const optionsHtml = data.options.map(opt =>
+                `<button class="suggestion-btn" onclick="doSearch('${opt.value}')">${opt.label}</button>`
+            ).join('');
+
+            return `
+                <div class="card">
+                    <div class="error-card">
+                        <div class="error-icon">🤔</div>
+                        <div class="error-title">${data.question || 'Which did you mean?'}</div>
+                        <div class="error-suggestions">${optionsHtml}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderError(data) {
+            const suggestions = data.suggestions || [];
+            // Escape quotes in suggestions for safe HTML attribute insertion
+            const suggestionsHtml = suggestions.map(s => {
+                const escaped = s.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                return `<button class="suggestion-btn" onclick="doSearch('${escaped}')">${s}</button>`;
+            }).join('');
+
+            return `
+                <div class="card">
+                    <div class="error-card">
+                        <div class="error-icon">😕</div>
+                        <div class="error-title">No results found</div>
+                        <div class="error-message">${data.message || 'Try a different search term'}</div>
+                        ${suggestionsHtml ? `<div class="error-suggestions">${suggestionsHtml}</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function getOrdinalSuffix(n) {
+            const s = ["th", "st", "nd", "rd"];
+            const v = n % 100;
+            return s[(v - 20) % 10] || s[v] || s[0];
+        }
+
+        // =============================================================================
+        // AUTOCOMPLETE
+        // =============================================================================
+        async function fetchSuggestions(query) {
+            if (query.length < 2) {
+                hideDropdown();
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/search/suggest?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                suggestions = data.suggestions || [];
+                renderSuggestions();
+            } catch (error) {
+                hideDropdown();
+            }
+        }
+
+        function renderSuggestions() {
+            if (suggestions.length === 0) {
+                hideDropdown();
+                return;
+            }
+
+            dropdown.innerHTML = suggestions.map((s, i) => `
+                <div class="autocomplete-item${i === selectedIndex ? ' selected' : ''}" data-index="${i}">
+                    <div class="autocomplete-avatar ${s.type}">
+                        ${s.photo ? `<img src="${s.photo}" alt="">` : (s.type === 'player' ? '👤' : '🏟️')}
+                    </div>
+                    <div class="autocomplete-info">
+                        <div class="autocomplete-name">${s.name}</div>
+                        ${s.team ? `<div class="autocomplete-meta">${s.team}</div>` : ''}
+                    </div>
+                    <span class="autocomplete-badge ${s.type}">${s.type}</span>
+                </div>
+            `).join('');
+
+            dropdown.classList.add('active');
+
+            dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    selectSuggestion(parseInt(item.dataset.index));
+                });
+            });
+        }
+
+        function selectSuggestion(index) {
+            const s = suggestions[index];
+            if (s) {
+                hideDropdown();
+                // Search for the entity to show preview card (user can click through to full page)
+                searchInput.value = s.name;
+                doSearch(s.name);
+            }
+        }
+
+        function hideDropdown() {
+            dropdown.classList.remove('active');
+            dropdown.innerHTML = '';
+            selectedIndex = -1;
+            suggestions = [];
+        }
+
+        // =============================================================================
+        // EVENT LISTENERS
+        // =============================================================================
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                fetchSuggestions(e.target.value.trim());
+            }, 200);
+        });
+
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' && dropdown.classList.contains('active')) {
+                e.preventDefault();
+                selectedIndex = Math.min(selectedIndex + 1, suggestions.length - 1);
+                renderSuggestions();
+            } else if (e.key === 'ArrowUp' && dropdown.classList.contains('active')) {
+                e.preventDefault();
+                selectedIndex = Math.max(selectedIndex - 1, -1);
+                renderSuggestions();
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                hideDropdown();
+                if (selectedIndex >= 0 && suggestions.length > 0) {
+                    selectSuggestion(selectedIndex);
+                } else {
+                    doSearch();
+                }
+            } else if (e.key === 'Escape') {
+                hideDropdown();
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                hideDropdown();
+            }
+        });
+
+        searchInput.addEventListener('blur', () => {
+            setTimeout(() => {
+                if (!dropdown.contains(document.activeElement)) {
+                    hideDropdown();
+                }
+            }, 150);
+        });
+
+        searchBtn.addEventListener('click', () => {
+            hideDropdown();
+            doSearch();
+        });
+    </script>
+</body>
+</html>

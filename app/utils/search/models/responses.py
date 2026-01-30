@@ -43,6 +43,8 @@ class TeamCardPayload:
     """Payload for team card response type."""
     team: Dict[str, Any]  # TeamDashboardView as dict
     standings_position: int = 0
+    league_name: Optional[str] = None
+    league_id: Optional[int] = None
     recent_results: List[Dict[str, Any]] = field(default_factory=list)
     upcoming: List[Dict[str, Any]] = field(default_factory=list)
     top_scorer: Optional[Dict[str, Any]] = None

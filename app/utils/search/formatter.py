@@ -132,9 +132,10 @@ class ResponseFormatter:
         rows = [
             {
                 "position": s.get("position"),
-                "team_id": s.get("team_id"),
-                "team_name": s.get("team_name"),
-                "team_logo": s.get("team_logo"),
+                # Handle both nested (API) and flat (transformed) formats
+                "team_id": s.get("team", {}).get("id") or s.get("team_id"),
+                "team_name": s.get("team", {}).get("name") or s.get("team_name"),
+                "team_logo": s.get("team", {}).get("logo") or s.get("team_logo"),
                 "played": s.get("played"),
                 "won": s.get("won"),
                 "drawn": s.get("drawn"),
@@ -336,6 +337,8 @@ class ResponseFormatter:
             data=TeamCardPayload(
                 team=team,
                 standings_position=standing.get("position", 0) if standing else 0,
+                league_name=data.get("league_name"),
+                league_id=data.get("league_id"),
                 recent_results=data.get("recent_fixtures", []),
                 upcoming=data.get("upcoming_fixtures", []),
                 top_scorer=data.get("top_players", [{}])[0] if data.get("top_players") else None,

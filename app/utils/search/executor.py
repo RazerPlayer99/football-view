@@ -247,6 +247,7 @@ class QueryExecutor:
     def _execute_team_lookup(self, resolved: ResolvedQuery) -> ExecutionResult:
         """Execute team lookup query."""
         from app import api_client
+        from app.api_client import SUPPORTED_LEAGUES
         from concurrent.futures import ThreadPoolExecutor
 
         if not resolved.primary_team:
@@ -261,32 +262,55 @@ class QueryExecutor:
         sources = []
         missing = []
 
-        # Parallel data fetching
-        with ThreadPoolExecutor(max_workers=4) as executor:
-            team_future = executor.submit(api_client.get_team_by_id, team_id)
-            standings_future = executor.submit(api_client.get_standings, season)
-            fixtures_future = executor.submit(
-                api_client.get_matches, season, league_id=None, team_id=team_id, limit=10
-            )
-            squad_future = executor.submit(api_client.get_team_players, team_id, season)
-
+        # First get team info to determine league
         try:
-            team_data = team_future.result()
+            team_data = api_client.get_team_by_id(team_id)
             sources.append("api_football:teams")
         except Exception:
             team_data = {"team_id": team_id, "name": resolved.primary_team.name}
 
-        try:
-            standings_data = standings_future.result()
-            standings = standings_data.get("standings", [])
-            # Team ID is nested under team.id, not team_id
-            team_standing = next(
-                (s for s in standings if s.get("team", {}).get("id") == team_id),
-                None
+        # Determine which league this team plays in
+        team_league_id = resolved.primary_team.league_id
+        team_standing = None
+        league_name = None
+
+        # If we don't have league_id from alias, try to find team in supported leagues
+        if not team_league_id:
+            for league_id in SUPPORTED_LEAGUES.keys():
+                try:
+                    standings_data = api_client.get_standings(season, league_id)
+                    standings = standings_data.get("standings", [])
+                    team_standing = next(
+                        (s for s in standings if s.get("team", {}).get("id") == team_id),
+                        None
+                    )
+                    if team_standing:
+                        team_league_id = league_id
+                        league_name = SUPPORTED_LEAGUES.get(league_id)
+                        sources.append("api_football:standings")
+                        break
+                except Exception:
+                    continue
+        else:
+            # Fetch standings for the known league
+            try:
+                standings_data = api_client.get_standings(season, team_league_id)
+                standings = standings_data.get("standings", [])
+                team_standing = next(
+                    (s for s in standings if s.get("team", {}).get("id") == team_id),
+                    None
+                )
+                league_name = SUPPORTED_LEAGUES.get(team_league_id, f"League {team_league_id}")
+                sources.append("api_football:standings")
+            except Exception:
+                team_standing = None
+
+        # Parallel data fetching for remaining data
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            fixtures_future = executor.submit(
+                api_client.get_matches, season, league_id=None, team_id=team_id, limit=10
             )
-            sources.append("api_football:standings")
-        except Exception:
-            team_standing = None
+            squad_future = executor.submit(api_client.get_team_players, team_id, season)
 
         try:
             fixtures_data = fixtures_future.result()
@@ -316,6 +340,8 @@ class QueryExecutor:
             data={
                 "team": team_data,
                 "standing": team_standing,
+                "league_id": team_league_id,
+                "league_name": league_name,
                 "recent_fixtures": [f for f in fixtures if f.get("status") in finished_statuses][:5],
                 "upcoming_fixtures": [f for f in fixtures if f.get("status") in upcoming_statuses][:3],
                 "top_players": top_scorers,
@@ -433,6 +459,7 @@ class QueryExecutor:
     def _execute_comparison(self, resolved: ResolvedQuery) -> ExecutionResult:
         """Execute comparison query."""
         from app import api_client
+        from app.api_client import SUPPORTED_LEAGUES
 
         season = self._get_season(resolved)
         sources = []
@@ -444,25 +471,54 @@ class QueryExecutor:
             team1 = resolved.teams[0]
             team2 = resolved.teams[1]
 
-            # Get standings for both
-            standings_data = api_client.get_standings(season)
-            standings = standings_data.get("standings", [])
-            sources.append("api_football:standings")
+            # Get standings for both teams - they may be in different leagues
+            team1_standing = {}
+            team2_standing = {}
+            team1_league_name = None
+            team2_league_name = None
 
-            # Team ID is nested under team.id, not team_id
-            team1_standing = next((s for s in standings if s.get("team", {}).get("id") == team1.team_id), {})
-            team2_standing = next((s for s in standings if s.get("team", {}).get("id") == team2.team_id), {})
+            # Check team1's league first, then all supported leagues
+            leagues_to_check = []
+            if team1.league_id:
+                leagues_to_check.append(team1.league_id)
+            if team2.league_id and team2.league_id != team1.league_id:
+                leagues_to_check.append(team2.league_id)
+            leagues_to_check.extend([lid for lid in SUPPORTED_LEAGUES.keys()
+                                    if lid not in leagues_to_check])
+
+            for league_id in leagues_to_check:
+                if team1_standing and team2_standing:
+                    break  # Found both
+                try:
+                    standings_data = api_client.get_standings(season, league_id)
+                    standings = standings_data.get("standings", [])
+                    sources.append(f"api_football:standings:{league_id}")
+
+                    if not team1_standing:
+                        found = next((s for s in standings if s.get("team", {}).get("id") == team1.team_id), None)
+                        if found:
+                            team1_standing = found
+                            team1_league_name = SUPPORTED_LEAGUES.get(league_id)
+
+                    if not team2_standing:
+                        found = next((s for s in standings if s.get("team", {}).get("id") == team2.team_id), None)
+                        if found:
+                            team2_standing = found
+                            team2_league_name = SUPPORTED_LEAGUES.get(league_id)
+                except Exception:
+                    continue
 
             return ExecutionResult(
                 success=True,
                 data={
                     "comparison_type": "team",
                     "entities": [
-                        {"team": {"id": team1.team_id, "name": team1.name}, "stats": team1_standing},
-                        {"team": {"id": team2.team_id, "name": team2.name}, "stats": team2_standing},
+                        {"team": {"id": team1.team_id, "name": team1.name, "league": team1_league_name}, "stats": team1_standing},
+                        {"team": {"id": team2.team_id, "name": team2.name, "league": team2_league_name}, "stats": team2_standing},
                     ],
+                    "cross_league": team1_league_name != team2_league_name if team1_league_name and team2_league_name else False,
                 },
-                sources_used=sources,
+                sources_used=list(set(sources)),  # Dedupe sources
             )
 
         elif len(resolved.players) >= 2:

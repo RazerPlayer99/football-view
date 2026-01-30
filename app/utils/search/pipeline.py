@@ -26,6 +26,7 @@ from .session import get_session_store
 from .rate_limiter import get_rate_limiter
 from .logger import log_query
 from .llm import get_llm_provider
+from .analytics import record_search_result
 from .models.intent import IntentType
 from .models.responses import (
     SearchResponse,
@@ -85,7 +86,11 @@ def search(
         return error_response(
             error_type="empty_query",
             message="Please enter a search term",
-            suggestions=["Try searching for a team name like 'Arsenal'", "Or 'top scorers'"],
+            suggestions=[
+                "Try a team: 'Arsenal', 'Barcelona', 'Bayern'",
+                "Try a league: 'La Liga standings', 'Serie A top scorers'",
+                "Try a player: 'Salah', 'Mbappé', 'Bellingham'",
+            ],
         )
 
     # Step 4: Extract entities
@@ -121,13 +126,22 @@ def search(
             latency_ms=latency_ms,
             used_llm=intent_result.used_llm,
         )
+        # Record failed search for analytics
+        record_search_result(
+            query=query,
+            success=False,
+            error_reason="unknown_intent",
+            error_message="Could not determine search intent",
+            intent_detected=None,
+            entities_found=[e.name for e in entities.all_entities] if entities.all_entities else None,
+        )
         return error_response(
             error_type="unsupported_query",
             message="I'm not sure what you're looking for.",
             suggestions=[
-                "Try 'Arsenal' for team info",
-                "Try 'standings' for league table",
-                "Try 'top scorers' for goal leaders",
+                "Try a team: 'Real Madrid', 'Juventus', 'PSG'",
+                "Try 'La Liga standings' or 'Bundesliga top scorers'",
+                "Try 'Arsenal vs Chelsea' for head-to-head",
             ],
         )
 
@@ -197,6 +211,36 @@ def search(
         latency_ms=latency_ms,
         used_llm=intent_result.used_llm,
     )
+
+    # Step 13: Record analytics
+    if not result.success:
+        record_search_result(
+            query=query,
+            success=False,
+            error_reason=result.error or "execution_failed",
+            error_message=str(result.data) if result.data else None,
+            intent_detected=intent_result.intent_type.value,
+            entities_found=[e.name for e in entities.all_entities] if entities.all_entities else None,
+        )
+    else:
+        # Check for low confidence matches
+        primary_entity = resolved.primary_player or resolved.primary_team
+        if primary_entity and primary_entity.confidence < 0.85:
+            record_search_result(
+                query=query,
+                success=True,
+                result_type=response.type,
+                confidence=primary_entity.confidence,
+                matched_entity=primary_entity.name,
+                entity_type="player" if resolved.primary_player else "team",
+                match_method=primary_entity.match_method,
+            )
+        else:
+            record_search_result(
+                query=query,
+                success=True,
+                result_type=response.type,
+            )
 
     return response
 

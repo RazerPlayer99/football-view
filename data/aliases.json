@@ -1,147 +1,107 @@
 {
   "version": "1.0.0",
-  "generated_at": "2026-01-28T02:04:19.448476Z",
+  "generated_at": "2026-01-29T22:25:53.297347Z",
   "teams": {
     "42": {
       "canonical": "Arsenal",
       "aliases": [
         "arsenal",
+        "the arsenal",
         "gunners",
         "the gunners",
-        "afc",
         "arse",
-        "the arsenal",
-        "gooners"
-      ]
-    },
-    "33": {
-      "canonical": "Manchester United",
-      "aliases": [
-        "manchester united",
-        "man united",
-        "man u",
-        "man utd",
-        "mufc",
-        "united",
-        "red devils",
-        "manu",
-        "the reds"
-      ]
+        "gooners",
+        "afc"
+      ],
+      "league_id": 39
     },
     "50": {
       "canonical": "Manchester City",
       "aliases": [
-        "manchester city",
         "man city",
-        "city",
-        "mcfc",
         "cityzens",
+        "manchester city",
+        "mcfc",
+        "city",
         "the citizens"
-      ]
-    },
-    "40": {
-      "canonical": "Liverpool",
-      "aliases": [
-        "liverpool",
-        "lfc",
-        "the reds",
-        "pool",
-        "liverpoo"
-      ]
-    },
-    "49": {
-      "canonical": "Chelsea",
-      "aliases": [
-        "chelsea",
-        "cfc",
-        "the blues",
-        "chels"
-      ]
-    },
-    "47": {
-      "canonical": "Tottenham",
-      "aliases": [
-        "tottenham",
-        "spurs",
-        "thfc",
-        "tottenham hotspur",
-        "the lilywhites"
-      ]
+      ],
+      "league_id": 39
     },
     "66": {
       "canonical": "Aston Villa",
       "aliases": [
         "aston villa",
-        "villa",
+        "the villans",
         "avfc",
-        "the villans"
-      ]
+        "villa"
+      ],
+      "league_id": 39
     },
-    "34": {
-      "canonical": "Newcastle",
+    "33": {
+      "canonical": "Manchester United",
       "aliases": [
-        "newcastle",
-        "newcastle united",
-        "nufc",
-        "the magpies",
-        "toon",
-        "the toon"
-      ]
+        "manu",
+        "united",
+        "manchester united",
+        "mufc",
+        "man u",
+        "the reds",
+        "man utd",
+        "man united",
+        "red devils"
+      ],
+      "league_id": 39
     },
-    "51": {
-      "canonical": "Brighton",
+    "49": {
+      "canonical": "Chelsea",
       "aliases": [
-        "brighton",
-        "bhafc",
-        "brighton and hove albion",
-        "the seagulls",
-        "albion"
-      ]
+        "chels",
+        "chelsea",
+        "cfc",
+        "the blues"
+      ],
+      "league_id": 39
     },
-    "48": {
-      "canonical": "West Ham",
+    "40": {
+      "canonical": "Liverpool",
       "aliases": [
-        "west ham",
-        "west ham united",
-        "whu",
-        "the hammers",
-        "irons"
-      ]
-    },
-    "52": {
-      "canonical": "Crystal Palace",
-      "aliases": [
-        "crystal palace",
-        "palace",
-        "cpfc",
-        "the eagles"
-      ]
-    },
-    "35": {
-      "canonical": "Bournemouth",
-      "aliases": [
-        "bournemouth",
-        "afc bournemouth",
-        "the cherries",
-        "afcb"
-      ]
+        "lfc",
+        "pool",
+        "the reds",
+        "liverpool",
+        "liverpoo"
+      ],
+      "league_id": 39
     },
     "36": {
       "canonical": "Fulham",
       "aliases": [
-        "fulham",
         "ffc",
-        "the cottagers"
-      ]
+        "the cottagers",
+        "fulham"
+      ],
+      "league_id": 39
     },
-    "39": {
-      "canonical": "Wolves",
+    "55": {
+      "canonical": "Brentford",
       "aliases": [
-        "wolves",
-        "wolverhampton",
-        "wolverhampton wanderers",
-        "wwfc"
-      ]
+        "brentford",
+        "bfc",
+        "the bees"
+      ],
+      "league_id": 39
+    },
+    "34": {
+      "canonical": "Newcastle",
+      "aliases": [
+        "the magpies",
+        "toon",
+        "newcastle united",
+        "nufc",
+        "the toon",
+        "newcastle"
+      ],
+      "league_id": 39
     },
     "45": {
       "canonical": "Everton",
@@ -150,24 +110,369 @@
         "efc",
         "the toffees",
         "everton fc"
-      ]
+      ],
+      "league_id": 39
     },
-    "55": {
-      "canonical": "Brentford",
+    "746": {
+      "canonical": "Sunderland",
       "aliases": [
-        "brentford",
-        "the bees",
-        "bfc"
-      ]
+        "sunderland"
+      ],
+      "league_id": 39
+    },
+    "51": {
+      "canonical": "Brighton",
+      "aliases": [
+        "albion",
+        "brighton and hove albion",
+        "brighton",
+        "the seagulls",
+        "bhafc"
+      ],
+      "league_id": 39
+    },
+    "35": {
+      "canonical": "Bournemouth",
+      "aliases": [
+        "afc bournemouth",
+        "afcb",
+        "bournemouth",
+        "the cherries"
+      ],
+      "league_id": 39
+    },
+    "47": {
+      "canonical": "Tottenham",
+      "aliases": [
+        "tottenham",
+        "spurs",
+        "thfc",
+        "the lilywhites",
+        "tottenham hotspur"
+      ],
+      "league_id": 39
+    },
+    "52": {
+      "canonical": "Crystal Palace",
+      "aliases": [
+        "cpfc",
+        "palace",
+        "crystal palace",
+        "the eagles"
+      ],
+      "league_id": 39
+    },
+    "63": {
+      "canonical": "Leeds",
+      "aliases": [
+        "leeds",
+        "lufc",
+        "the whites",
+        "leeds united"
+      ],
+      "league_id": 39
     },
     "65": {
       "canonical": "Nottingham Forest",
       "aliases": [
-        "nottingham forest",
-        "forest",
+        "notts forest",
         "nffc",
-        "notts forest"
-      ]
+        "nottingham forest",
+        "forest"
+      ],
+      "league_id": 39
+    },
+    "48": {
+      "canonical": "West Ham",
+      "aliases": [
+        "the hammers",
+        "west ham",
+        "whu",
+        "irons",
+        "west ham united"
+      ],
+      "league_id": 39
+    },
+    "44": {
+      "canonical": "Burnley",
+      "aliases": [
+        "the clarets",
+        "bfc",
+        "burnley"
+      ],
+      "league_id": 39
+    },
+    "39": {
+      "canonical": "Wolves",
+      "aliases": [
+        "wwfc",
+        "wolves",
+        "wolverhampton",
+        "wolverhampton wanderers"
+      ],
+      "league_id": 39
+    },
+    "157": {
+      "canonical": "Bayern Munich",
+      "aliases": [
+        "bavarians",
+        "bayern",
+        "bayern munchen",
+        "bayern munich",
+        "fcb",
+        "fc bayern"
+      ],
+      "league_id": 78
+    },
+    "529": {
+      "canonical": "Barcelona",
+      "aliases": [
+        "blaugrana",
+        "barcelona",
+        "fc barcelona",
+        "barca",
+        "fcb"
+      ],
+      "league_id": 140
+    },
+    "228": {
+      "canonical": "Sporting CP",
+      "aliases": [
+        "sporting cp"
+      ],
+      "league_id": 2
+    },
+    "541": {
+      "canonical": "Real Madrid",
+      "aliases": [
+        "rmcf",
+        "real",
+        "los merengues",
+        "real madrid",
+        "los blancos",
+        "madrid"
+      ],
+      "league_id": 140
+    },
+    "505": {
+      "canonical": "Inter Milan",
+      "aliases": [
+        "nerazzurri",
+        "inter milan",
+        "inter",
+        "internazionale"
+      ],
+      "league_id": 135
+    },
+    "85": {
+      "canonical": "Paris Saint-Germain",
+      "aliases": [
+        "les parisiens",
+        "paris",
+        "paris saint germain",
+        "paris saint-germain",
+        "psg"
+      ],
+      "league_id": 61
+    },
+    "496": {
+      "canonical": "Juventus",
+      "aliases": [
+        "juventus",
+        "juve",
+        "bianconeri",
+        "the old lady"
+      ],
+      "league_id": 135
+    },
+    "530": {
+      "canonical": "Atletico Madrid",
+      "aliases": [
+        "atleti",
+        "atletico madrid",
+        "los colchoneros",
+        "atm",
+        "atletico"
+      ],
+      "league_id": 140
+    },
+    "499": {
+      "canonical": "Atalanta",
+      "aliases": [
+        "atalanta"
+      ],
+      "league_id": 135
+    },
+    "168": {
+      "canonical": "Bayer Leverkusen",
+      "aliases": [
+        "bayer leverkusen",
+        "leverkusen"
+      ],
+      "league_id": 78
+    },
+    "165": {
+      "canonical": "Borussia Dortmund",
+      "aliases": [
+        "die schwarzgelben",
+        "borussia dortmund",
+        "bvb",
+        "dortmund"
+      ],
+      "league_id": 78
+    },
+    "553": {
+      "canonical": "Olympiakos Piraeus",
+      "aliases": [
+        "olympiakos piraeus"
+      ],
+      "league_id": 2
+    },
+    "569": {
+      "canonical": "Club Brugge KV",
+      "aliases": [
+        "club brugge kv"
+      ],
+      "league_id": 2
+    },
+    "645": {
+      "canonical": "Galatasaray",
+      "aliases": [
+        "galatasaray"
+      ],
+      "league_id": 2
+    },
+    "91": {
+      "canonical": "Monaco",
+      "aliases": [
+        "monaco",
+        "as monaco"
+      ],
+      "league_id": 61
+    },
+    "556": {
+      "canonical": "Qarabag",
+      "aliases": [
+        "qarabag"
+      ],
+      "league_id": 2
+    },
+    "327": {
+      "canonical": "Bodo/Glimt",
+      "aliases": [
+        "bodoglimt"
+      ],
+      "league_id": 2
+    },
+    "211": {
+      "canonical": "Benfica",
+      "aliases": [
+        "benfica",
+        "sl benfica",
+        "slb",
+        "the eagles"
+      ],
+      "league_id": 2
+    },
+    "81": {
+      "canonical": "Marseille",
+      "aliases": [
+        "marseille",
+        "om",
+        "olympique marseille"
+      ],
+      "league_id": 61
+    },
+    "3403": {
+      "canonical": "Pafos",
+      "aliases": [
+        "pafos"
+      ],
+      "league_id": 2
+    },
+    "1393": {
+      "canonical": "Union St. Gilloise",
+      "aliases": [
+        "union st gilloise"
+      ],
+      "league_id": 2
+    },
+    "197": {
+      "canonical": "PSV",
+      "aliases": [
+        "psv eindhoven",
+        "psv",
+        "de boeren"
+      ],
+      "league_id": 2
+    },
+    "531": {
+      "canonical": "Athletic Club",
+      "aliases": [
+        "athletic club",
+        "athletic bilbao",
+        "bilbao"
+      ],
+      "league_id": 140
+    },
+    "492": {
+      "canonical": "Napoli",
+      "aliases": [
+        "napoli",
+        "partenopei",
+        "gli azzurri",
+        "ssc napoli"
+      ],
+      "league_id": 135
+    },
+    "400": {
+      "canonical": "FC Copenhagen",
+      "aliases": [
+        "copenhagen",
+        "fc copenhagen"
+      ],
+      "league_id": 2
+    },
+    "194": {
+      "canonical": "Ajax",
+      "aliases": [
+        "ajax",
+        "afc ajax",
+        "godenzonen"
+      ],
+      "league_id": 2
+    },
+    "169": {
+      "canonical": "Eintracht Frankfurt",
+      "aliases": [
+        "eintracht frankfurt",
+        "frankfurt",
+        "eintracht"
+      ],
+      "league_id": 78
+    },
+    "560": {
+      "canonical": "Slavia Praha",
+      "aliases": [
+        "slavia praha"
+      ],
+      "league_id": 2
+    },
+    "533": {
+      "canonical": "Villarreal",
+      "aliases": [
+        "villarreal",
+        "el submarino amarillo",
+        "yellow submarine"
+      ],
+      "league_id": 140
+    },
+    "664": {
+      "canonical": "Kairat Almaty",
+      "aliases": [
+        "kairat almaty"
+      ],
+      "league_id": 2
     },
     "46": {
       "canonical": "Leicester",
@@ -196,15 +501,6 @@
         "soton"
       ]
     },
-    "63": {
-      "canonical": "Leeds",
-      "aliases": [
-        "leeds",
-        "leeds united",
-        "lufc",
-        "the whites"
-      ]
-    },
     "62": {
       "canonical": "Sheffield United",
       "aliases": [
@@ -212,73 +508,6 @@
         "sheff utd",
         "the blades",
         "sufc"
-      ]
-    },
-    "44": {
-      "canonical": "Burnley",
-      "aliases": [
-        "burnley",
-        "the clarets",
-        "bfc"
-      ]
-    },
-    "529": {
-      "canonical": "Barcelona",
-      "aliases": [
-        "barcelona",
-        "barca",
-        "fcb",
-        "fc barcelona",
-        "blaugrana"
-      ]
-    },
-    "541": {
-      "canonical": "Real Madrid",
-      "aliases": [
-        "real madrid",
-        "real",
-        "madrid",
-        "rmcf",
-        "los blancos",
-        "los merengues"
-      ]
-    },
-    "530": {
-      "canonical": "Atletico Madrid",
-      "aliases": [
-        "atletico madrid",
-        "atletico",
-        "atleti",
-        "atm",
-        "los colchoneros"
-      ]
-    },
-    "157": {
-      "canonical": "Bayern Munich",
-      "aliases": [
-        "bayern munich",
-        "bayern",
-        "fcb",
-        "fc bayern",
-        "bavarians"
-      ]
-    },
-    "165": {
-      "canonical": "Borussia Dortmund",
-      "aliases": [
-        "borussia dortmund",
-        "dortmund",
-        "bvb",
-        "die schwarzgelben"
-      ]
-    },
-    "85": {
-      "canonical": "Paris Saint-Germain",
-      "aliases": [
-        "paris saint-germain",
-        "psg",
-        "paris",
-        "les parisiens"
       ]
     },
     "489": {
@@ -290,42 +519,6 @@
         "acm"
       ]
     },
-    "505": {
-      "canonical": "Inter Milan",
-      "aliases": [
-        "inter milan",
-        "inter",
-        "internazionale",
-        "nerazzurri"
-      ]
-    },
-    "496": {
-      "canonical": "Juventus",
-      "aliases": [
-        "juventus",
-        "juve",
-        "the old lady",
-        "bianconeri"
-      ]
-    },
-    "492": {
-      "canonical": "Napoli",
-      "aliases": [
-        "napoli",
-        "ssc napoli",
-        "partenopei",
-        "gli azzurri"
-      ]
-    },
-    "211": {
-      "canonical": "Benfica",
-      "aliases": [
-        "benfica",
-        "slb",
-        "sl benfica",
-        "the eagles"
-      ]
-    },
     "212": {
       "canonical": "Porto",
       "aliases": [
@@ -334,44 +527,3987 @@
         "the dragons",
         "dragoes"
       ]
-    },
-    "194": {
-      "canonical": "Ajax",
-      "aliases": [
-        "ajax",
-        "afc ajax",
-        "godenzonen"
-      ]
-    },
-    "197": {
-      "canonical": "PSV",
-      "aliases": [
-        "psv",
-        "psv eindhoven",
-        "de boeren"
-      ]
     }
   },
   "players": {
-    "306": {
-      "canonical": "Mohamed Salah",
+    "19465": {
+      "canonical": "David Raya",
       "aliases": [
-        "salah",
-        "mo salah",
-        "m. salah",
-        "egyptian king"
+        "d raya",
+        "d. raya",
+        "david raya",
+        "raya"
       ],
-      "team_id": 40
+      "team_id": 42
+    },
+    "47315": {
+      "canonical": "Martín Zubimendi",
+      "aliases": [
+        "m zubimendi",
+        "m. zubimendi",
+        "martin zubimendi",
+        "zubimendi"
+      ],
+      "team_id": 42
+    },
+    "2937": {
+      "canonical": "D. Rice",
+      "aliases": [
+        "d rice",
+        "d. rice",
+        "rice"
+      ],
+      "team_id": 42
+    },
+    "38746": {
+      "canonical": "J. Timber",
+      "aliases": [
+        "j timber",
+        "j. timber",
+        "timber"
+      ],
+      "team_id": 42
+    },
+    "1460": {
+      "canonical": "B. Saka",
+      "aliases": [
+        "b saka",
+        "b. saka",
+        "saka"
+      ],
+      "team_id": 42
+    },
+    "18979": {
+      "canonical": "V. Gyökeres",
+      "aliases": [
+        "gyokeres",
+        "v gyokeres",
+        "v. gyokeres"
+      ],
+      "team_id": 42
+    },
+    "47311": {
+      "canonical": "Mikel Merino",
+      "aliases": [
+        "m merino",
+        "m. merino",
+        "merino",
+        "mikel merino"
+      ],
+      "team_id": 42
+    },
+    "22090": {
+      "canonical": "W. Saliba",
+      "aliases": [
+        "saliba",
+        "w saliba",
+        "w. saliba"
+      ],
+      "team_id": 42
+    },
+    "19586": {
+      "canonical": "E. Eze",
+      "aliases": [
+        "e eze",
+        "e. eze",
+        "eze"
+      ],
+      "team_id": 52
+    },
+    "22224": {
+      "canonical": "Gabriel Magalhães",
+      "aliases": [
+        "g magalhaes",
+        "g. magalhaes",
+        "gabriel magalhaes",
+        "magalhaes"
+      ],
+      "team_id": 42
+    },
+    "37127": {
+      "canonical": "M. Ødegaard",
+      "aliases": [
+        "degaard",
+        "m degaard",
+        "m ødegaard",
+        "m. degaard",
+        "m. ødegaard",
+        "ødegaard"
+      ],
+      "team_id": 42
+    },
+    "127769": {
+      "canonical": "Gabriel Martinelli",
+      "aliases": [
+        "g martinelli",
+        "g. martinelli",
+        "gabriel martinelli",
+        "martinelli"
+      ],
+      "team_id": 42
+    },
+    "157052": {
+      "canonical": "R. Calafiori",
+      "aliases": [
+        "calafiori",
+        "r calafiori",
+        "r. calafiori"
+      ],
+      "team_id": 42
+    },
+    "136723": {
+      "canonical": "N. Madueke",
+      "aliases": [
+        "madueke",
+        "n madueke",
+        "n. madueke"
+      ],
+      "team_id": 42
+    },
+    "313245": {
+      "canonical": "M. Lewis-Skelly",
+      "aliases": [
+        "lewis-skelly",
+        "m lewis-skelly",
+        "m. lewis-skelly"
+      ],
+      "team_id": 42
+    },
+    "333682": {
+      "canonical": "Cristhian Mosquera",
+      "aliases": [
+        "c mosquera",
+        "c. mosquera",
+        "cristhian mosquera",
+        "mosquera"
+      ],
+      "team_id": 42
+    },
+    "19959": {
+      "canonical": "B. White",
+      "aliases": [
+        "b white",
+        "b. white",
+        "white"
+      ],
+      "team_id": 42
+    },
+    "313236": {
+      "canonical": "E. Nwaneri",
+      "aliases": [
+        "e nwaneri",
+        "e. nwaneri",
+        "nwaneri"
+      ],
+      "team_id": 42
+    },
+    "978": {
+      "canonical": "K. Havertz",
+      "aliases": [
+        "havertz",
+        "k havertz",
+        "k. havertz"
+      ],
+      "team_id": 42
+    },
+    "2273": {
+      "canonical": "Kepa",
+      "aliases": [
+        "kepa"
+      ],
+      "team_id": 42
+    },
+    "636": {
+      "canonical": "Bernardo Silva",
+      "aliases": [
+        "b silva",
+        "b. silva",
+        "bernardo silva",
+        "silva"
+      ],
+      "team_id": 50
     },
     "1100": {
       "canonical": "Erling Haaland",
       "aliases": [
-        "haaland",
         "erling haaland",
+        "e haaland",
+        "e. haaland",
         "the terminator",
+        "haaland",
         "haaland9"
       ],
       "team_id": 50
+    },
+    "36902": {
+      "canonical": "T. Reijnders",
+      "aliases": [
+        "reijnders",
+        "t reijnders",
+        "t. reijnders"
+      ],
+      "team_id": 50
+    },
+    "307123": {
+      "canonical": "N. O&apos;Reilly",
+      "aliases": [
+        "n o&apos;reilly",
+        "n oaposreilly",
+        "n. o&apos;reilly",
+        "n. oaposreilly",
+        "o&apos;reilly",
+        "oaposreilly"
+      ],
+      "team_id": 50
+    },
+    "567": {
+      "canonical": "Rúben Dias",
+      "aliases": [
+        "dias",
+        "r dias",
+        "r. dias",
+        "ruben dias"
+      ],
+      "team_id": 50
+    },
+    "1422": {
+      "canonical": "J. Doku",
+      "aliases": [
+        "doku",
+        "j doku",
+        "j. doku"
+      ],
+      "team_id": 50
+    },
+    "41621": {
+      "canonical": "Matheus Nunes",
+      "aliases": [
+        "m nunes",
+        "m. nunes",
+        "matheus nunes",
+        "nunes"
+      ],
+      "team_id": 50
+    },
+    "161933": {
+      "canonical": "Nico González",
+      "aliases": [
+        "gonzalez",
+        "n gonzalez",
+        "n. gonzalez",
+        "nico gonzalez"
+      ],
+      "team_id": 50
+    },
+    "156477": {
+      "canonical": "R. Cherki",
+      "aliases": [
+        "cherki",
+        "r cherki",
+        "r. cherki"
+      ],
+      "team_id": 50
+    },
+    "18861": {
+      "canonical": "N. Aké",
+      "aliases": [
+        "ake",
+        "n ake",
+        "n. ake"
+      ],
+      "team_id": 50
+    },
+    "81573": {
+      "canonical": "Omar Marmoush",
+      "aliases": [
+        "marmoush",
+        "o marmoush",
+        "o. marmoush",
+        "omar marmoush"
+      ],
+      "team_id": 50
+    },
+    "284230": {
+      "canonical": "R. Lewis",
+      "aliases": [
+        "lewis",
+        "r lewis",
+        "r. lewis"
+      ],
+      "team_id": 50
+    },
+    "278133": {
+      "canonical": "Oscar Bobb",
+      "aliases": [
+        "bobb",
+        "o bobb",
+        "o. bobb",
+        "oscar bobb"
+      ],
+      "team_id": 50
+    },
+    "360114": {
+      "canonical": "A. Khusanov",
+      "aliases": [
+        "a khusanov",
+        "a. khusanov",
+        "khusanov"
+      ],
+      "team_id": 50
+    },
+    "626": {
+      "canonical": "J. Stones",
+      "aliases": [
+        "j stones",
+        "j. stones",
+        "stones"
+      ],
+      "team_id": 50
+    },
+    "21138": {
+      "canonical": "R. Aït-Nouri",
+      "aliases": [
+        "ait-nouri",
+        "r ait-nouri",
+        "r. ait-nouri"
+      ],
+      "team_id": 50
+    },
+    "162489": {
+      "canonical": "J. Trafford",
+      "aliases": [
+        "j trafford",
+        "j. trafford",
+        "trafford"
+      ],
+      "team_id": 50
+    },
+    "19281": {
+      "canonical": "A. Semenyo",
+      "aliases": [
+        "a semenyo",
+        "a. semenyo",
+        "semenyo"
+      ],
+      "team_id": 35
+    },
+    "25004": {
+      "canonical": "S. Ortega",
+      "aliases": [
+        "ortega",
+        "s ortega",
+        "s. ortega"
+      ],
+      "team_id": 50
+    },
+    "5": {
+      "canonical": "M. Akanji",
+      "aliases": [
+        "akanji",
+        "m akanji",
+        "m. akanji"
+      ],
+      "team_id": 50
+    },
+    "19170": {
+      "canonical": "M. Rogers",
+      "aliases": [
+        "m rogers",
+        "m. rogers",
+        "rogers"
+      ],
+      "team_id": 66
+    },
+    "19366": {
+      "canonical": "O. Watkins",
+      "aliases": [
+        "o watkins",
+        "o. watkins",
+        "watkins"
+      ],
+      "team_id": 66
+    },
+    "19298": {
+      "canonical": "M. Cash",
+      "aliases": [
+        "cash",
+        "m cash",
+        "m. cash"
+      ],
+      "team_id": 66
+    },
+    "19354": {
+      "canonical": "E. Konsa",
+      "aliases": [
+        "e konsa",
+        "e. konsa",
+        "konsa"
+      ],
+      "team_id": 66
+    },
+    "2724": {
+      "canonical": "L. Digne",
+      "aliases": [
+        "digne",
+        "l digne",
+        "l. digne"
+      ],
+      "team_id": 66
+    },
+    "19191": {
+      "canonical": "J.  McGinn",
+      "aliases": [
+        "j  mcginn",
+        "j mcginn",
+        "j.  mcginn",
+        "j. mcginn",
+        "mcginn"
+      ],
+      "team_id": 66
+    },
+    "249": {
+      "canonical": "D. Malen",
+      "aliases": [
+        "d malen",
+        "d. malen",
+        "malen"
+      ],
+      "team_id": 66
+    },
+    "19071": {
+      "canonical": "E. Buendía",
+      "aliases": [
+        "buendia",
+        "e buendia",
+        "e. buendia"
+      ],
+      "team_id": 66
+    },
+    "1904": {
+      "canonical": "B. Kamara",
+      "aliases": [
+        "b kamara",
+        "b. kamara",
+        "kamara"
+      ],
+      "team_id": 66
+    },
+    "284457": {
+      "canonical": "L. Bogarde",
+      "aliases": [
+        "bogarde",
+        "l bogarde",
+        "l. bogarde"
+      ],
+      "team_id": 66
+    },
+    "2926": {
+      "canonical": "Y. Tielemans",
+      "aliases": [
+        "tielemans",
+        "y tielemans",
+        "y. tielemans"
+      ],
+      "team_id": 66
+    },
+    "138816": {
+      "canonical": "I. Maatsen",
+      "aliases": [
+        "i maatsen",
+        "i. maatsen",
+        "maatsen"
+      ],
+      "team_id": 66
+    },
+    "162714": {
+      "canonical": "A. Onana",
+      "aliases": [
+        "a onana",
+        "a. onana",
+        "onana"
+      ],
+      "team_id": 66
+    },
+    "46815": {
+      "canonical": "Pau Torres",
+      "aliases": [
+        "p torres",
+        "p. torres",
+        "pau torres",
+        "torres"
+      ],
+      "team_id": 66
+    },
+    "137303": {
+      "canonical": "E. Guessand",
+      "aliases": [
+        "e guessand",
+        "e. guessand",
+        "guessand"
+      ],
+      "team_id": 66
+    },
+    "19179": {
+      "canonical": "T. Mings",
+      "aliases": [
+        "mings",
+        "t mings",
+        "t. mings"
+      ],
+      "team_id": 66
+    },
+    "36878": {
+      "canonical": "M. Bizot",
+      "aliases": [
+        "bizot",
+        "m bizot",
+        "m. bizot"
+      ],
+      "team_id": 66
+    },
+    "19035": {
+      "canonical": "H. Elliott",
+      "aliases": [
+        "elliott",
+        "h elliott",
+        "h. elliott"
+      ],
+      "team_id": 40
+    },
+    "360268": {
+      "canonical": "J. Jimoh",
+      "aliases": [
+        "j jimoh",
+        "j. jimoh",
+        "jimoh"
+      ],
+      "team_id": 66
+    },
+    "284390": {
+      "canonical": "J. Wright",
+      "aliases": [
+        "j wright",
+        "j. wright",
+        "wright"
+      ],
+      "team_id": 66
+    },
+    "891": {
+      "canonical": "L. Shaw",
+      "aliases": [
+        "l shaw",
+        "l. shaw",
+        "shaw"
+      ],
+      "team_id": 33
+    },
+    "382452": {
+      "canonical": "P. Dorgu",
+      "aliases": [
+        "dorgu",
+        "p dorgu",
+        "p. dorgu"
+      ],
+      "team_id": 33
+    },
+    "342970": {
+      "canonical": "L. Yoro",
+      "aliases": [
+        "l yoro",
+        "l. yoro",
+        "yoro"
+      ],
+      "team_id": 33
+    },
+    "886": {
+      "canonical": "Diogo Dalot",
+      "aliases": [
+        "d dalot",
+        "d. dalot",
+        "dalot",
+        "diogo dalot"
+      ],
+      "team_id": 33
+    },
+    "747": {
+      "canonical": "Casemiro",
+      "aliases": [
+        "casemiro"
+      ],
+      "team_id": 33
+    },
+    "1485": {
+      "canonical": "Declan Rice",
+      "aliases": [
+        "declan rice",
+        "dec",
+        "rice",
+        "d rice",
+        "d. rice"
+      ],
+      "team_id": 33
+    },
+    "1165": {
+      "canonical": "Matheus Cunha",
+      "aliases": [
+        "cunha",
+        "m cunha",
+        "m. cunha",
+        "matheus cunha"
+      ],
+      "team_id": 33
+    },
+    "20589": {
+      "canonical": "B. Mbeumo",
+      "aliases": [
+        "b mbeumo",
+        "b. mbeumo",
+        "mbeumo"
+      ],
+      "team_id": 33
+    },
+    "115589": {
+      "canonical": "B. Šeško",
+      "aliases": [
+        "b sesko",
+        "b. sesko",
+        "sesko"
+      ],
+      "team_id": 33
+    },
+    "19220": {
+      "canonical": "M. Mount",
+      "aliases": [
+        "m mount",
+        "m. mount",
+        "mount"
+      ],
+      "team_id": 33
+    },
+    "157997": {
+      "canonical": "A. Diallo",
+      "aliases": [
+        "a diallo",
+        "a. diallo",
+        "diallo"
+      ],
+      "team_id": 33
+    },
+    "51494": {
+      "canonical": "M. Ugarte",
+      "aliases": [
+        "m ugarte",
+        "m. ugarte",
+        "ugarte"
+      ],
+      "team_id": 33
+    },
+    "284322": {
+      "canonical": "K. Mainoo",
+      "aliases": [
+        "k mainoo",
+        "k. mainoo",
+        "mainoo"
+      ],
+      "team_id": 33
+    },
+    "70100": {
+      "canonical": "J. Zirkzee",
+      "aliases": [
+        "j zirkzee",
+        "j. zirkzee",
+        "zirkzee"
+      ],
+      "team_id": 33
+    },
+    "532": {
+      "canonical": "M. de Ligt",
+      "aliases": [
+        "ligt",
+        "m de ligt",
+        "m ligt",
+        "m. de ligt",
+        "m. ligt"
+      ],
+      "team_id": 33
+    },
+    "402329": {
+      "canonical": "A. Heaven",
+      "aliases": [
+        "a heaven",
+        "a. heaven",
+        "heaven"
+      ],
+      "team_id": 33
+    },
+    "2935": {
+      "canonical": "H. Maguire",
+      "aliases": [
+        "h maguire",
+        "h. maguire",
+        "maguire"
+      ],
+      "team_id": 33
+    },
+    "50132": {
+      "canonical": "A. Bayındır",
+      "aliases": [
+        "a bayndr",
+        "a bayındır",
+        "a. bayndr",
+        "a. bayındır",
+        "bayndr",
+        "bayındır"
+      ],
+      "team_id": 33
+    },
+    "328101": {
+      "canonical": "T. Fredricson",
+      "aliases": [
+        "fredricson",
+        "t fredricson",
+        "t. fredricson"
+      ],
+      "team_id": 33
+    },
+    "2931": {
+      "canonical": "T. Heaton",
+      "aliases": [
+        "heaton",
+        "t heaton",
+        "t. heaton"
+      ],
+      "team_id": 33
+    },
+    "1864": {
+      "canonical": "Pedro Neto",
+      "aliases": [
+        "neto",
+        "p neto",
+        "p. neto",
+        "pedro neto"
+      ],
+      "team_id": 49
+    },
+    "10329": {
+      "canonical": "João Pedro",
+      "aliases": [
+        "j pedro",
+        "j. pedro",
+        "joao pedro",
+        "pedro"
+      ],
+      "team_id": 49
+    },
+    "18959": {
+      "canonical": "Robert Sánchez",
+      "aliases": [
+        "r sanchez",
+        "r. sanchez",
+        "robert sanchez",
+        "sanchez"
+      ],
+      "team_id": 49
+    },
+    "19545": {
+      "canonical": "R. James",
+      "aliases": [
+        "james",
+        "r james",
+        "r. james"
+      ],
+      "team_id": 49
+    },
+    "19720": {
+      "canonical": "T. Chalobah",
+      "aliases": [
+        "chalobah",
+        "t chalobah",
+        "t. chalobah"
+      ],
+      "team_id": 49
+    },
+    "5996": {
+      "canonical": "E. Fernández",
+      "aliases": [
+        "e fernandez",
+        "e. fernandez",
+        "fernandez"
+      ],
+      "team_id": 49
+    },
+    "47380": {
+      "canonical": "Marc Cucurella",
+      "aliases": [
+        "cucurella",
+        "m cucurella",
+        "m. cucurella",
+        "marc cucurella"
+      ],
+      "team_id": 49
+    },
+    "161907": {
+      "canonical": "M. Gusto",
+      "aliases": [
+        "gusto",
+        "m gusto",
+        "m. gusto"
+      ],
+      "team_id": 49
+    },
+    "116117": {
+      "canonical": "M. Caicedo",
+      "aliases": [
+        "caicedo",
+        "m caicedo",
+        "m. caicedo"
+      ],
+      "team_id": 49
+    },
+    "425733": {
+      "canonical": "Estêvão",
+      "aliases": [
+        "estevao"
+      ],
+      "team_id": 49
+    },
+    "305834": {
+      "canonical": "Andrey Santos",
+      "aliases": [
+        "a santos",
+        "a. santos",
+        "andrey santos",
+        "santos"
+      ],
+      "team_id": 49
+    },
+    "286894": {
+      "canonical": "J. Bynoe-Gittens",
+      "aliases": [
+        "bynoe-gittens",
+        "j bynoe-gittens",
+        "j. bynoe-gittens"
+      ],
+      "team_id": 49
+    },
+    "161948": {
+      "canonical": "L. Delap",
+      "aliases": [
+        "delap",
+        "l delap",
+        "l. delap"
+      ],
+      "team_id": 49
+    },
+    "152982": {
+      "canonical": "C. Palmer",
+      "aliases": [
+        "c palmer",
+        "c. palmer",
+        "palmer"
+      ],
+      "team_id": 49
+    },
+    "22094": {
+      "canonical": "W. Fofana",
+      "aliases": [
+        "fofana",
+        "w fofana",
+        "w. fofana"
+      ],
+      "team_id": 49
+    },
+    "366735": {
+      "canonical": "Joshua Kofi Acheampong",
+      "aliases": [
+        "acheampong",
+        "j acheampong",
+        "j. acheampong",
+        "joshua acheampong",
+        "joshua kofi acheampong"
+      ],
+      "team_id": 49
+    },
+    "341642": {
+      "canonical": "J. Hato",
+      "aliases": [
+        "hato",
+        "j hato",
+        "j. hato"
+      ],
+      "team_id": 49
+    },
+    "392270": {
+      "canonical": "Marc Guiu",
+      "aliases": [
+        "guiu",
+        "m guiu",
+        "m. guiu",
+        "marc guiu"
+      ],
+      "team_id": 746
+    },
+    "286616": {
+      "canonical": "F. Jörgensen",
+      "aliases": [
+        "f jorgensen",
+        "f. jorgensen",
+        "jorgensen"
+      ],
+      "team_id": 49
+    },
+    "308678": {
+      "canonical": "Dário Essugo",
+      "aliases": [
+        "d essugo",
+        "d. essugo",
+        "dario essugo",
+        "essugo"
+      ],
+      "team_id": 49
+    },
+    "290": {
+      "canonical": "V. van Dijk",
+      "aliases": [
+        "dijk",
+        "v dijk",
+        "v van dijk",
+        "v. dijk",
+        "v. van dijk"
+      ],
+      "team_id": 40
+    },
+    "1145": {
+      "canonical": "I. Konaté",
+      "aliases": [
+        "i konate",
+        "i. konate",
+        "konate"
+      ],
+      "team_id": 40
+    },
+    "206254": {
+      "canonical": "M. Kerkez",
+      "aliases": [
+        "kerkez",
+        "m kerkez",
+        "m. kerkez"
+      ],
+      "team_id": 40
+    },
+    "1096": {
+      "canonical": "D. Szoboszlai",
+      "aliases": [
+        "d szoboszlai",
+        "d. szoboszlai",
+        "szoboszlai"
+      ],
+      "team_id": 40
+    },
+    "6716": {
+      "canonical": "A. Mac Allister",
+      "aliases": [
+        "a allister",
+        "a mac allister",
+        "a. allister",
+        "a. mac allister",
+        "allister"
+      ],
+      "team_id": 40
+    },
+    "203224": {
+      "canonical": "F. Wirtz",
+      "aliases": [
+        "f wirtz",
+        "f. wirtz",
+        "wirtz"
+      ],
+      "team_id": 40
+    },
+    "247": {
+      "canonical": "C. Gakpo",
+      "aliases": [
+        "c gakpo",
+        "c. gakpo",
+        "gakpo"
+      ],
+      "team_id": 40
+    },
+    "174565": {
+      "canonical": "H. Ekitike",
+      "aliases": [
+        "ekitike",
+        "h ekitike",
+        "h. ekitike"
+      ],
+      "team_id": 40
+    },
+    "293": {
+      "canonical": "C. Jones",
+      "aliases": [
+        "c jones",
+        "c. jones",
+        "jones"
+      ],
+      "team_id": 40
+    },
+    "280": {
+      "canonical": "Alisson Becker",
+      "aliases": [
+        "a becker",
+        "a. becker",
+        "alisson becker",
+        "becker"
+      ],
+      "team_id": 40
+    },
+    "30410": {
+      "canonical": "F. Chiesa",
+      "aliases": [
+        "chiesa",
+        "f chiesa",
+        "f. chiesa"
+      ],
+      "team_id": 40
+    },
+    "306": {
+      "canonical": "Mohamed Salah",
+      "aliases": [
+        "mo salah",
+        "mohamed salah",
+        "m salah",
+        "salah",
+        "egyptian king",
+        "m. salah"
+      ],
+      "team_id": 40
+    },
+    "289": {
+      "canonical": "A. Robertson",
+      "aliases": [
+        "a robertson",
+        "a. robertson",
+        "robertson"
+      ],
+      "team_id": 40
+    },
+    "152654": {
+      "canonical": "J. Frimpong",
+      "aliases": [
+        "frimpong",
+        "j frimpong",
+        "j. frimpong"
+      ],
+      "team_id": 40
+    },
+    "284": {
+      "canonical": "Bruno Fernandes",
+      "aliases": [
+        "bruno",
+        "bruno fernandes",
+        "b fernandes",
+        "b. fernandes",
+        "fernandes"
+      ],
+      "team_id": 33
+    },
+    "452685": {
+      "canonical": "R. Ngumoha",
+      "aliases": [
+        "ngumoha",
+        "r ngumoha",
+        "r. ngumoha"
+      ],
+      "team_id": 40
+    },
+    "8500": {
+      "canonical": "W. Endo",
+      "aliases": [
+        "endo",
+        "w endo",
+        "w. endo"
+      ],
+      "team_id": 40
+    },
+    "24760": {
+      "canonical": "G. Mamardashvili",
+      "aliases": [
+        "g mamardashvili",
+        "g. mamardashvili",
+        "mamardashvili"
+      ],
+      "team_id": 40
+    },
+    "397997": {
+      "canonical": "T. Nyoni",
+      "aliases": [
+        "nyoni",
+        "t nyoni",
+        "t. nyoni"
+      ],
+      "team_id": 40
+    },
+    "1438": {
+      "canonical": "B. Leno",
+      "aliases": [
+        "b leno",
+        "b. leno",
+        "leno"
+      ],
+      "team_id": 36
+    },
+    "1934": {
+      "canonical": "S. Berge",
+      "aliases": [
+        "berge",
+        "s berge",
+        "s. berge"
+      ],
+      "team_id": 36
+    },
+    "1161": {
+      "canonical": "E. Smith Rowe",
+      "aliases": [
+        "e rowe",
+        "e smith rowe",
+        "e. rowe",
+        "e. smith rowe",
+        "rowe"
+      ],
+      "team_id": 36
+    },
+    "2729": {
+      "canonical": "J. Andersen",
+      "aliases": [
+        "andersen",
+        "j andersen",
+        "j. andersen"
+      ],
+      "team_id": 36
+    },
+    "19221": {
+      "canonical": "H. Wilson",
+      "aliases": [
+        "h wilson",
+        "h. wilson",
+        "wilson"
+      ],
+      "team_id": 36
+    },
+    "2887": {
+      "canonical": "R. Jiménez",
+      "aliases": [
+        "jimenez",
+        "r jimenez",
+        "r. jimenez"
+      ],
+      "team_id": 36
+    },
+    "389315": {
+      "canonical": "Joshua King",
+      "aliases": [
+        "j king",
+        "j. king",
+        "joshua king",
+        "king"
+      ],
+      "team_id": 36
+    },
+    "2823": {
+      "canonical": "S. Lukić",
+      "aliases": [
+        "lukic",
+        "s lukic",
+        "s. lukic"
+      ],
+      "team_id": 36
+    },
+    "2920": {
+      "canonical": "T. Castagne",
+      "aliases": [
+        "castagne",
+        "t castagne",
+        "t. castagne"
+      ],
+      "team_id": 36
+    },
+    "1455": {
+      "canonical": "A. Iwobi",
+      "aliases": [
+        "a iwobi",
+        "a. iwobi",
+        "iwobi"
+      ],
+      "team_id": 36
+    },
+    "657": {
+      "canonical": "K. Tete",
+      "aliases": [
+        "k tete",
+        "k. tete",
+        "tete"
+      ],
+      "team_id": 36
+    },
+    "152967": {
+      "canonical": "C. Bassey",
+      "aliases": [
+        "bassey",
+        "c bassey",
+        "c. bassey"
+      ],
+      "team_id": 36
+    },
+    "19025": {
+      "canonical": "T. Cairney",
+      "aliases": [
+        "cairney",
+        "t cairney",
+        "t. cairney"
+      ],
+      "team_id": 36
+    },
+    "18753": {
+      "canonical": "Adama Traoré",
+      "aliases": [
+        "a traore",
+        "a. traore",
+        "adama traore",
+        "traore"
+      ],
+      "team_id": 36
+    },
+    "131": {
+      "canonical": "Jorge Cuenca",
+      "aliases": [
+        "cuenca",
+        "j cuenca",
+        "j. cuenca",
+        "jorge cuenca"
+      ],
+      "team_id": 36
+    },
+    "18814": {
+      "canonical": "I. Diop",
+      "aliases": [
+        "diop",
+        "i diop",
+        "i. diop"
+      ],
+      "team_id": 36
+    },
+    "195106": {
+      "canonical": "Rodrigo Muniz",
+      "aliases": [
+        "muniz",
+        "r muniz",
+        "r. muniz",
+        "rodrigo muniz"
+      ],
+      "team_id": 36
+    },
+    "19480": {
+      "canonical": "H. Reed",
+      "aliases": [
+        "h reed",
+        "h. reed",
+        "reed"
+      ],
+      "team_id": 36
+    },
+    "21566": {
+      "canonical": "B. Lecomte",
+      "aliases": [
+        "b lecomte",
+        "b. lecomte",
+        "lecomte"
+      ],
+      "team_id": 36
+    },
+    "899": {
+      "canonical": "Andreas Pereira",
+      "aliases": [
+        "a pereira",
+        "a. pereira",
+        "andreas pereira",
+        "pereira"
+      ],
+      "team_id": 36
+    },
+    "281": {
+      "canonical": "C. Kelleher",
+      "aliases": [
+        "c kelleher",
+        "c. kelleher",
+        "kelleher"
+      ],
+      "team_id": 55
+    },
+    "342022": {
+      "canonical": "M. Kayode",
+      "aliases": [
+        "kayode",
+        "m kayode",
+        "m. kayode"
+      ],
+      "team_id": 55
+    },
+    "19495": {
+      "canonical": "N. Collins",
+      "aliases": [
+        "collins",
+        "n collins",
+        "n. collins"
+      ],
+      "team_id": 55
+    },
+    "263538": {
+      "canonical": "Y. Yarmolyuk",
+      "aliases": [
+        "y yarmolyuk",
+        "y. yarmolyuk",
+        "yarmolyuk"
+      ],
+      "team_id": 55
+    },
+    "196156": {
+      "canonical": "Thiago",
+      "aliases": [
+        "thiago"
+      ],
+      "team_id": 55
+    },
+    "178077": {
+      "canonical": "K. Schade",
+      "aliases": [
+        "k schade",
+        "k. schade",
+        "schade"
+      ],
+      "team_id": 55
+    },
+    "47438": {
+      "canonical": "M. Jensen",
+      "aliases": [
+        "jensen",
+        "m jensen",
+        "m. jensen"
+      ],
+      "team_id": 55
+    },
+    "106725": {
+      "canonical": "K. Lewis-Potter",
+      "aliases": [
+        "k lewis-potter",
+        "k. lewis-potter",
+        "lewis-potter"
+      ],
+      "team_id": 55
+    },
+    "292": {
+      "canonical": "J. Henderson",
+      "aliases": [
+        "henderson",
+        "j henderson",
+        "j. henderson"
+      ],
+      "team_id": 55
+    },
+    "19346": {
+      "canonical": "R. Henry",
+      "aliases": [
+        "henry",
+        "r henry",
+        "r. henry"
+      ],
+      "team_id": 55
+    },
+    "36922": {
+      "canonical": "S. van den Berg",
+      "aliases": [
+        "berg",
+        "s berg",
+        "s van den berg",
+        "s. berg",
+        "s. van den berg"
+      ],
+      "team_id": 55
+    },
+    "1119": {
+      "canonical": "K. Ajer",
+      "aliases": [
+        "ajer",
+        "k ajer",
+        "k. ajer"
+      ],
+      "team_id": 55
+    },
+    "44871": {
+      "canonical": "A. Hickey",
+      "aliases": [
+        "a hickey",
+        "a. hickey",
+        "hickey"
+      ],
+      "team_id": 55
+    },
+    "153066": {
+      "canonical": "Fábio Carvalho",
+      "aliases": [
+        "carvalho",
+        "f carvalho",
+        "f. carvalho",
+        "fabio carvalho"
+      ],
+      "team_id": 55
+    },
+    "15799": {
+      "canonical": "F. Onyeka",
+      "aliases": [
+        "f onyeka",
+        "f. onyeka",
+        "onyeka"
+      ],
+      "team_id": 55
+    },
+    "319517": {
+      "canonical": "A. Milambo",
+      "aliases": [
+        "a milambo",
+        "a. milambo",
+        "milambo"
+      ],
+      "team_id": 55
+    },
+    "180308": {
+      "canonical": "M. Peart-Harris",
+      "aliases": [
+        "m peart-harris",
+        "m. peart-harris",
+        "peart-harris"
+      ],
+      "team_id": 55
+    },
+    "61742": {
+      "canonical": "H. Valdimarsson",
+      "aliases": [
+        "h valdimarsson",
+        "h. valdimarsson",
+        "valdimarsson"
+      ],
+      "team_id": 55
+    },
+    "430827": {
+      "canonical": "Benjamin Arthur",
+      "aliases": [
+        "arthur",
+        "b arthur",
+        "b. arthur",
+        "benjamin arthur"
+      ],
+      "team_id": 55
+    },
+    "15745": {
+      "canonical": "M. Roerslev",
+      "aliases": [
+        "m roerslev",
+        "m. roerslev",
+        "roerslev"
+      ],
+      "team_id": 55
+    },
+    "31146": {
+      "canonical": "S. Tonali",
+      "aliases": [
+        "s tonali",
+        "s. tonali",
+        "tonali"
+      ],
+      "team_id": 34
+    },
+    "18778": {
+      "canonical": "H. Barnes",
+      "aliases": [
+        "barnes",
+        "h barnes",
+        "h. barnes"
+      ],
+      "team_id": 34
+    },
+    "10135": {
+      "canonical": "Bruno Guimarães",
+      "aliases": [
+        "b guimaraes",
+        "b. guimaraes",
+        "bruno guimaraes",
+        "guimaraes"
+      ],
+      "team_id": 34
+    },
+    "163189": {
+      "canonical": "M. Thiaw",
+      "aliases": [
+        "m thiaw",
+        "m. thiaw",
+        "thiaw"
+      ],
+      "team_id": 34
+    },
+    "723": {
+      "canonical": "Joelinton",
+      "aliases": [
+        "joelinton"
+      ],
+      "team_id": 34
+    },
+    "153430": {
+      "canonical": "A. Elanga",
+      "aliases": [
+        "a elanga",
+        "a. elanga",
+        "elanga"
+      ],
+      "team_id": 34
+    },
+    "328105": {
+      "canonical": "L. Miley",
+      "aliases": [
+        "l miley",
+        "l. miley",
+        "miley"
+      ],
+      "team_id": 34
+    },
+    "138787": {
+      "canonical": "A. Gordon",
+      "aliases": [
+        "a gordon",
+        "a. gordon",
+        "gordon"
+      ],
+      "team_id": 34
+    },
+    "19163": {
+      "canonical": "J. Murphy",
+      "aliases": [
+        "j murphy",
+        "j. murphy",
+        "murphy"
+      ],
+      "team_id": 34
+    },
+    "18911": {
+      "canonical": "N. Pope",
+      "aliases": [
+        "n pope",
+        "n. pope",
+        "pope"
+      ],
+      "team_id": 34
+    },
+    "2806": {
+      "canonical": "F. Schär",
+      "aliases": [
+        "f schar",
+        "f. schar",
+        "schar"
+      ],
+      "team_id": 34
+    },
+    "284492": {
+      "canonical": "L. Hall",
+      "aliases": [
+        "hall",
+        "l hall",
+        "l. hall"
+      ],
+      "team_id": 34
+    },
+    "18961": {
+      "canonical": "D. Burn",
+      "aliases": [
+        "burn",
+        "d burn",
+        "d. burn"
+      ],
+      "team_id": 34
+    },
+    "158694": {
+      "canonical": "T. Livramento",
+      "aliases": [
+        "livramento",
+        "t livramento",
+        "t. livramento"
+      ],
+      "team_id": 34
+    },
+    "38734": {
+      "canonical": "S. Botman",
+      "aliases": [
+        "botman",
+        "s botman",
+        "s. botman"
+      ],
+      "team_id": 34
+    },
+    "169": {
+      "canonical": "K. Trippier",
+      "aliases": [
+        "k trippier",
+        "k. trippier",
+        "trippier"
+      ],
+      "team_id": 34
+    },
+    "315237": {
+      "canonical": "W. Osula",
+      "aliases": [
+        "osula",
+        "w osula",
+        "w. osula"
+      ],
+      "team_id": 34
+    },
+    "20355": {
+      "canonical": "A. Ramsdale",
+      "aliases": [
+        "a ramsdale",
+        "a. ramsdale",
+        "ramsdale"
+      ],
+      "team_id": 34
+    },
+    "2855": {
+      "canonical": "E. Krafth",
+      "aliases": [
+        "e krafth",
+        "e. krafth",
+        "krafth"
+      ],
+      "team_id": 34
+    },
+    "423714": {
+      "canonical": "Park Seung-Soo",
+      "aliases": [
+        "p seung-soo",
+        "p. seung-soo",
+        "park seung-soo",
+        "seung-soo"
+      ],
+      "team_id": 34
+    },
+    "2932": {
+      "canonical": "J. Pickford",
+      "aliases": [
+        "j pickford",
+        "j. pickford",
+        "pickford"
+      ],
+      "team_id": 45
+    },
+    "270139": {
+      "canonical": "J. O&apos;Brien",
+      "aliases": [
+        "j o&apos;brien",
+        "j oaposbrien",
+        "j. o&apos;brien",
+        "j. oaposbrien",
+        "o&apos;brien",
+        "oaposbrien"
+      ],
+      "team_id": 45
+    },
+    "2936": {
+      "canonical": "J. Tarkowski",
+      "aliases": [
+        "j tarkowski",
+        "j. tarkowski",
+        "tarkowski"
+      ],
+      "team_id": 45
+    },
+    "895": {
+      "canonical": "J. Garner",
+      "aliases": [
+        "garner",
+        "j garner",
+        "j. garner"
+      ],
+      "team_id": 45
+    },
+    "125743": {
+      "canonical": "Beto",
+      "aliases": [
+        "beto"
+      ],
+      "team_id": 45
+    },
+    "343684": {
+      "canonical": "T. Barry",
+      "aliases": [
+        "barry",
+        "t barry",
+        "t. barry"
+      ],
+      "team_id": 45
+    },
+    "19187": {
+      "canonical": "J. Grealish",
+      "aliases": [
+        "grealish",
+        "j grealish",
+        "j. grealish"
+      ],
+      "team_id": 45
+    },
+    "2934": {
+      "canonical": "M. Keane",
+      "aliases": [
+        "keane",
+        "m keane",
+        "m. keane"
+      ],
+      "team_id": 45
+    },
+    "284500": {
+      "canonical": "T. Iroegbunam",
+      "aliases": [
+        "iroegbunam",
+        "t iroegbunam",
+        "t. iroegbunam"
+      ],
+      "team_id": 45
+    },
+    "18592": {
+      "canonical": "I. Ndiaye",
+      "aliases": [
+        "i ndiaye",
+        "i. ndiaye",
+        "ndiaye"
+      ],
+      "team_id": 45
+    },
+    "148099": {
+      "canonical": "K. Dewsbury-Hall",
+      "aliases": [
+        "dewsbury-hall",
+        "k dewsbury-hall",
+        "k. dewsbury-hall"
+      ],
+      "team_id": 45
+    },
+    "195993": {
+      "canonical": "C. Alcaraz",
+      "aliases": [
+        "alcaraz",
+        "c alcaraz",
+        "c. alcaraz"
+      ],
+      "team_id": 45
+    },
+    "2990": {
+      "canonical": "I. Gueye",
+      "aliases": [
+        "gueye",
+        "i gueye",
+        "i. gueye"
+      ],
+      "team_id": 45
+    },
+    "18929": {
+      "canonical": "D. McNeil",
+      "aliases": [
+        "d mcneil",
+        "d. mcneil",
+        "mcneil"
+      ],
+      "team_id": 45
+    },
+    "405360": {
+      "canonical": "H. Armstrong",
+      "aliases": [
+        "armstrong",
+        "h armstrong",
+        "h. armstrong"
+      ],
+      "team_id": 45
+    },
+    "18758": {
+      "canonical": "S. Coleman",
+      "aliases": [
+        "coleman",
+        "s coleman",
+        "s. coleman"
+      ],
+      "team_id": 45
+    },
+    "18860": {
+      "canonical": "M. Travers",
+      "aliases": [
+        "m travers",
+        "m. travers",
+        "travers"
+      ],
+      "team_id": 45
+    },
+    "138844": {
+      "canonical": "H. Tyrer",
+      "aliases": [
+        "h tyrer",
+        "h. tyrer",
+        "tyrer"
+      ],
+      "team_id": 45
+    },
+    "167657": {
+      "canonical": "T. Onyango",
+      "aliases": [
+        "onyango",
+        "t onyango",
+        "t. onyango"
+      ],
+      "team_id": 45
+    },
+    "330412": {
+      "canonical": "Youssef Chermiti",
+      "aliases": [
+        "chermiti",
+        "y chermiti",
+        "y. chermiti",
+        "youssef chermiti"
+      ],
+      "team_id": 45
+    },
+    "194536": {
+      "canonical": "R. Roefs",
+      "aliases": [
+        "r roefs",
+        "r. roefs",
+        "roefs"
+      ],
+      "team_id": 746
+    },
+    "119121": {
+      "canonical": "T. Hume",
+      "aliases": [
+        "hume",
+        "t hume",
+        "t. hume"
+      ],
+      "team_id": 746
+    },
+    "1464": {
+      "canonical": "G. Xhaka",
+      "aliases": [
+        "g xhaka",
+        "g. xhaka",
+        "xhaka"
+      ],
+      "team_id": 746
+    },
+    "20638": {
+      "canonical": "E. Le Fée",
+      "aliases": [
+        "e fee",
+        "e le fee",
+        "e. fee",
+        "e. le fee",
+        "fee"
+      ],
+      "team_id": 746
+    },
+    "84087": {
+      "canonical": "W. Isidor",
+      "aliases": [
+        "isidor",
+        "w isidor",
+        "w. isidor"
+      ],
+      "team_id": 746
+    },
+    "55904": {
+      "canonical": "D. Ballard",
+      "aliases": [
+        "ballard",
+        "d ballard",
+        "d. ballard"
+      ],
+      "team_id": 746
+    },
+    "6168": {
+      "canonical": "O. Alderete",
+      "aliases": [
+        "alderete",
+        "o alderete",
+        "o. alderete"
+      ],
+      "team_id": 746
+    },
+    "365331": {
+      "canonical": "N. Sadiki",
+      "aliases": [
+        "n sadiki",
+        "n. sadiki",
+        "sadiki"
+      ],
+      "team_id": 746
+    },
+    "336659": {
+      "canonical": "C. Talbi",
+      "aliases": [
+        "c talbi",
+        "c. talbi",
+        "talbi"
+      ],
+      "team_id": 746
+    },
+    "22225": {
+      "canonical": "Reinildo",
+      "aliases": [
+        "reinildo"
+      ],
+      "team_id": 746
+    },
+    "349799": {
+      "canonical": "Eliezer Mayenda",
+      "aliases": [
+        "e mayenda",
+        "e. mayenda",
+        "eliezer mayenda",
+        "mayenda"
+      ],
+      "team_id": 746
+    },
+    "301771": {
+      "canonical": "S. Adingra",
+      "aliases": [
+        "adingra",
+        "s adingra",
+        "s. adingra"
+      ],
+      "team_id": 746
+    },
+    "339201": {
+      "canonical": "C. Rigg",
+      "aliases": [
+        "c rigg",
+        "c. rigg",
+        "rigg"
+      ],
+      "team_id": 746
+    },
+    "327631": {
+      "canonical": "H. Diarra",
+      "aliases": [
+        "diarra",
+        "h diarra",
+        "h. diarra"
+      ],
+      "team_id": 746
+    },
+    "19910": {
+      "canonical": "D. Neil",
+      "aliases": [
+        "d neil",
+        "d. neil",
+        "neil"
+      ],
+      "team_id": 746
+    },
+    "290545": {
+      "canonical": "J. Seelt",
+      "aliases": [
+        "j seelt",
+        "j. seelt",
+        "seelt"
+      ],
+      "team_id": 746
+    },
+    "47521": {
+      "canonical": "P. Roberts",
+      "aliases": [
+        "p roberts",
+        "p. roberts",
+        "roberts"
+      ],
+      "team_id": 746
+    },
+    "19881": {
+      "canonical": "A. Patterson",
+      "aliases": [
+        "a patterson",
+        "a. patterson",
+        "patterson"
+      ],
+      "team_id": 746
+    },
+    "330640": {
+      "canonical": "Harrison Jones",
+      "aliases": [
+        "h jones",
+        "h. jones",
+        "harrison jones",
+        "jones"
+      ],
+      "team_id": 746
+    },
+    "129058": {
+      "canonical": "B. Verbruggen",
+      "aliases": [
+        "b verbruggen",
+        "b. verbruggen",
+        "verbruggen"
+      ],
+      "team_id": 51
+    },
+    "38695": {
+      "canonical": "J. van Hecke",
+      "aliases": [
+        "hecke",
+        "j hecke",
+        "j van hecke",
+        "j. hecke",
+        "j. van hecke"
+      ],
+      "team_id": 51
+    },
+    "18963": {
+      "canonical": "L. Dunk",
+      "aliases": [
+        "dunk",
+        "l dunk",
+        "l. dunk"
+      ],
+      "team_id": 51
+    },
+    "1361": {
+      "canonical": "F. Kadıoğlu",
+      "aliases": [
+        "f kadoglu",
+        "f kadıoglu",
+        "f. kadoglu",
+        "f. kadıoglu",
+        "kadoglu",
+        "kadıoglu"
+      ],
+      "team_id": 51
+    },
+    "1469": {
+      "canonical": "D. Welbeck",
+      "aliases": [
+        "d welbeck",
+        "d. welbeck",
+        "welbeck"
+      ],
+      "team_id": 51
+    },
+    "383685": {
+      "canonical": "Y. Minteh",
+      "aliases": [
+        "minteh",
+        "y minteh",
+        "y. minteh"
+      ],
+      "team_id": 51
+    },
+    "90590": {
+      "canonical": "G. Rutter",
+      "aliases": [
+        "g rutter",
+        "g. rutter",
+        "rutter"
+      ],
+      "team_id": 51
+    },
+    "278370": {
+      "canonical": "D. Gómez",
+      "aliases": [
+        "d gomez",
+        "d. gomez",
+        "gomez"
+      ],
+      "team_id": 51
+    },
+    "265820": {
+      "canonical": "Y. Ayari",
+      "aliases": [
+        "ayari",
+        "y ayari",
+        "y. ayari"
+      ],
+      "team_id": 51
+    },
+    "162007": {
+      "canonical": "M. De Cuyper",
+      "aliases": [
+        "cuyper",
+        "m cuyper",
+        "m de cuyper",
+        "m. cuyper",
+        "m. de cuyper"
+      ],
+      "team_id": 51
+    },
+    "356041": {
+      "canonical": "C. Baleba",
+      "aliases": [
+        "baleba",
+        "c baleba",
+        "c. baleba"
+      ],
+      "team_id": 51
+    },
+    "328225": {
+      "canonical": "B. Gruda",
+      "aliases": [
+        "b gruda",
+        "b. gruda",
+        "gruda"
+      ],
+      "team_id": 51
+    },
+    "92993": {
+      "canonical": "M. Wieffer",
+      "aliases": [
+        "m wieffer",
+        "m. wieffer",
+        "wieffer"
+      ],
+      "team_id": 51
+    },
+    "106835": {
+      "canonical": "K. Mitoma",
+      "aliases": [
+        "k mitoma",
+        "k. mitoma",
+        "mitoma"
+      ],
+      "team_id": 51
+    },
+    "296": {
+      "canonical": "J. Milner",
+      "aliases": [
+        "j milner",
+        "j. milner",
+        "milner"
+      ],
+      "team_id": 51
+    },
+    "537": {
+      "canonical": "J. Veltman",
+      "aliases": [
+        "j veltman",
+        "j. veltman",
+        "veltman"
+      ],
+      "team_id": 51
+    },
+    "22160": {
+      "canonical": "O. Boscagli",
+      "aliases": [
+        "boscagli",
+        "o boscagli",
+        "o. boscagli"
+      ],
+      "team_id": 51
+    },
+    "342063": {
+      "canonical": "D. Coppola",
+      "aliases": [
+        "coppola",
+        "d coppola",
+        "d. coppola"
+      ],
+      "team_id": 51
+    },
+    "19030": {
+      "canonical": "M. O&apos;Riley",
+      "aliases": [
+        "m o&apos;riley",
+        "m oaposriley",
+        "m. o&apos;riley",
+        "m. oaposriley",
+        "o&apos;riley",
+        "oaposriley"
+      ],
+      "team_id": 51
+    },
+    "18960": {
+      "canonical": "J. Steele",
+      "aliases": [
+        "j steele",
+        "j. steele",
+        "steele"
+      ],
+      "team_id": 51
+    },
+    "118307": {
+      "canonical": "Đ. Petrović",
+      "aliases": [
+        " petrovic",
+        "petrovic",
+        "đ petrovic",
+        "đ. petrovic"
+      ],
+      "team_id": 35
+    },
+    "162267": {
+      "canonical": "A. Truffert",
+      "aliases": [
+        "a truffert",
+        "a. truffert",
+        "truffert"
+      ],
+      "team_id": 35
+    },
+    "304853": {
+      "canonical": "A. Scott",
+      "aliases": [
+        "a scott",
+        "a. scott",
+        "scott"
+      ],
+      "team_id": 35
+    },
+    "6610": {
+      "canonical": "M. Senesi",
+      "aliases": [
+        "m senesi",
+        "m. senesi",
+        "senesi"
+      ],
+      "team_id": 35
+    },
+    "19245": {
+      "canonical": "M. Tavernier",
+      "aliases": [
+        "m tavernier",
+        "m. tavernier",
+        "tavernier"
+      ],
+      "team_id": 35
+    },
+    "152856": {
+      "canonical": "Evanilson",
+      "aliases": [
+        "evanilson"
+      ],
+      "team_id": 35
+    },
+    "18870": {
+      "canonical": "D. Brooks",
+      "aliases": [
+        "brooks",
+        "d brooks",
+        "d. brooks"
+      ],
+      "team_id": 35
+    },
+    "368030": {
+      "canonical": "E. Kroupi",
+      "aliases": [
+        "e kroupi",
+        "e. kroupi",
+        "kroupi"
+      ],
+      "team_id": 35
+    },
+    "22136": {
+      "canonical": "B. Diakité",
+      "aliases": [
+        "b diakite",
+        "b. diakite",
+        "diakite"
+      ],
+      "team_id": 35
+    },
+    "1150": {
+      "canonical": "T. Adams",
+      "aliases": [
+        "adams",
+        "t adams",
+        "t. adams"
+      ],
+      "team_id": 35
+    },
+    "20093": {
+      "canonical": "J. Hill",
+      "aliases": [
+        "hill",
+        "j hill",
+        "j. hill"
+      ],
+      "team_id": 35
+    },
+    "18869": {
+      "canonical": "A. Smith",
+      "aliases": [
+        "a smith",
+        "a. smith",
+        "smith"
+      ],
+      "team_id": 35
+    },
+    "363333": {
+      "canonical": "J. Soler",
+      "aliases": [
+        "j soler",
+        "j. soler",
+        "soler"
+      ],
+      "team_id": 35
+    },
+    "31057": {
+      "canonical": "H. Traorè",
+      "aliases": [
+        "h traore",
+        "h. traore",
+        "traore"
+      ],
+      "team_id": 35
+    },
+    "402432": {
+      "canonical": "Ben Winterburn",
+      "aliases": [
+        "b winterburn",
+        "b. winterburn",
+        "ben winterburn",
+        "winterburn"
+      ],
+      "team_id": 35
+    },
+    "151756": {
+      "canonical": "W. Dennis",
+      "aliases": [
+        "dennis",
+        "w dennis",
+        "w. dennis"
+      ],
+      "team_id": 35
+    },
+    "51051": {
+      "canonical": "J. Araujo",
+      "aliases": [
+        "araujo",
+        "j araujo",
+        "j. araujo"
+      ],
+      "team_id": 35
+    },
+    "2734": {
+      "canonical": "P. Billing",
+      "aliases": [
+        "billing",
+        "p billing",
+        "p. billing"
+      ],
+      "team_id": 35
+    },
+    "402434": {
+      "canonical": "Remy Rees-Dottin",
+      "aliases": [
+        "r rees-dottin",
+        "r. rees-dottin",
+        "rees-dottin",
+        "remy rees-dottin"
+      ],
+      "team_id": 35
+    },
+    "31354": {
+      "canonical": "G. Vicario",
+      "aliases": [
+        "g vicario",
+        "g. vicario",
+        "vicario"
+      ],
+      "team_id": 47
+    },
+    "47519": {
+      "canonical": "Pedro Porro",
+      "aliases": [
+        "p porro",
+        "p. porro",
+        "pedro porro",
+        "porro"
+      ],
+      "team_id": 47
+    },
+    "152849": {
+      "canonical": "M. van de Ven",
+      "aliases": [
+        "m van de ven",
+        "m ven",
+        "m. van de ven",
+        "m. ven",
+        "ven"
+      ],
+      "team_id": 47
+    },
+    "2413": {
+      "canonical": "Richarlison",
+      "aliases": [
+        "richarlison"
+      ],
+      "team_id": 47
+    },
+    "336564": {
+      "canonical": "W. Odobert",
+      "aliases": [
+        "odobert",
+        "w odobert",
+        "w. odobert"
+      ],
+      "team_id": 47
+    },
+    "19235": {
+      "canonical": "D. Spence",
+      "aliases": [
+        "d spence",
+        "d. spence",
+        "spence"
+      ],
+      "team_id": 47
+    },
+    "863": {
+      "canonical": "R. Bentancur",
+      "aliases": [
+        "bentancur",
+        "r bentancur",
+        "r. bentancur"
+      ],
+      "team_id": 47
+    },
+    "41104": {
+      "canonical": "João Palhinha",
+      "aliases": [
+        "j palhinha",
+        "j. palhinha",
+        "joao palhinha",
+        "palhinha"
+      ],
+      "team_id": 47
+    },
+    "30776": {
+      "canonical": "C. Romero",
+      "aliases": [
+        "c romero",
+        "c. romero",
+        "romero"
+      ],
+      "team_id": 47
+    },
+    "15911": {
+      "canonical": "M. Kudus",
+      "aliases": [
+        "kudus",
+        "m kudus",
+        "m. kudus"
+      ],
+      "team_id": 47
+    },
+    "347316": {
+      "canonical": "L. Bergvall",
+      "aliases": [
+        "bergvall",
+        "l bergvall",
+        "l. bergvall"
+      ],
+      "team_id": 47
+    },
+    "129711": {
+      "canonical": "B. Johnson",
+      "aliases": [
+        "b johnson",
+        "b. johnson",
+        "johnson"
+      ],
+      "team_id": 52
+    },
+    "270510": {
+      "canonical": "M. Tel",
+      "aliases": [
+        "m tel",
+        "m. tel",
+        "tel"
+      ],
+      "team_id": 47
+    },
+    "237129": {
+      "canonical": "P. Sarr",
+      "aliases": [
+        "p sarr",
+        "p. sarr",
+        "sarr"
+      ],
+      "team_id": 47
+    },
+    "328089": {
+      "canonical": "A. Gray",
+      "aliases": [
+        "a gray",
+        "a. gray",
+        "gray"
+      ],
+      "team_id": 47
+    },
+    "25287": {
+      "canonical": "K. Danso",
+      "aliases": [
+        "danso",
+        "k danso",
+        "k. danso"
+      ],
+      "team_id": 47
+    },
+    "18883": {
+      "canonical": "D. Solanke",
+      "aliases": [
+        "d solanke",
+        "d. solanke",
+        "solanke"
+      ],
+      "team_id": 47
+    },
+    "164": {
+      "canonical": "B. Davies",
+      "aliases": [
+        "b davies",
+        "b. davies",
+        "davies"
+      ],
+      "team_id": 47
+    },
+    "265826": {
+      "canonical": "A. Kinský",
+      "aliases": [
+        "a kinsky",
+        "a. kinsky",
+        "kinsky"
+      ],
+      "team_id": 47
+    },
+    "387521": {
+      "canonical": "L. Vušković",
+      "aliases": [
+        "l vuskovic",
+        "l. vuskovic",
+        "vuskovic"
+      ],
+      "team_id": 47
+    },
+    "19088": {
+      "canonical": "D. Henderson",
+      "aliases": [
+        "d henderson",
+        "d. henderson",
+        "henderson"
+      ],
+      "team_id": 52
+    },
+    "20995": {
+      "canonical": "M. Lacroix",
+      "aliases": [
+        "lacroix",
+        "m lacroix",
+        "m. lacroix"
+      ],
+      "team_id": 52
+    },
+    "182201": {
+      "canonical": "T. Mitchell",
+      "aliases": [
+        "mitchell",
+        "t mitchell",
+        "t. mitchell"
+      ],
+      "team_id": 52
+    },
+    "25927": {
+      "canonical": "J. Mateta",
+      "aliases": [
+        "j mateta",
+        "j. mateta",
+        "mateta"
+      ],
+      "team_id": 52
+    },
+    "288102": {
+      "canonical": "A. Wharton",
+      "aliases": [
+        "a wharton",
+        "a. wharton",
+        "wharton"
+      ],
+      "team_id": 52
+    },
+    "67971": {
+      "canonical": "M. Guéhi",
+      "aliases": [
+        "guehi",
+        "m guehi",
+        "m. guehi"
+      ],
+      "team_id": 52
+    },
+    "18806": {
+      "canonical": "W. Hughes",
+      "aliases": [
+        "hughes",
+        "w hughes",
+        "w. hughes"
+      ],
+      "team_id": 52
+    },
+    "2490": {
+      "canonical": "J. Lerma",
+      "aliases": [
+        "j lerma",
+        "j. lerma",
+        "lerma"
+      ],
+      "team_id": 52
+    },
+    "126949": {
+      "canonical": "C. Richards",
+      "aliases": [
+        "c richards",
+        "c. richards",
+        "richards"
+      ],
+      "team_id": 52
+    },
+    "286458": {
+      "canonical": "J. Devenny",
+      "aliases": [
+        "devenny",
+        "j devenny",
+        "j. devenny"
+      ],
+      "team_id": 52
+    },
+    "13736": {
+      "canonical": "D. Muñoz",
+      "aliases": [
+        "d munoz",
+        "d. munoz",
+        "munoz"
+      ],
+      "team_id": 52
+    },
+    "2218": {
+      "canonical": "I. Sarr",
+      "aliases": [
+        "i sarr",
+        "i. sarr",
+        "sarr"
+      ],
+      "team_id": 52
+    },
+    "18862": {
+      "canonical": "N. Clyne",
+      "aliases": [
+        "clyne",
+        "n clyne",
+        "n. clyne"
+      ],
+      "team_id": 52
+    },
+    "26303": {
+      "canonical": "B. Sosa",
+      "aliases": [
+        "b sosa",
+        "b. sosa",
+        "sosa"
+      ],
+      "team_id": 52
+    },
+    "402640": {
+      "canonical": "R. Esse",
+      "aliases": [
+        "esse",
+        "r esse",
+        "r. esse"
+      ],
+      "team_id": 52
+    },
+    "22157": {
+      "canonical": "W. Benítez",
+      "aliases": [
+        "benitez",
+        "w benitez",
+        "w. benitez"
+      ],
+      "team_id": 52
+    },
+    "380703": {
+      "canonical": "Rio Cardines",
+      "aliases": [
+        "cardines",
+        "r cardines",
+        "r. cardines",
+        "rio cardines"
+      ],
+      "team_id": 52
+    },
+    "284449": {
+      "canonical": "J. Rak-Sakyi",
+      "aliases": [
+        "j rak-sakyi",
+        "j. rak-sakyi",
+        "rak-sakyi"
+      ],
+      "team_id": 52
+    },
+    "47969": {
+      "canonical": "G. Gudmundsson",
+      "aliases": [
+        "g gudmundsson",
+        "g. gudmundsson",
+        "gudmundsson"
+      ],
+      "team_id": 63
+    },
+    "50739": {
+      "canonical": "B. Aaronson",
+      "aliases": [
+        "aaronson",
+        "b aaronson",
+        "b. aaronson"
+      ],
+      "team_id": 63
+    },
+    "19201": {
+      "canonical": "J. Bogle",
+      "aliases": [
+        "bogle",
+        "j bogle",
+        "j. bogle"
+      ],
+      "team_id": 63
+    },
+    "19321": {
+      "canonical": "J. Rodon",
+      "aliases": [
+        "j rodon",
+        "j. rodon",
+        "rodon"
+      ],
+      "team_id": 63
+    },
+    "64003": {
+      "canonical": "P. Struijk",
+      "aliases": [
+        "p struijk",
+        "p. struijk",
+        "struijk"
+      ],
+      "team_id": 63
+    },
+    "32966": {
+      "canonical": "A. Tanaka",
+      "aliases": [
+        "a tanaka",
+        "a. tanaka",
+        "tanaka"
+      ],
+      "team_id": 63
+    },
+    "2279": {
+      "canonical": "E. Ampadu",
+      "aliases": [
+        "ampadu",
+        "e ampadu",
+        "e. ampadu"
+      ],
+      "team_id": 63
+    },
+    "177665": {
+      "canonical": "A. Stach",
+      "aliases": [
+        "a stach",
+        "a. stach",
+        "stach"
+      ],
+      "team_id": 63
+    },
+    "19461": {
+      "canonical": "L. Nmecha",
+      "aliases": [
+        "l nmecha",
+        "l. nmecha",
+        "nmecha"
+      ],
+      "team_id": 63
+    },
+    "80296": {
+      "canonical": "Lucas Perri",
+      "aliases": [
+        "l perri",
+        "l. perri",
+        "lucas perri",
+        "perri"
+      ],
+      "team_id": 63
+    },
+    "129142": {
+      "canonical": "I. Gruev",
+      "aliases": [
+        "gruev",
+        "i gruev",
+        "i. gruev"
+      ],
+      "team_id": 63
+    },
+    "162128": {
+      "canonical": "W. Gnonto",
+      "aliases": [
+        "gnonto",
+        "w gnonto",
+        "w. gnonto"
+      ],
+      "team_id": 63
+    },
+    "18901": {
+      "canonical": "S. Longstaff",
+      "aliases": [
+        "longstaff",
+        "s longstaff",
+        "s. longstaff"
+      ],
+      "team_id": 63
+    },
+    "19128": {
+      "canonical": "J. Harrison",
+      "aliases": [
+        "harrison",
+        "j harrison",
+        "j. harrison"
+      ],
+      "team_id": 63
+    },
+    "19329": {
+      "canonical": "D. James",
+      "aliases": [
+        "d james",
+        "d. james",
+        "james"
+      ],
+      "team_id": 63
+    },
+    "250": {
+      "canonical": "J. Piroe",
+      "aliases": [
+        "j piroe",
+        "j. piroe",
+        "piroe"
+      ],
+      "team_id": 63
+    },
+    "18885": {
+      "canonical": "K. Darlow",
+      "aliases": [
+        "darlow",
+        "k darlow",
+        "k. darlow"
+      ],
+      "team_id": 63
+    },
+    "1408": {
+      "canonical": "S. Bornauw",
+      "aliases": [
+        "bornauw",
+        "s bornauw",
+        "s. bornauw"
+      ],
+      "team_id": 63
+    },
+    "19287": {
+      "canonical": "S. Byram",
+      "aliases": [
+        "byram",
+        "s byram",
+        "s. byram"
+      ],
+      "team_id": 63
+    },
+    "444291": {
+      "canonical": "Harry Gray",
+      "aliases": [
+        "gray",
+        "h gray",
+        "h. gray",
+        "harry gray"
+      ],
+      "team_id": 63
+    },
+    "2817": {
+      "canonical": "N. Milenković",
+      "aliases": [
+        "milenkovic",
+        "n milenkovic",
+        "n. milenkovic"
+      ],
+      "team_id": 65
+    },
+    "138780": {
+      "canonical": "N. Williams",
+      "aliases": [
+        "n williams",
+        "n. williams",
+        "williams"
+      ],
+      "team_id": 65
+    },
+    "138908": {
+      "canonical": "E. Anderson",
+      "aliases": [
+        "anderson",
+        "e anderson",
+        "e. anderson"
+      ],
+      "team_id": 65
+    },
+    "18746": {
+      "canonical": "M. Gibbs-White",
+      "aliases": [
+        "gibbs-white",
+        "m gibbs-white",
+        "m. gibbs-white"
+      ],
+      "team_id": 65
+    },
+    "9366": {
+      "canonical": "Igor Jesus",
+      "aliases": [
+        "i jesus",
+        "i. jesus",
+        "igor jesus",
+        "jesus"
+      ],
+      "team_id": 65
+    },
+    "2298": {
+      "canonical": "C. Hudson-Odoi",
+      "aliases": [
+        "c hudson-odoi",
+        "c. hudson-odoi",
+        "hudson-odoi"
+      ],
+      "team_id": 65
+    },
+    "2919": {
+      "canonical": "M. Sels",
+      "aliases": [
+        "m sels",
+        "m. sels",
+        "sels"
+      ],
+      "team_id": 65
+    },
+    "363695": {
+      "canonical": "Murillo",
+      "aliases": [
+        "murillo"
+      ],
+      "team_id": 65
+    },
+    "48648": {
+      "canonical": "D. Ndoye",
+      "aliases": [
+        "d ndoye",
+        "d. ndoye",
+        "ndoye"
+      ],
+      "team_id": 65
+    },
+    "22149": {
+      "canonical": "I. Sangaré",
+      "aliases": [
+        "i sangare",
+        "i. sangare",
+        "sangare"
+      ],
+      "team_id": 65
+    },
+    "19305": {
+      "canonical": "R. Yates",
+      "aliases": [
+        "r yates",
+        "r. yates",
+        "yates"
+      ],
+      "team_id": 65
+    },
+    "67943": {
+      "canonical": "Morato",
+      "aliases": [
+        "morato"
+      ],
+      "team_id": 65
+    },
+    "18931": {
+      "canonical": "C. Wood",
+      "aliases": [
+        "c wood",
+        "c. wood",
+        "wood"
+      ],
+      "team_id": 65
+    },
+    "8598": {
+      "canonical": "T. Awoniyi",
+      "aliases": [
+        "awoniyi",
+        "t awoniyi",
+        "t. awoniyi"
+      ],
+      "team_id": 65
+    },
+    "2771": {
+      "canonical": "O. Aina",
+      "aliases": [
+        "aina",
+        "o aina",
+        "o. aina"
+      ],
+      "team_id": 65
+    },
+    "141901": {
+      "canonical": "Jota Silva",
+      "aliases": [
+        "j silva",
+        "j. silva",
+        "jota silva",
+        "silva"
+      ],
+      "team_id": 65
+    },
+    "329357": {
+      "canonical": "Z. Abbott",
+      "aliases": [
+        "abbott",
+        "z abbott",
+        "z. abbott"
+      ],
+      "team_id": 65
+    },
+    "362711": {
+      "canonical": "Jair",
+      "aliases": [
+        "jair"
+      ],
+      "team_id": 65
+    },
+    "18933": {
+      "canonical": "A. Gunn",
+      "aliases": [
+        "a gunn",
+        "a. gunn",
+        "gunn"
+      ],
+      "team_id": 65
+    },
+    "18739": {
+      "canonical": "W. Boly",
+      "aliases": [
+        "boly",
+        "w boly",
+        "w. boly"
+      ],
+      "team_id": 65
+    },
+    "19428": {
+      "canonical": "J. Bowen",
+      "aliases": [
+        "bowen",
+        "j bowen",
+        "j. bowen"
+      ],
+      "team_id": 48
+    },
+    "18744": {
+      "canonical": "M. Kilman",
+      "aliases": [
+        "kilman",
+        "m kilman",
+        "m. kilman"
+      ],
+      "team_id": 48
+    },
+    "1243": {
+      "canonical": "T. Souček",
+      "aliases": [
+        "soucek",
+        "t soucek",
+        "t. soucek"
+      ],
+      "team_id": 48
+    },
+    "2939": {
+      "canonical": "C. Wilson",
+      "aliases": [
+        "c wilson",
+        "c. wilson",
+        "wilson"
+      ],
+      "team_id": 48
+    },
+    "253": {
+      "canonical": "A. Areola",
+      "aliases": [
+        "a areola",
+        "a. areola",
+        "areola"
+      ],
+      "team_id": 48
+    },
+    "1646": {
+      "canonical": "Lucas Paquetá",
+      "aliases": [
+        "l paqueta",
+        "l. paqueta",
+        "lucas paqueta",
+        "paqueta"
+      ],
+      "team_id": 48
+    },
+    "138": {
+      "canonical": "J. Todibo",
+      "aliases": [
+        "j todibo",
+        "j. todibo",
+        "todibo"
+      ],
+      "team_id": 48
+    },
+    "409303": {
+      "canonical": "E. Diouf",
+      "aliases": [
+        "diouf",
+        "e diouf",
+        "e. diouf"
+      ],
+      "team_id": 48
+    },
+    "284446": {
+      "canonical": "F. Potts",
+      "aliases": [
+        "f potts",
+        "f. potts",
+        "potts"
+      ],
+      "team_id": 48
+    },
+    "171": {
+      "canonical": "K. Walker-Peters",
+      "aliases": [
+        "k walker-peters",
+        "k. walker-peters",
+        "walker-peters"
+      ],
+      "team_id": 48
+    },
+    "1445": {
+      "canonical": "K. Mavropanos",
+      "aliases": [
+        "k mavropanos",
+        "k. mavropanos",
+        "mavropanos"
+      ],
+      "team_id": 48
+    },
+    "18846": {
+      "canonical": "A. Wan-Bissaka",
+      "aliases": [
+        "a wan-bissaka",
+        "a. wan-bissaka",
+        "wan-bissaka"
+      ],
+      "team_id": 48
+    },
+    "327730": {
+      "canonical": "O. Scarles",
+      "aliases": [
+        "o scarles",
+        "o. scarles",
+        "scarles"
+      ],
+      "team_id": 48
+    },
+    "25391": {
+      "canonical": "N. Füllkrug",
+      "aliases": [
+        "fullkrug",
+        "n fullkrug",
+        "n. fullkrug"
+      ],
+      "team_id": 48
+    },
+    "68466": {
+      "canonical": "A. Irving",
+      "aliases": [
+        "a irving",
+        "a. irving",
+        "irving"
+      ],
+      "team_id": 48
+    },
+    "2476": {
+      "canonical": "G. Rodríguez",
+      "aliases": [
+        "g rodriguez",
+        "g. rodriguez",
+        "rodriguez"
+      ],
+      "team_id": 48
+    },
+    "2938": {
+      "canonical": "J. Ward-Prowse",
+      "aliases": [
+        "j ward-prowse",
+        "j. ward-prowse",
+        "ward-prowse"
+      ],
+      "team_id": 48
+    },
+    "15870": {
+      "canonical": "M. Hermansen",
+      "aliases": [
+        "hermansen",
+        "m hermansen",
+        "m. hermansen"
+      ],
+      "team_id": 48
+    },
+    "21694": {
+      "canonical": "N. Aguerd",
+      "aliases": [
+        "aguerd",
+        "n aguerd",
+        "n. aguerd"
+      ],
+      "team_id": 48
+    },
+    "2869": {
+      "canonical": "E. Álvarez",
+      "aliases": [
+        "alvarez",
+        "e alvarez",
+        "e. alvarez"
+      ],
+      "team_id": 48
+    },
+    "18886": {
+      "canonical": "M. Dúbravka",
+      "aliases": [
+        "dubravka",
+        "m dubravka",
+        "m. dubravka"
+      ],
+      "team_id": 44
+    },
+    "627": {
+      "canonical": "K. Walker",
+      "aliases": [
+        "k walker",
+        "k. walker",
+        "walker"
+      ],
+      "team_id": 44
+    },
+    "196855": {
+      "canonical": "J. Anthony",
+      "aliases": [
+        "anthony",
+        "j anthony",
+        "j. anthony"
+      ],
+      "team_id": 44
+    },
+    "270508": {
+      "canonical": "L. Ugochukwu",
+      "aliases": [
+        "l ugochukwu",
+        "l. ugochukwu",
+        "ugochukwu"
+      ],
+      "team_id": 44
+    },
+    "179400": {
+      "canonical": "M. Estève",
+      "aliases": [
+        "esteve",
+        "m esteve",
+        "m. esteve"
+      ],
+      "team_id": 44
+    },
+    "20303": {
+      "canonical": "J. Laurent",
+      "aliases": [
+        "j laurent",
+        "j. laurent",
+        "laurent"
+      ],
+      "team_id": 44
+    },
+    "19827": {
+      "canonical": "J. Cullen",
+      "aliases": [
+        "cullen",
+        "j cullen",
+        "j. cullen"
+      ],
+      "team_id": 44
+    },
+    "22": {
+      "canonical": "J. Bruun Larsen",
+      "aliases": [
+        "j bruun larsen",
+        "j larsen",
+        "j. bruun larsen",
+        "j. larsen",
+        "larsen"
+      ],
+      "team_id": 44
+    },
+    "161621": {
+      "canonical": "L. Tchaouna",
+      "aliases": [
+        "l tchaouna",
+        "l. tchaouna",
+        "tchaouna"
+      ],
+      "team_id": 44
+    },
+    "180560": {
+      "canonical": "H. Mejbri",
+      "aliases": [
+        "h mejbri",
+        "h. mejbri",
+        "mejbri"
+      ],
+      "team_id": 44
+    },
+    "98936": {
+      "canonical": "L. Foster",
+      "aliases": [
+        "foster",
+        "l foster",
+        "l. foster"
+      ],
+      "team_id": 44
+    },
+    "47903": {
+      "canonical": "H. Ekdal",
+      "aliases": [
+        "ekdal",
+        "h ekdal",
+        "h. ekdal"
+      ],
+      "team_id": 44
+    },
+    "375915": {
+      "canonical": "Q. Hartman",
+      "aliases": [
+        "hartman",
+        "q hartman",
+        "q. hartman"
+      ],
+      "team_id": 44
+    },
+    "36927": {
+      "canonical": "Z. Flemming",
+      "aliases": [
+        "flemming",
+        "z flemming",
+        "z. flemming"
+      ],
+      "team_id": 44
+    },
+    "37882": {
+      "canonical": "M. Edwards",
+      "aliases": [
+        "edwards",
+        "m edwards",
+        "m. edwards"
+      ],
+      "team_id": 44
+    },
+    "330238": {
+      "canonical": "Lucas Pires",
+      "aliases": [
+        "l pires",
+        "l. pires",
+        "lucas pires",
+        "pires"
+      ],
+      "team_id": 44
+    },
+    "128895": {
+      "canonical": "O. Sonne",
+      "aliases": [
+        "o sonne",
+        "o. sonne",
+        "sonne"
+      ],
+      "team_id": 44
+    },
+    "1746": {
+      "canonical": "J. Worrall",
+      "aliases": [
+        "j worrall",
+        "j. worrall",
+        "worrall"
+      ],
+      "team_id": 44
+    },
+    "328273": {
+      "canonical": "M. Weiß",
+      "aliases": [
+        "m wei",
+        "m weiß",
+        "m. wei",
+        "m. weiß",
+        "wei",
+        "weiß"
+      ],
+      "team_id": 44
+    },
+    "278079": {
+      "canonical": "A. Ramsey",
+      "aliases": [
+        "a ramsey",
+        "a. ramsey",
+        "ramsey"
+      ],
+      "team_id": 44
+    },
+    "265784": {
+      "canonical": "André",
+      "aliases": [
+        "andre"
+      ],
+      "team_id": 39
+    },
+    "195103": {
+      "canonical": "João Gomes",
+      "aliases": [
+        "gomes",
+        "j gomes",
+        "j. gomes",
+        "joao gomes"
+      ],
+      "team_id": 39
+    },
+    "13708": {
+      "canonical": "J. Arias",
+      "aliases": [
+        "arias",
+        "j arias",
+        "j. arias"
+      ],
+      "team_id": 39
+    },
+    "2032": {
+      "canonical": "J. Strand Larsen",
+      "aliases": [
+        "j larsen",
+        "j strand larsen",
+        "j. larsen",
+        "j. strand larsen",
+        "larsen"
+      ],
+      "team_id": 39
+    },
+    "280687": {
+      "canonical": "Hugo Bueno",
+      "aliases": [
+        "bueno",
+        "h bueno",
+        "h. bueno",
+        "hugo bueno"
+      ],
+      "team_id": 39
+    },
+    "24888": {
+      "canonical": "Hwang Hee-Chan",
+      "aliases": [
+        "h hee-chan",
+        "h. hee-chan",
+        "hee-chan",
+        "hwang hee-chan"
+      ],
+      "team_id": 39
+    },
+    "265782": {
+      "canonical": "D. Møller Wolfe",
+      "aliases": [
+        "d mller wolfe",
+        "d møller wolfe",
+        "d wolfe",
+        "d. møller wolfe",
+        "d. wolfe",
+        "wolfe"
+      ],
+      "team_id": 39
+    },
+    "20665": {
+      "canonical": "J. Bellegarde",
+      "aliases": [
+        "bellegarde",
+        "j bellegarde",
+        "j. bellegarde"
+      ],
+      "team_id": 39
+    },
+    "135334": {
+      "canonical": "S. Bueno",
+      "aliases": [
+        "bueno",
+        "s bueno",
+        "s. bueno"
+      ],
+      "team_id": 39
+    },
+    "195717": {
+      "canonical": "Y. Mosquera",
+      "aliases": [
+        "mosquera",
+        "y mosquera",
+        "y. mosquera"
+      ],
+      "team_id": 39
+    },
+    "135068": {
+      "canonical": "E. Agbadou",
+      "aliases": [
+        "agbadou",
+        "e agbadou",
+        "e. agbadou"
+      ],
+      "team_id": 39
+    },
+    "41606": {
+      "canonical": "Toti Gomes",
+      "aliases": [
+        "gomes",
+        "t gomes",
+        "t. gomes",
+        "toti gomes"
+      ],
+      "team_id": 39
+    },
+    "3080": {
+      "canonical": "M. Munetsi",
+      "aliases": [
+        "m munetsi",
+        "m. munetsi",
+        "munetsi"
+      ],
+      "team_id": 39
+    },
+    "19143": {
+      "canonical": "S. Johnstone",
+      "aliases": [
+        "johnstone",
+        "s johnstone",
+        "s. johnstone"
+      ],
+      "team_id": 39
+    },
+    "1590": {
+      "canonical": "José Sá",
+      "aliases": [
+        "j sa",
+        "j. sa",
+        "jose sa",
+        "sa"
+      ],
+      "team_id": 39
+    },
+    "391822": {
+      "canonical": "Fer López",
+      "aliases": [
+        "f lopez",
+        "f. lopez",
+        "fer lopez",
+        "lopez"
+      ],
+      "team_id": 39
+    },
+    "18742": {
+      "canonical": "M. Doherty",
+      "aliases": [
+        "doherty",
+        "m doherty",
+        "m. doherty"
+      ],
+      "team_id": 39
+    },
+    "285": {
+      "canonical": "K. Hoever",
+      "aliases": [
+        "hoever",
+        "k hoever",
+        "k. hoever"
+      ],
+      "team_id": 39
+    },
+    "282770": {
+      "canonical": "Rodrigo Gomes",
+      "aliases": [
+        "gomes",
+        "r gomes",
+        "r. gomes",
+        "rodrigo gomes"
+      ],
+      "team_id": 39
+    },
+    "7722": {
+      "canonical": "S. Kalajdzic",
+      "aliases": [
+        "kalajdzic",
+        "s kalajdzic",
+        "s. kalajdzic"
+      ],
+      "team_id": 39
+    },
+    "18766": {
+      "canonical": "D. Calvert-Lewin",
+      "aliases": [
+        "calvert-lewin",
+        "d calvert-lewin",
+        "d. calvert-lewin"
+      ],
+      "team_id": 63
+    },
+    "631": {
+      "canonical": "P. Foden",
+      "aliases": [
+        "foden",
+        "p foden",
+        "p. foden"
+      ],
+      "team_id": 50
+    },
+    "158054": {
+      "canonical": "N. Woltemade",
+      "aliases": [
+        "n woltemade",
+        "n. woltemade",
+        "woltemade"
+      ],
+      "team_id": 34
+    },
+    "1946": {
+      "canonical": "L. Trossard",
+      "aliases": [
+        "l trossard",
+        "l. trossard",
+        "trossard"
+      ],
+      "team_id": 42
+    },
+    "1696": {
+      "canonical": "S. Chukwueze",
+      "aliases": [
+        "chukwueze",
+        "s chukwueze",
+        "s. chukwueze"
+      ],
+      "team_id": 36
+    },
+    "25073": {
+      "canonical": "V. Janelt",
+      "aliases": [
+        "janelt",
+        "v janelt",
+        "v. janelt"
+      ],
+      "team_id": 55
+    },
+    "278": {
+      "canonical": "Kylian Mbappe",
+      "aliases": [
+        "kylian mbappe",
+        "k. mbappe",
+        "mbappe",
+        "k mbappe",
+        "kylian"
+      ],
+      "team_id": 541
+    },
+    "184": {
+      "canonical": "H. Kane",
+      "aliases": [
+        "h kane",
+        "h. kane",
+        "kane"
+      ],
+      "team_id": 157
+    },
+    "7398": {
+      "canonical": "B. Varga",
+      "aliases": [
+        "b varga",
+        "b. varga",
+        "varga"
+      ],
+      "team_id": 651
+    },
+    "2780": {
+      "canonical": "V. Osimhen",
+      "aliases": [
+        "osimhen",
+        "v osimhen",
+        "v. osimhen"
+      ],
+      "team_id": 645
+    },
+    "909": {
+      "canonical": "M. Rashford",
+      "aliases": [
+        "m rashford",
+        "m. rashford",
+        "rashford"
+      ],
+      "team_id": 529
+    },
+    "340626": {
+      "canonical": "Fermín",
+      "aliases": [
+        "fermin"
+      ],
+      "team_id": 529
+    },
+    "47291": {
+      "canonical": "Gorka Guruzeta",
+      "aliases": [
+        "g guruzeta",
+        "g. guruzeta",
+        "gorka guruzeta",
+        "guruzeta"
+      ],
+      "team_id": 531
+    },
+    "128384": {
+      "canonical": "Vitinha",
+      "aliases": [
+        "vitinha"
+      ],
+      "team_id": 85
+    },
+    "78": {
+      "canonical": "H. Vanaken",
+      "aliases": [
+        "h vanaken",
+        "h. vanaken",
+        "vanaken"
+      ],
+      "team_id": 569
+    },
+    "39073": {
+      "canonical": "J. Hauge",
+      "aliases": [
+        "hauge",
+        "j hauge",
+        "j. hauge"
+      ],
+      "team_id": 327
+    },
+    "134320": {
+      "canonical": "Leandro Andrade",
+      "aliases": [
+        "andrade",
+        "l andrade",
+        "l. andrade",
+        "leandro andrade"
+      ],
+      "team_id": 556
+    },
+    "15704": {
+      "canonical": "K. Høgh",
+      "aliases": [
+        "hgh",
+        "høgh",
+        "k hgh",
+        "k høgh",
+        "k. hgh",
+        "k. høgh"
+      ],
+      "team_id": 327
+    },
+    "9363": {
+      "canonical": "Igor Paixão",
+      "aliases": [
+        "i paixao",
+        "i. paixao",
+        "igor paixao",
+        "paixao"
+      ],
+      "team_id": 81
+    },
+    "454968": {
+      "canonical": "C. Durán",
+      "aliases": [
+        "c duran",
+        "c. duran",
+        "duran"
+      ],
+      "team_id": 556
+    },
+    "563": {
+      "canonical": "Álex Grimaldo",
+      "aliases": [
+        "a grimaldo",
+        "a. grimaldo",
+        "alex grimaldo",
+        "grimaldo"
+      ],
+      "team_id": 168
+    },
+    "41112": {
+      "canonical": "Trincão",
+      "aliases": [
+        "trincao"
+      ],
+      "team_id": 228
+    },
+    "161800": {
+      "canonical": "C. Tzolis",
+      "aliases": [
+        "c tzolis",
+        "c. tzolis",
+        "tzolis"
+      ],
+      "team_id": 569
+    },
+    "1465": {
+      "canonical": "Cole Palmer",
+      "aliases": [
+        "cole palmer",
+        "p aubameyang",
+        "cold palmer",
+        "p. aubameyang",
+        "aubameyang",
+        "palmer"
+      ],
+      "team_id": 81
+    },
+    "18946": {
+      "canonical": "M. Elyounoussi",
+      "aliases": [
+        "elyounoussi",
+        "m elyounoussi",
+        "m. elyounoussi"
+      ],
+      "team_id": 400
+    },
+    "39043": {
+      "canonical": "F. Aursnes",
+      "aliases": [
+        "aursnes",
+        "f aursnes",
+        "f. aursnes"
+      ],
+      "team_id": 211
+    },
+    "19617": {
+      "canonical": "M. Olise",
+      "aliases": [
+        "m olise",
+        "m. olise",
+        "olise"
+      ],
+      "team_id": 157
+    },
+    "762": {
+      "canonical": "Vinícius Júnior",
+      "aliases": [
+        "junior",
+        "v junior",
+        "v. junior",
+        "vinicius junior"
+      ],
+      "team_id": 541
+    },
+    "291964": {
+      "canonical": "A. Güler",
+      "aliases": [
+        "a guler",
+        "a. guler",
+        "guler"
+      ],
+      "team_id": 541
+    },
+    "282126": {
+      "canonical": "Carlos Forbs",
+      "aliases": [
+        "c forbs",
+        "c. forbs",
+        "carlos forbs",
+        "forbs"
+      ],
+      "team_id": 569
+    },
+    "375974": {
+      "canonical": "J. Seys",
+      "aliases": [
+        "j seys",
+        "j. seys",
+        "seys"
+      ],
+      "team_id": 569
+    },
+    "483": {
+      "canonical": "K. Kvaratskhelia",
+      "aliases": [
+        "k kvaratskhelia",
+        "k. kvaratskhelia",
+        "kvaratskhelia"
+      ],
+      "team_id": 85
+    },
+    "386828": {
+      "canonical": "Lamine Yamal",
+      "aliases": [
+        "l yamal",
+        "l. yamal",
+        "lamine yamal",
+        "yamal"
+      ],
+      "team_id": 529
+    },
+    "36905": {
+      "canonical": "G. Til",
+      "aliases": [
+        "g til",
+        "g. til",
+        "til"
+      ],
+      "team_id": 197
+    },
+    "339883": {
+      "canonical": "K. Yıldız",
+      "aliases": [
+        "k yldz",
+        "k yıldız",
+        "k. yldz",
+        "k. yıldız",
+        "yldz",
+        "yıldız"
+      ],
+      "team_id": 496
+    },
+    "510": {
+      "canonical": "S. Gnabry",
+      "aliases": [
+        "gnabry",
+        "s gnabry",
+        "s. gnabry"
+      ],
+      "team_id": 157
     },
     "874": {
       "canonical": "Cristiano Ronaldo",
@@ -382,15 +4518,6 @@
         "cristiano"
       ],
       "team_id": 45
-    },
-    "152982": {
-      "canonical": "Cole Palmer",
-      "aliases": [
-        "palmer",
-        "cole palmer",
-        "cold palmer"
-      ],
-      "team_id": 49
     },
     "186": {
       "canonical": "Harry Kane",
@@ -420,26 +4547,16 @@
       ],
       "team_id": 33
     },
-    "1485": {
-      "canonical": "Bruno Fernandes",
-      "aliases": [
-        "bruno",
-        "bruno fernandes",
-        "b. fernandes"
-      ],
-      "team_id": 33
-    },
-    "37127": {
+    "882": {
       "canonical": "Martin Odegaard",
       "aliases": [
         "odegaard",
         "martin odegaard",
-        "ode",
-        "m. odegaard"
+        "ode"
       ],
       "team_id": 42
     },
-    "631": {
+    "903": {
       "canonical": "Phil Foden",
       "aliases": [
         "foden",
@@ -448,7 +4565,7 @@
       ],
       "team_id": 50
     },
-    "290": {
+    "547": {
       "canonical": "Virgil van Dijk",
       "aliases": [
         "van dijk",
@@ -457,30 +4574,12 @@
       ],
       "team_id": 40
     },
-    "2937": {
-      "canonical": "Declan Rice",
-      "aliases": [
-        "rice",
-        "declan rice",
-        "dec"
-      ],
-      "team_id": 42
-    },
     "2295": {
       "canonical": "Jude Bellingham",
       "aliases": [
         "bellingham",
         "jude bellingham",
         "jude"
-      ],
-      "team_id": 541
-    },
-    "278": {
-      "canonical": "Kylian Mbappe",
-      "aliases": [
-        "mbappe",
-        "kylian mbappe",
-        "kylian"
       ],
       "team_id": 541
     },
@@ -504,88 +4603,6 @@
         "goat"
       ],
       "team_id": 85
-    },
-    "891": {
-      "canonical": "Luke Shaw",
-      "aliases": [
-        "shaw",
-        "luke shaw",
-        "l. shaw"
-      ],
-      "team_id": 33
-    },
-    "1460": {
-      "canonical": "Bukayo Saka",
-      "aliases": [
-        "saka",
-        "bukayo saka",
-        "b. saka",
-        "starboy"
-      ],
-      "team_id": 42
-    },
-    "342970": {
-      "canonical": "Leny Yoro",
-      "aliases": [
-        "yoro",
-        "leny yoro",
-        "l. yoro"
-      ],
-      "team_id": 33
-    },
-    "978": {
-      "canonical": "Kai Havertz",
-      "aliases": [
-        "havertz",
-        "kai havertz",
-        "k. havertz"
-      ],
-      "team_id": 42
-    },
-    "18979": {
-      "canonical": "Viktor Gyokeres",
-      "aliases": [
-        "gyokeres",
-        "viktor gyokeres",
-        "v. gyokeres"
-      ],
-      "team_id": 42
-    },
-    "22090": {
-      "canonical": "William Saliba",
-      "aliases": [
-        "saliba",
-        "william saliba",
-        "w. saliba"
-      ],
-      "team_id": 42
-    },
-    "127769": {
-      "canonical": "Gabriel Martinelli",
-      "aliases": [
-        "martinelli",
-        "gabriel martinelli",
-        "gabi"
-      ],
-      "team_id": 42
-    },
-    "284322": {
-      "canonical": "Kobbie Mainoo",
-      "aliases": [
-        "mainoo",
-        "kobbie mainoo",
-        "k. mainoo"
-      ],
-      "team_id": 33
-    },
-    "157052": {
-      "canonical": "Riccardo Calafiori",
-      "aliases": [
-        "calafiori",
-        "riccardo calafiori",
-        "r. calafiori"
-      ],
-      "team_id": 42
     }
   },
   "competitions": {

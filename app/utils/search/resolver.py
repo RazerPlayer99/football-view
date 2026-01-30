@@ -112,8 +112,9 @@ class Resolver:
             return None, disambiguation
 
         # Filter to high-confidence entities
-        teams = self._filter_teams(resolved_entities.teams, assumptions)
-        players = self._filter_players(resolved_entities.players, assumptions)
+        is_comparison = intent.intent_type == IntentType.COMPARISON
+        teams = self._filter_teams(resolved_entities.teams, assumptions, for_comparison=is_comparison)
+        players = self._filter_players(resolved_entities.players, assumptions, for_comparison=is_comparison)
         competitions = self._filter_competitions(resolved_entities.competitions, assumptions)
 
         # Apply defaults based on intent
@@ -194,6 +195,23 @@ class Resolver:
         if intent.intent_type == IntentType.COMPARISON:
             return None
 
+        # For league-focused intents (standings, top scorers, etc.),
+        # if we have a high-confidence competition match, skip player/team disambiguation
+        # This prevents "la liga standings" from triggering player disambiguation
+        league_focused_intents = {
+            IntentType.STANDINGS,
+            IntentType.TOP_SCORERS,
+            IntentType.TOP_ASSISTS,
+            IntentType.SCHEDULE,
+        }
+        if intent.intent_type in league_focused_intents:
+            # Check if we have a competition match
+            if entities.competitions:
+                top_comp = max(entities.competitions, key=lambda c: c.confidence)
+                if top_comp.confidence >= COMPETITION_AUTO_THRESHOLD:
+                    # High confidence competition - proceed without disambiguation
+                    return None
+
         # Check for ambiguous teams
         if entities.has_ambiguous_teams:
             teams = sorted(entities.teams, key=lambda t: t.confidence, reverse=True)
@@ -261,10 +279,17 @@ class Resolver:
         self,
         teams: List[TeamEntity],
         assumptions: List[str],
+        for_comparison: bool = False,
     ) -> List[TeamEntity]:
         """Filter teams to high-confidence matches."""
         # Sort by confidence
         sorted_teams = sorted(teams, key=lambda t: t.confidence, reverse=True)
+
+        # For comparisons, keep multiple teams above disambiguate threshold
+        if for_comparison:
+            result = [t for t in sorted_teams if t.confidence >= TEAM_DISAMBIGUATE_THRESHOLD][:2]
+            if result:
+                return result
 
         # Take top team if above threshold, or top 2 for vs queries
         result = []
@@ -280,9 +305,16 @@ class Resolver:
         self,
         players: List[PlayerEntity],
         assumptions: List[str],
+        for_comparison: bool = False,
     ) -> List[PlayerEntity]:
         """Filter players to high-confidence matches."""
         sorted_players = sorted(players, key=lambda p: p.confidence, reverse=True)
+
+        # For comparisons, keep multiple players above disambiguate threshold
+        if for_comparison:
+            result = [p for p in sorted_players if p.confidence >= PLAYER_DISAMBIGUATE_THRESHOLD][:2]
+            if result:
+                return result
 
         result = []
         for player in sorted_players:
@@ -315,6 +347,16 @@ class Resolver:
         session: Optional[SearchSession],
     ) -> Tuple[List[TeamEntity], List[PlayerEntity], List[CompetitionEntity], List[str]]:
         """Apply sensible defaults based on intent type."""
+        # League name mapping for better UX
+        league_names = {
+            39: "Premier League",
+            140: "La Liga",
+            78: "Bundesliga",
+            135: "Serie A",
+            61: "Ligue 1",
+            2: "Champions League",
+        }
+
         # Default competition for standings, top scorers, etc.
         if intent.intent_type in (
             IntentType.STANDINGS,
@@ -327,11 +369,13 @@ class Resolver:
                 league_id = session.last_league_id if session else None
                 if not league_id:
                     league_id = self.default_league_id
-                    assumptions.append("Showing Premier League (default)")
+                    league_name = league_names.get(league_id, "Premier League")
+                    assumptions.append(f"Showing {league_name} (default)")
 
+                league_name = league_names.get(league_id, f"League {league_id}")
                 competitions = [CompetitionEntity(
                     league_id=league_id,
-                    name="Premier League" if league_id == 39 else f"League {league_id}",
+                    name=league_name,
                     confidence=0.80,
                     matched_text="default",
                     match_method="default",
@@ -343,7 +387,7 @@ class Resolver:
         elif session and session.last_season:
             assumptions.append(f"Using season {session.last_season} from context")
         else:
-            assumptions.append(f"Showing current season 2024-25")
+            assumptions.append(f"Showing current season 2025-26")
 
         return teams, players, competitions, assumptions
 

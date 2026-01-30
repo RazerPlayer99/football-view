@@ -50,6 +50,13 @@ FILLER_WORDS = {
     "want", "to", "see", "get", "find", "give",
 }
 
+# Multi-word phrases that should NOT have filler words stripped
+# (e.g., "serie a" - the "a" is part of the league name)
+PRESERVE_PHRASES = {
+    "serie a",
+    "ligue 1",
+}
+
 # Date patterns for relative date extraction
 RELATIVE_DATES = {
     "today": 0,
@@ -143,9 +150,29 @@ def strip_filler_words(text: str) -> str:
     Remove filler words for better entity matching.
 
     Example: "show me the arsenal stats" → "arsenal stats"
+
+    Preserves certain phrases where filler words are part of entity names
+    (e.g., "serie a" - the "a" is part of the league name)
     """
-    words = text.lower().split()
-    return " ".join(w for w in words if w not in FILLER_WORDS)
+    text_lower = text.lower()
+
+    # First, temporarily replace phrases we want to preserve
+    preserved = {}
+    for phrase in PRESERVE_PHRASES:
+        if phrase in text_lower:
+            placeholder = f"__PRESERVE_{len(preserved)}__"
+            preserved[placeholder] = phrase
+            text_lower = text_lower.replace(phrase, placeholder)
+
+    # Strip filler words
+    words = text_lower.split()
+    result = " ".join(w for w in words if w not in FILLER_WORDS)
+
+    # Restore preserved phrases
+    for placeholder, phrase in preserved.items():
+        result = result.replace(placeholder, phrase)
+
+    return result
 
 
 def extract_time_modifier(text: str) -> Tuple[str, TimeModifier | None]:
