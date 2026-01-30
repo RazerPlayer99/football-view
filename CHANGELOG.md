@@ -1,5 +1,37 @@
 # Football View Changelog
 
+## v0.2.2 - Stability Update (2026-01-30)
+
+### 🐛 Bug Fixes & Stability Improvements
+
+**Dashboard Fixes**
+- Fixed matches not displaying due to undefined `matchTime` variable in `renderMatchRow`
+- Fixed "Today/Yesterday/Tomorrow" date labels now correctly reference simulated date (2026-01-30)
+- Fixed match IDs not passing correctly (was sending `fixture_id=0`) - now uses `match.id`
+- Dashboard now defaults to "Today" (2026-01-30) on load
+
+**Season Configuration**
+- Fixed `current_season` computation - now correctly returns 2025 for Jan-Jul months (football seasons run Aug-May)
+- Centralized season logic in `config/settings.py` with `_compute_current_season()` function
+
+**Search System Consolidation** (merged from Codex branch)
+- Unified alias systems - deprecated `app/aliases.json` in favor of `data/aliases.json` via `AliasDatabase`
+- Removed hardcoded Premier League defaults (`league_id=39`) throughout codebase
+- New `/api/config` endpoint provides dynamic league list and current season to frontend
+- `search_utils.py` now wraps modern `AliasDatabase` with deprecation warnings
+
+**New API Endpoint**
+- Added `/api/predicted-xi` endpoint for fetching predicted lineups
+  - Accepts `fixture_id`, `home_team_id`, `away_team_id` parameters
+  - Returns formation, players with positions, confidence scores
+  - Parallel fetching for home/away teams
+
+**Frontend Improvements**
+- Dynamic league list loaded from `/api/config` instead of hardcoded
+- Match detail panel now passes team IDs for predicted lineup fetching
+
+---
+
 ## v0.2.2 - Multi-League & Major UX Update (2026-01-29)
 
 **Most comprehensive update so far.** Complete multi-league support, major UX architecture update, and dozens of fixes across the entire stack.

@@ -452,6 +452,88 @@ def api_search_suggest(
     return {"suggestions": suggestions, "query": q}
 
 
+@app.get("/api/predicted-xi")
+def api_predicted_xi(
+    fixture_id: int = Query(..., description="Fixture/match ID"),
+    home_team_id: Optional[int] = Query(None, description="Home team ID (optional, will be fetched if not provided)"),
+    away_team_id: Optional[int] = Query(None, description="Away team ID (optional, will be fetched if not provided)"),
+):
+    """
+    Get predicted starting XI for a match.
+
+    Returns predicted lineups for both home and away teams including:
+    - Formation
+    - Predicted players with positions
+    - Confidence scores
+    """
+    from app.predicted_xi import get_predicted_xi_provider
+    from concurrent.futures import ThreadPoolExecutor
+
+    # If team IDs not provided, try to fetch match data to get them
+    if not home_team_id or not away_team_id:
+        try:
+            match_data = client.get_fixture(fixture_id)
+            if match_data:
+                home_team_id = home_team_id or match_data.get("teams", {}).get("home", {}).get("id")
+                away_team_id = away_team_id or match_data.get("teams", {}).get("away", {}).get("id")
+        except Exception:
+            pass
+
+    if not home_team_id and not away_team_id:
+        return {"home": None, "away": None, "error": "Could not determine team IDs"}
+
+    try:
+        predicted_provider = get_predicted_xi_provider()
+
+        result = {"home": None, "away": None}
+
+        # Fetch predictions in parallel
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            futures = {}
+            if home_team_id:
+                futures["home"] = executor.submit(
+                    predicted_provider.get_or_generate_prediction,
+                    match_id=fixture_id,
+                    team_id=home_team_id,
+                )
+            if away_team_id:
+                futures["away"] = executor.submit(
+                    predicted_provider.get_or_generate_prediction,
+                    match_id=fixture_id,
+                    team_id=away_team_id,
+                )
+
+            for key, future in futures.items():
+                prediction = future.result()
+                if prediction:
+                    result[key] = {
+                        "formation": prediction.formation,
+                        "formation_confidence": prediction.formation_confidence,
+                        "players": [
+                            {
+                                "name": p.name,
+                                "position": p.position,
+                                "confidence": p.confidence,
+                                "player_id": p.player_id,
+                            }
+                            for p in prediction.predicted_xi
+                        ],
+                        "bench": [
+                            {
+                                "name": p.name,
+                                "position": p.position,
+                                "player_id": p.player_id,
+                            }
+                            for p in (prediction.bench or [])
+                        ],
+                        "overall_confidence": prediction.overall_confidence,
+                    }
+
+        return result
+    except Exception as e:
+        return {"home": None, "away": None, "error": str(e)}
+
+
 @app.get("/", response_class=HTMLResponse)
 def home():
     """Dashboard landing page with matches and league stats."""

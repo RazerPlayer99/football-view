@@ -2784,7 +2784,8 @@
         }
 
         function formatDisplayDate(date) {
-            const today = new Date();
+            // Use simulated "today" (2026-01-30) to match API data
+            const today = new Date('2026-01-30');
             // Reset time components for accurate date comparison
             today.setHours(0, 0, 0, 0);
             const compareDate = new Date(date);
@@ -2890,7 +2891,7 @@
             const rawTime = match.time || match.fixture?.date?.split('T')[1]?.slice(0, 5) || '';
             const matchDate = match.date || match.fixture?.date || '';
             const elapsed = match.elapsed || match.fixture?.status?.elapsed || '';
-            const matchId = match.fixture_id || match.fixture?.id || '';
+            const matchId = match.id || match.fixture_id || match.fixture?.id || '';
             const compName = competition || match.competition || match.league_name || '';
 
             const isLive = status === 'live';
@@ -2930,9 +2931,11 @@
             const homeLogoEsc = (homeTeam.logo || '').replace(/'/g, "\\'");
             const awayLogoEsc = (awayTeam.logo || '').replace(/'/g, "\\'");
             const safeMatchId = matchId || 0;
+            const homeTeamId = homeTeam.id || 0;
+            const awayTeamId = awayTeam.id || 0;
 
             return `
-                <div class="match-row ${isLive ? 'live' : ''}" onclick="showMatchDetail(${safeMatchId}, '${homeName}', '${awayName}', '${homeGoals}', '${awayGoals}', '${homeLogoEsc}', '${awayLogoEsc}', '${compNameEsc}', '${statusText}', '${matchTime}')">
+                <div class="match-row ${isLive ? 'live' : ''}" onclick="showMatchDetail(${safeMatchId}, '${homeName}', '${awayName}', '${homeGoals}', '${awayGoals}', '${homeLogoEsc}', '${awayLogoEsc}', '${compNameEsc}', '${statusText}', '${localKickoff}', ${homeTeamId}, ${awayTeamId})">
                     <div class="team home">
                         <span class="team-name">${homeTeam.name || 'Home'}</span>
                         <img src="${homeTeam.logo || ''}" alt="" class="team-logo" onerror="this.style.display='none'">
@@ -2953,8 +2956,8 @@
             `;
         }
 
-        function showMatchDetail(matchId, homeName, awayName, homeGoals, awayGoals, homeLogo, awayLogo, competition, status, time) {
-            console.log('showMatchDetail called:', { matchId, homeName, awayName });
+        function showMatchDetail(matchId, homeName, awayName, homeGoals, awayGoals, homeLogo, awayLogo, competition, status, time, homeTeamId, awayTeamId) {
+            console.log('showMatchDetail called:', { matchId, homeName, awayName, homeTeamId, awayTeamId });
 
             // Build match detail content for the slide-in panel
             const content = `
@@ -3010,10 +3013,10 @@
             openDetailPanel(`${homeName} vs ${awayName}`, '⚽', content);
 
             // Load H2H and lineups asynchronously
-            loadMatchExtras(matchId, homeName, awayName);
+            loadMatchExtras(matchId, homeName, awayName, homeTeamId, awayTeamId);
         }
 
-        async function loadMatchExtras(matchId, homeName, awayName) {
+        async function loadMatchExtras(matchId, homeName, awayName, homeTeamId, awayTeamId) {
             // Try to load H2H data
             try {
                 const h2hResponse = await fetch(`/api/search?q=${encodeURIComponent(homeName + ' vs ' + awayName)}`);
@@ -3035,7 +3038,7 @@
 
             // Try to load predicted lineups
             try {
-                const lineupResponse = await fetch(`/api/predicted-xi?fixture_id=${matchId}`);
+                const lineupResponse = await fetch(`/api/predicted-xi?fixture_id=${matchId}&home_team_id=${homeTeamId}&away_team_id=${awayTeamId}`);
                 if (lineupResponse.ok) {
                     const lineupData = await lineupResponse.json();
                     if (lineupData.home || lineupData.away) {
