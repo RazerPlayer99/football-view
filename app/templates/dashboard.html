@@ -2102,7 +2102,9 @@
         // STATE
         // =============================================================================
         // Use today's date
-        let currentDate = new Date();
+        // Use simulated "today" in the 2025-26 season (Jan 2026)
+        // This matches the API-Football data which has matches for this date range
+        let currentDate = new Date('2026-01-30');
         let selectedLeague = 'all';
         let selectedStatus = 'all';
         let currentTab = 'all';
