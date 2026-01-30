@@ -6,6 +6,20 @@ from typing import Optional
 from pydantic_settings import BaseSettings
 
 
+def _compute_current_season() -> int:
+    """
+    Compute the current football season year.
+
+    API-Football uses the starting year of the season (2025 for 2025-26).
+    Football seasons run Aug-May, so Jan-Jul uses previous year's season code.
+    """
+    now = datetime.now()
+    # If we're in Jan-Jul, we're still in last year's season
+    if now.month <= 7:
+        return now.year - 1
+    return now.year
+
+
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
@@ -31,7 +45,8 @@ class Settings(BaseSettings):
     premier_league_id: int = 39
 
     # Current season (single source of truth)
-    current_season: int = datetime.now().year
+    # Computed dynamically: Jan-Jul = previous year, Aug-Dec = current year
+    current_season: int = _compute_current_season()
 
     class Config:
         env_file = ".env"
