@@ -34,6 +34,7 @@ from .models.responses import (
     error_response,
     disambiguation_response,
 )
+from config.settings import settings
 
 
 def search(
@@ -146,8 +147,8 @@ def search(
         )
 
     # Step 7: Resolve entities and check for disambiguation
-    default_season = season or 2025
-    default_league = league_id or 39
+    default_season = season or settings.current_season
+    default_league = league_id or session.last_league_id
 
     resolved, disambiguation = resolve_query(
         intent_result,

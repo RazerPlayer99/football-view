@@ -27,6 +27,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List, Set
 
+from config.settings import settings
+
 # Add project root to path for imports
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
@@ -384,8 +386,8 @@ def main():
     parser.add_argument(
         "--season",
         type=int,
-        default=2025,
-        help="Season year (default: 2025 for 2024-25 season)",
+        default=settings.current_season,
+        help="Season year (default: current season)",
     )
     parser.add_argument(
         "--with-players",

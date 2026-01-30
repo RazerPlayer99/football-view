@@ -92,7 +92,7 @@ SEASON_PATTERNS = [
     r"this\s+season",
     r"current\s+season",
     r"last\s+season",
-    r"(\d{4})[-/](\d{2,4})",  # 2024-25, 2024/2025
+    r"(\d{4})[-/](\d{2,4})",  # 2024-25, 2024/25
     r"(\d{4})\s+season",
 ]
 

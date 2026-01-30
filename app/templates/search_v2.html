@@ -1003,6 +1003,18 @@
         let debounceTimer = null;
         let selectedIndex = -1;
         let suggestions = [];
+        let currentSeason = null;
+
+        async function ensureConfig() {
+            if (currentSeason) return;
+            try {
+                const response = await fetch('/api/config');
+                const config = await response.json();
+                currentSeason = config.current_season;
+            } catch (error) {
+                console.error('Error loading config:', error);
+            }
+        }
 
         // =============================================================================
         // SEARCH FUNCTIONALITY
@@ -1022,7 +1034,9 @@
             resultsDiv.innerHTML = '';
 
             try {
-                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&season=2025`);
+                await ensureConfig();
+                const seasonParam = currentSeason ? `&season=${currentSeason}` : '';
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}${seasonParam}`);
                 const data = await response.json();
                 loadingDiv.classList.remove('active');
                 resultsDiv.innerHTML = renderResponse(data);

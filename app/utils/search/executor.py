@@ -83,10 +83,13 @@ class QueryExecutor:
         from app import api_client
 
         season = self._get_season(resolved)
-        league_id = 39  # Default to Premier League
-
-        if resolved.primary_competition:
-            league_id = resolved.primary_competition.league_id
+        league_id = resolved.primary_competition.league_id if resolved.primary_competition else None
+        if league_id is None:
+            return ExecutionResult(
+                success=False,
+                data={},
+                error="League required for standings. Try 'La Liga standings'.",
+            )
 
         data = api_client.get_standings(season, league_id)
 
@@ -105,10 +108,13 @@ class QueryExecutor:
         from app import api_client
 
         season = self._get_season(resolved)
-        league_id = 39
-
-        if resolved.primary_competition:
-            league_id = resolved.primary_competition.league_id
+        league_id = resolved.primary_competition.league_id if resolved.primary_competition else None
+        if league_id is None:
+            return ExecutionResult(
+                success=False,
+                data={},
+                error="League required for top scorers. Try 'Bundesliga top scorers'.",
+            )
 
         data = api_client.get_top_scorers(season, league_id=league_id, limit=20)
 
@@ -127,10 +133,13 @@ class QueryExecutor:
         from app import api_client
 
         season = self._get_season(resolved)
-        league_id = 39
-
-        if resolved.primary_competition:
-            league_id = resolved.primary_competition.league_id
+        league_id = resolved.primary_competition.league_id if resolved.primary_competition else None
+        if league_id is None:
+            return ExecutionResult(
+                success=False,
+                data={},
+                error="League required for top assists. Try 'Serie A top assists'.",
+            )
 
         data = api_client.get_top_assists(season, league_id=league_id, limit=20)
 

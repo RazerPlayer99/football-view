@@ -212,8 +212,8 @@ class MatchCardView:
     home_goals: int
     away_goals: int
     result: str  # H, D, A
-    competition: str = "Premier League"
-    league_id: int = 39
+    competition: str = "Unknown League"
+    league_id: Optional[int] = None
     league_logo: str = ""
     match_round: str = ""
 
@@ -258,8 +258,8 @@ class MatchCardView:
             home_goals=data.get("home_goals", 0),
             away_goals=data.get("away_goals", 0),
             result=data.get("result", ""),
-            competition=data.get("competition", "Premier League"),
-            league_id=data.get("league_id", 39),
+            competition=data.get("competition", "Unknown League"),
+            league_id=data.get("league_id"),
             league_logo=data.get("league_logo", ""),
             match_round=data.get("round", ""),
             unknown_fields=unknown,
@@ -932,7 +932,7 @@ class MatchDetailView:
         <div class="match-scoreboard">
             <div class="scoreboard-header">
                 {f'<img src="{self.league_logo}" class="league-logo">' if self.league_logo else ''}
-                <span class="league-info">{self.league_name or 'Premier League'} - {self.match_round or ''}</span>
+                <span class="league-info">{self.league_name or 'Unknown League'} - {self.match_round or ''}</span>
             </div>
             <div class="scoreboard-main">
                 <div class="scoreboard-team scoreboard-home">

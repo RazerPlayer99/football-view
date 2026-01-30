@@ -1,4 +1,5 @@
 """Configuration management using pydantic-settings."""
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -30,7 +31,7 @@ class Settings(BaseSettings):
     premier_league_id: int = 39
 
     # Current season (single source of truth)
-    current_season: int = 2025
+    current_season: int = datetime.now().year
 
     class Config:
         env_file = ".env"

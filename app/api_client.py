@@ -14,16 +14,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 from dotenv import load_dotenv
 
-from app.search_utils import (
-    normalize_text,
-    resolve_alias,
-    get_search_queries,
-    is_ambiguous_query,
-    rank_players,
-    resolve_team_alias,
-    resolve_player_alias,
-)
+from app.utils.search.entities import AliasDatabase, normalize_for_matching
 from app.cache import get_cache_manager, CacheMeta
+from config.settings import settings
 
 load_dotenv()
 
@@ -34,7 +27,7 @@ logger = logging.getLogger("api_client")
 API_KEY = os.getenv("API_FOOTBALL_KEY")
 BASE_URL = "https://v3.football.api-sports.io"
 # Top 5 European Leagues
-PREMIER_LEAGUE_ID = 39
+PREMIER_LEAGUE_ID = settings.premier_league_id
 LA_LIGA_ID = 140
 BUNDESLIGA_ID = 78
 SERIE_A_ID = 135
@@ -61,6 +54,69 @@ _api_semaphore = threading.Semaphore(10)
 
 # Response metadata storage (thread-local would be better for production)
 _last_cache_meta: Optional[CacheMeta] = None
+
+# Alias database for legacy API search helpers
+_alias_db: Optional[AliasDatabase] = None
+
+
+def _get_alias_db() -> AliasDatabase:
+    """Get shared alias database for API client search helpers."""
+    global _alias_db
+    if _alias_db is None:
+        _alias_db = AliasDatabase()
+    return _alias_db
+
+
+def _normalize_text(text: str) -> str:
+    """Normalize text using the unified search normalizer."""
+    return normalize_for_matching(text or "")
+
+
+def _is_ambiguous_query(query: str) -> bool:
+    """Check if a query is potentially ambiguous (very short or common name)."""
+    normalized = _normalize_text(query)
+
+    if len(normalized) <= 3:
+        return True
+
+    ambiguous_names = {
+        "john", "james", "david", "michael", "chris", "christian",
+        "daniel", "alex", "alexander", "martin", "marcus", "max",
+        "ben", "jack", "joe", "sam", "matt", "luke", "ryan", "adam"
+    }
+
+    return normalized in ambiguous_names
+
+
+def _score_player_match(player: Dict[str, Any], query: str) -> float:
+    """Score how well a player matches the query."""
+    normalized_query = _normalize_text(query)
+    player_name = _normalize_text(player.get("name", ""))
+
+    score = 0.0
+
+    if player_name == normalized_query:
+        score += 100
+    elif player_name.startswith(normalized_query):
+        score += 50
+    elif normalized_query in player_name:
+        score += 25
+
+    appearances = player.get("appearances", 0) or 0
+    score += min(appearances * 0.5, 20)
+
+    goals = player.get("goals", 0) or 0
+    assists = player.get("assists", 0) or 0
+    score += min((goals + assists) * 0.3, 15)
+
+    return score
+
+
+def _rank_players(players: List[Dict[str, Any]], query: str) -> List[Dict[str, Any]]:
+    """Rank players by relevance to query."""
+    scored = [(player, _score_player_match(player, query)) for player in players]
+    scored.sort(key=lambda x: x[1], reverse=True)
+    return [player for player, score in scored]
 
 
 def _cache_key(endpoint: str, params: dict) -> str:
@@ -204,7 +260,7 @@ def get_standings(
     Get league standings for a season.
 
     Args:
-        season: Season year (e.g., 2025 for 2025-26)
+        season: Season year (e.g., 2024 for 2024-25)
         league_id: League ID (default: Premier League)
         force_refresh: Bypass cache and fetch fresh data
 
@@ -880,7 +936,7 @@ def get_top_assists(
 
 def get_injuries_by_league(
     league_id: int = PREMIER_LEAGUE_ID,
-    season: int = 2025,
+    season: int = settings.current_season,
     force_refresh: bool = False,
 ) -> Dict[str, Any]:
     """
@@ -925,7 +981,7 @@ def get_injuries_by_league(
 
 def get_injuries_by_team(
     team_id: int,
-    season: int = 2025,
+    season: int = settings.current_season,
     force_refresh: bool = False,
 ) -> Dict[str, Any]:
     """
@@ -1481,7 +1537,7 @@ def _format_player_match(match: dict) -> Dict[str, Any]:
 def search_players(
     query: str,
     season: int,
-    league_id: int = PREMIER_LEAGUE_ID,
+    league_id: Optional[int] = None,
     limit: int = 20
 ) -> Dict[str, Any]:
     """
@@ -1494,54 +1550,58 @@ def search_players(
         Dict with scope, season, league_id, query, players list, and alias info
     """
     # Check for player alias first
-    canonical_name, player_id = resolve_player_alias(query)
+    alias_db = _get_alias_db()
+    alias_matches = alias_db.match_player(query)
+    canonical_name = alias_matches[0].name if alias_matches else None
+    player_id = int(alias_matches[0].entity_id) if alias_matches else None
 
     alias_used = None
     if canonical_name:
         alias_used = {"original": query, "resolved_to": canonical_name, "player_id": player_id}
         # If we have an exact ID, fetch that player directly
         if player_id:
-            player_data = get_player_by_id(player_id, season, scope="league_only")
-            # Only use this if player has Premier League stats this season
-            if player_data and player_data.get("premier_league"):
-                pl_stats = player_data.get("premier_league")
+            player_data = get_player_by_id(player_id, season, scope="all_competitions")
+            if player_data:
+                competitions = player_data.get("competitions", [])
+                primary_stats = player_data.get("premier_league") or (competitions[0] if competitions else {})
                 players = [{
                     "id": player_data.get("id"),
                     "name": player_data.get("name"),
                     "photo": player_data.get("photo"),
                     "nationality": player_data.get("nationality"),
                     "team": {
-                        "id": pl_stats.get("team_id"),
-                        "name": pl_stats.get("team"),
+                        "id": primary_stats.get("team_id"),
+                        "name": primary_stats.get("team"),
                     },
-                    "position": pl_stats.get("position"),
-                    "goals": pl_stats.get("goals", 0),
-                    "assists": pl_stats.get("assists", 0),
-                    "appearances": pl_stats.get("appearances", 0),
+                    "position": primary_stats.get("position"),
+                    "goals": primary_stats.get("goals", 0),
+                    "assists": primary_stats.get("assists", 0),
+                    "appearances": primary_stats.get("appearances", 0),
                 }]
                 return {
-                    "scope": "league_only",
+                    "scope": "all_competitions",
                     "season": season,
                     "league_id": league_id,
                     "query": query,
                     "alias_used": alias_used,
                     "players": players,
                 }
-            # Player not in league this season - fall through to text search
-            alias_used["note"] = "Player not found in league this season, using text search"
+            alias_used["note"] = "Player not found in season, using text search"
 
     # Get search queries (may include canonical name)
-    search_queries = get_search_queries(query)
+    search_queries = [canonical_name, query] if canonical_name else [query]
 
     all_players = []
     seen_ids = set()
 
     for search_query in search_queries:
-        data = _make_request("players", {
+        params = {
             "search": search_query,
-            "league": league_id,
             "season": season,
-        })
+        }
+        if league_id is not None:
+            params["league"] = league_id
+        data = _make_request("players", params)
 
         for item in data.get("response", []):
             player = item.get("player", {})
@@ -1572,10 +1632,10 @@ def search_players(
             })
 
     # Rank players by relevance
-    ranked_players = rank_players(all_players, query)
+    ranked_players = _rank_players(all_players, query)
 
     # For ambiguous queries, always return top 5
-    if is_ambiguous_query(query) and len(ranked_players) > 1:
+    if _is_ambiguous_query(query) and len(ranked_players) > 1:
         result_limit = min(5, len(ranked_players))
         ambiguous = True
     else:
@@ -1583,7 +1643,7 @@ def search_players(
         ambiguous = False
 
     return {
-        "scope": "league_only",
+        "scope": "league_only" if league_id is not None else "all_competitions",
         "season": season,
         "league_id": league_id,
         "query": query,
@@ -1596,7 +1656,7 @@ def search_players(
 def search_teams(
     query: str,
     season: int,
-    league_id: int = PREMIER_LEAGUE_ID,
+    league_id: Optional[int] = None,
     limit: int = 20
 ) -> Dict[str, Any]:
     """
@@ -1608,7 +1668,10 @@ def search_teams(
         Dict with scope, season, league_id, query, teams list, and alias info
     """
     # Check for team alias first
-    canonical_name, team_id = resolve_team_alias(query)
+    alias_db = _get_alias_db()
+    alias_matches = alias_db.match_team(query)
+    canonical_name = alias_matches[0].name if alias_matches else None
+    team_id = int(alias_matches[0].entity_id) if alias_matches else None
 
     alias_used = None
     if canonical_name:
@@ -1618,16 +1681,22 @@ def search_teams(
     else:
         search_query = query
 
-    all_teams_data = get_teams(season, league_id)
-    all_teams = all_teams_data.get("teams", [])
+    all_teams = []
+    if league_id is not None:
+        all_teams_data = get_teams(season, league_id)
+        all_teams = all_teams_data.get("teams", [])
+    else:
+        for lid in SUPPORTED_LEAGUES.keys():
+            league_teams_data = get_teams(season, lid)
+            all_teams.extend(league_teams_data.get("teams", []))
 
     # Normalize search query
-    normalized_query = normalize_text(search_query)
+    normalized_query = _normalize_text(search_query)
 
     # Find matching teams
     matching = []
     for team in all_teams:
-        team_name_normalized = normalize_text(team.get("name", ""))
+        team_name_normalized = _normalize_text(team.get("name", ""))
 
         # Exact match gets priority
         if team_name_normalized == normalized_query:
@@ -1651,7 +1720,7 @@ def search_teams(
                     break
 
     return {
-        "scope": "league_only",
+        "scope": "league_only" if league_id is not None else "all_competitions",
         "season": season,
         "league_id": league_id,
         "query": query,

@@ -10,6 +10,7 @@ from .models.entities import (
     CompetitionEntity,
     PronounEntity,
 )
+from .entities import get_alias_database
 from .models.responses import (
     DisambiguationPayload,
     DisambiguationOption,
@@ -347,15 +348,7 @@ class Resolver:
         session: Optional[SearchSession],
     ) -> Tuple[List[TeamEntity], List[PlayerEntity], List[CompetitionEntity], List[str]]:
         """Apply sensible defaults based on intent type."""
-        # League name mapping for better UX
-        league_names = {
-            39: "Premier League",
-            140: "La Liga",
-            78: "Bundesliga",
-            135: "Serie A",
-            61: "Ligue 1",
-            2: "Champions League",
-        }
+        alias_db = get_alias_database()
 
         # Default competition for standings, top scorers, etc.
         if intent.intent_type in (
@@ -367,19 +360,26 @@ class Resolver:
             if not competitions:
                 # Use session league or default
                 league_id = session.last_league_id if session else None
-                if not league_id:
+                if not league_id and self.default_league_id is not None:
                     league_id = self.default_league_id
-                    league_name = league_names.get(league_id, "Premier League")
+                    league_name = alias_db.competitions.get(str(league_id), {}).get(
+                        "canonical",
+                        f"League {league_id}",
+                    )
                     assumptions.append(f"Showing {league_name} (default)")
 
-                league_name = league_names.get(league_id, f"League {league_id}")
-                competitions = [CompetitionEntity(
-                    league_id=league_id,
-                    name=league_name,
-                    confidence=0.80,
-                    matched_text="default",
-                    match_method="default",
-                )]
+                if league_id:
+                    league_name = alias_db.competitions.get(str(league_id), {}).get(
+                        "canonical",
+                        f"League {league_id}",
+                    )
+                    competitions = [CompetitionEntity(
+                        league_id=league_id,
+                        name=league_name,
+                        confidence=0.80,
+                        matched_text="default",
+                        match_method="default",
+                    )]
 
         # Default season
         if intent.time_modifier and intent.time_modifier.season_year:
@@ -387,7 +387,7 @@ class Resolver:
         elif session and session.last_season:
             assumptions.append(f"Using season {session.last_season} from context")
         else:
-            assumptions.append(f"Showing current season 2025-26")
+            assumptions.append(f"Showing current season {settings.current_season}-{str(settings.current_season + 1)[-2:]}")
 
         return teams, players, competitions, assumptions
 
@@ -406,7 +406,7 @@ def resolve_query(
         Tuple of (ResolvedQuery, None) or (None, DisambiguationPayload)
     """
     resolver = Resolver(
-        default_league_id or settings.premier_league_id,
+        default_league_id,
         default_season or settings.current_season
     )
     return resolver.resolve(intent, entities, session)

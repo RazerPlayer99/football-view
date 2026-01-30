@@ -35,7 +35,7 @@ CURRENT_SEASON = settings.current_season
 
 
 def parse_season(season_str: str) -> int:
-    """Convert '2025-26' or '2025' to season year (2025)."""
+    """Convert '2024-25' or '2024' to season year (2024)."""
     if "-" in season_str:
         return int(season_str.split("-")[0])
     return int(season_str)
@@ -158,7 +158,7 @@ def export_analytics():
 @app.get("/api/dashboard")
 def api_dashboard(
     date: Optional[str] = Query(None, description="Date in YYYY-MM-DD format, defaults to today"),
-    season: int = Query(default=2025, description="Season year"),
+    season: int = Query(default=settings.current_season, description="Season year"),
 ):
     """
     Get dashboard data: matches for a specific date across all leagues.
@@ -203,6 +203,22 @@ def api_dashboard(
             "total_matches": 0,
             "error": str(e),
         }
+
+
+@app.get("/api/config")
+def api_config():
+    """Expose runtime configuration for the dashboard UI."""
+    leagues = [
+        {
+            "id": league_id,
+            "name": name,
+        }
+        for league_id, name in api_client.SUPPORTED_LEAGUES.items()
+    ]
+    return {
+        "current_season": settings.current_season,
+        "leagues": leagues,
+    }
 
 
 # =============================================================================
@@ -500,17 +516,17 @@ def old_home():
                 <li><a href="/health">/health</a> - Health check</li>
                 <li><a href="/docs">/docs</a> - Interactive API documentation</li>
                 <li><a href="/api/dashboard">/api/dashboard</a> - Dashboard data (JSON)</li>
-                <li><a href="/teams?season=2025">/teams</a> - All Premier League teams (JSON)</li>
-                <li><a href="/standings?season=2025">/standings</a> - League standings (JSON)</li>
-                <li><a href="/matches?season=2025&limit=10">/matches</a> - Matches (JSON)</li>
-                <li><a href="/players/top-scorers?season=2025&limit=20">/players/top-scorers</a> - Top scorers (JSON)</li>
+                <li><a href="/teams?season=__CURRENT_SEASON__">/teams</a> - Teams (JSON)</li>
+                <li><a href="/standings?season=__CURRENT_SEASON__">/standings</a> - League standings (JSON)</li>
+                <li><a href="/matches?season=__CURRENT_SEASON__&limit=10">/matches</a> - Matches (JSON)</li>
+                <li><a href="/players/top-scorers?season=__CURRENT_SEASON__&limit=20">/players/top-scorers</a> - Top scorers (JSON)</li>
             </ul>
             <p><em>All data fetched live from API-Football</em></p>
         </div>
     </body>
     </html>
     """
-    return html_content
+    return html_content.replace("__CURRENT_SEASON__", str(settings.current_season))
 
 
 # ===== STANDINGS =====
@@ -520,8 +536,8 @@ def old_home():
 
 @app.get("/standings")
 def get_standings(
-    season: str = Query(default="2025", description="Season year (e.g., '2025' for 2025-26)"),
-    league: int = Query(default=39, description="League ID (39=PL, 140=LaLiga, 78=Bundesliga, 135=SerieA, 61=Ligue1)"),
+    season: str = Query(default=str(settings.current_season), description="Season year (e.g., '2024' for 2024-25)"),
+    league: int = Query(default=settings.premier_league_id, description="League ID (see /api/config)"),
     forceRefresh: bool = Query(default=False, description="Bypass cache and fetch fresh data"),
 ):
     """
@@ -549,7 +565,7 @@ def get_standings(
 
 @app.get("/teams")
 def list_teams(
-    season: str = Query(default="2025", description="Season year")
+    season: str = Query(default=str(settings.current_season), description="Season year")
 ):
     """Get all Premier League teams for a season."""
     try:
@@ -576,7 +592,7 @@ def get_team(team_id: int):
 @app.get("/teams/{team_id}/players")
 def get_team_players(
     team_id: int,
-    season: str = Query(default="2025", description="Season year")
+    season: str = Query(default=str(settings.current_season), description="Season year")
 ):
     """Get all players for a team."""
     try:
@@ -592,7 +608,7 @@ def get_team_players(
 
 @app.get("/matches")
 def get_matches(
-    season: str = Query(default="2025", description="Season year"),
+    season: str = Query(default=str(settings.current_season), description="Season year"),
     team_id: Optional[int] = Query(None, description="Filter by team ID"),
     from_date: Optional[str] = Query(None, description="From date (YYYY-MM-DD)"),
     to_date: Optional[str] = Query(None, description="To date (YYYY-MM-DD)"),
@@ -630,8 +646,8 @@ def get_match(match_id: int):
 
 @app.get("/players/top-scorers")
 def get_top_scorers(
-    season: str = Query(default="2025", description="Season year"),
-    league: int = Query(default=39, description="League ID (39=PL, 140=LaLiga, 78=Bundesliga, 135=SerieA, 61=Ligue1)"),
+    season: str = Query(default=str(settings.current_season), description="Season year"),
+    league: int = Query(default=settings.premier_league_id, description="League ID (see /api/config)"),
     limit: int = Query(default=20, description="Number of top scorers"),
 ):
     """Get top scorers for a season and league."""
@@ -648,7 +664,7 @@ def get_top_scorers(
 
 @app.get("/players/top-assists")
 def get_top_assists(
-    season: str = Query(default="2025", description="Season year"),
+    season: str = Query(default=str(settings.current_season), description="Season year"),
     limit: int = Query(default=20, description="Number of top assist providers"),
 ):
     """Get top assist providers for a season."""
@@ -666,7 +682,7 @@ def get_top_assists(
 @app.get("/players/{player_id}")
 def get_player(
     player_id: int,
-    season: str = Query(default="2025", description="Season year"),
+    season: str = Query(default=str(settings.current_season), description="Season year"),
     scope: str = Query(default="all_competitions", description="all_competitions or league_only"),
 ):
     """Get detailed player stats by ID."""
@@ -683,8 +699,8 @@ def get_player(
 @app.get("/players/{player_id}/matches")
 def get_player_matches(
     player_id: int,
-    season: str = Query(default="2025", description="Season year"),
-    league_id: Optional[int] = Query(None, description="Filter by league ID (39 for Premier League)"),
+    season: str = Query(default=str(settings.current_season), description="Season year"),
+    league_id: Optional[int] = Query(None, description="Filter by league ID (see /api/config)"),
     limit: int = Query(default=10, description="Number of matches to return"),
 ):
     """
@@ -709,7 +725,7 @@ def get_player_matches(
 @app.get("/search")
 def search(
     q: str = Query(..., min_length=2, description="Search query"),
-    season: str = Query(default="2025", description="Season year"),
+    season: str = Query(default=str(settings.current_season), description="Season year"),
     limit: int = Query(default=20, description="Max results per category"),
 ):
     """Search for teams and players."""
@@ -1030,7 +1046,7 @@ def search_ui_legacy():
 
             <div class="search-box">
                 <div class="search-wrapper">
-                    <input type="text" id="search-input" placeholder="Ask anything about Premier League..." autofocus autocomplete="off">
+                    <input type="text" id="search-input" placeholder="Ask anything about football..." autofocus autocomplete="off">
                     <div id="autocomplete-dropdown" class="autocomplete-dropdown"></div>
                 </div>
                 <button id="search-btn">Search</button>
@@ -1045,6 +1061,7 @@ def search_ui_legacy():
             const searchBtn = document.getElementById('search-btn');
             const resultsDiv = document.getElementById('results');
             const loadingDiv = document.getElementById('loading');
+            const currentSeason = __CURRENT_SEASON__;
 
             async function doSearch(query) {
                 // Always hide dropdown when searching
@@ -1066,7 +1083,7 @@ def search_ui_legacy():
                 resultsDiv.innerHTML = '';
 
                 try {
-                    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&season=2025`);
+                    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&season=${currentSeason}`);
                     const data = await response.json();
 
                     loadingDiv.style.display = 'none';
@@ -1359,7 +1376,7 @@ def search_ui_legacy():
 
 
 @app.get("/ui/teams/{team_id}", response_class=HTMLResponse)
-def team_dashboard_ui(team_id: int, season: str = Query(default="2025")):
+def team_dashboard_ui(team_id: int, season: str = Query(default=str(settings.current_season))):
     """Team dashboard page with comprehensive team information."""
     from concurrent.futures import ThreadPoolExecutor
     from app.view_models import TeamDashboardView
@@ -2269,7 +2286,7 @@ def player_detail_ui(player_id: int, season: str = Query(default=None)):
 
 
 @app.get("/ui/standings", response_class=HTMLResponse)
-def standings_ui(season: str = Query(default="2025", description="Season year")):
+def standings_ui(season: str = Query(default=str(settings.current_season), description="Season year")):
     """
     Standings UI page - DISABLED.
     Standings are now accessed through the search system for each specific league.
@@ -2353,12 +2370,14 @@ def standings_ui(season: str = Query(default="2025", description="Season year"))
     </body>
     </html>
     """
-    return HTMLResponse(content=html_content)
+    return HTMLResponse(
+        content=html_content.replace("__CURRENT_SEASON__", str(settings.current_season))
+    )
 
 
 @app.get("/ui/matches", response_class=HTMLResponse)
 def matches_ui(
-    season: str = Query(default="2025", description="Season year"),
+    season: str = Query(default=str(settings.current_season), description="Season year"),
     date: Optional[str] = Query(default=None, description="Date (YYYY-MM-DD), defaults to today"),
 ):
     """Matches UI page with date-based navigation."""
@@ -2684,7 +2703,7 @@ def matches_ui(
 
 @app.get("/ui/top-scorers", response_class=HTMLResponse)
 def top_scorers_ui(
-    season: str = Query(default="2025", description="Season year"),
+    season: str = Query(default=str(settings.current_season), description="Season year"),
     limit: int = Query(default=20, description="Number of players")
 ):
     """Top scorers UI page with proper table rendering."""

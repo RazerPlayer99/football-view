@@ -2013,37 +2013,7 @@
         <aside class="sidebar-left">
             <div class="sidebar-section">
                 <div class="sidebar-title">Leagues</div>
-                <div class="league-list" id="leagueList">
-                    <div class="league-item active" data-league="all">
-                        <span class="league-indicator"></span>
-                        <span class="league-name">All Leagues</span>
-                    </div>
-                    <div class="league-item" data-league="39">
-                        <span class="league-indicator"></span>
-                        <span class="league-name">Premier League</span>
-                    </div>
-                    <div class="league-item" data-league="140">
-                        <span class="league-indicator"></span>
-                        <span class="league-name">La Liga</span>
-                    </div>
-                    <div class="league-item" data-league="78">
-                        <span class="league-indicator"></span>
-                        <span class="league-name">Bundesliga</span>
-                    </div>
-                    <div class="league-item" data-league="135">
-                        <span class="league-indicator"></span>
-                        <span class="league-name">Serie A</span>
-                    </div>
-                    <div class="league-item" data-league="61">
-                        <span class="league-indicator"></span>
-                        <span class="league-name">Ligue 1</span>
-                    </div>
-                    <div class="divider"></div>
-                    <div class="league-item" data-league="2">
-                        <span class="league-indicator"></span>
-                        <span class="league-name">Champions League</span>
-                    </div>
-                </div>
+                <div class="league-list" id="leagueList"></div>
             </div>
         </aside>
 
@@ -2065,7 +2035,7 @@
             <!-- Standings Card -->
             <div class="stats-card" id="standingsCard">
                 <div class="stats-header">
-                    <span class="stats-title" id="standingsTitle">Premier League</span>
+                    <span class="stats-title" id="standingsTitle">Unknown League</span>
                     <div class="stats-tabs">
                         <button class="stats-tab active" data-panel="standings">Standings</button>
                         <button class="stats-tab" data-panel="scorers">Top Scorers</button>
@@ -2131,8 +2101,8 @@
         // =============================================================================
         // STATE
         // =============================================================================
-        // Use today's date in the 2025-26 season (Jan 2026)
-        let currentDate = new Date('2026-01-30');
+        // Use today's date
+        let currentDate = new Date();
         let selectedLeague = 'all';
         let selectedStatus = 'all';
         let currentTab = 'all';
@@ -2140,16 +2110,67 @@
         let standingsData = [];
         let scorersData = [];
         let searchTimeout = null;
-
-        // League ID to name mapping
-        const LEAGUES = {
-            39: { name: 'Premier League', country: 'England' },
-            140: { name: 'La Liga', country: 'Spain' },
-            78: { name: 'Bundesliga', country: 'Germany' },
-            135: { name: 'Serie A', country: 'Italy' },
-            61: { name: 'Ligue 1', country: 'France' },
-            2: { name: 'Champions League', country: 'Europe' }
+        let appConfig = {
+            currentSeason: null,
+            leagues: []
         };
+
+        // League ID to name mapping (populated from /api/config)
+        let LEAGUES = {};
+
+        function getLeagueIds() {
+            return Object.keys(LEAGUES).map(Number);
+        }
+
+        function renderLeagueList() {
+            const list = document.getElementById('leagueList');
+            if (!list) return;
+
+            list.innerHTML = '';
+
+            const allItem = document.createElement('div');
+            allItem.className = 'league-item active';
+            allItem.dataset.league = 'all';
+            allItem.innerHTML = `
+                <span class="league-indicator"></span>
+                <span class="league-name">All Leagues</span>
+            `;
+            list.appendChild(allItem);
+
+            const leagueIds = getLeagueIds();
+            leagueIds.forEach((leagueId) => {
+                const league = LEAGUES[leagueId] || {};
+                const item = document.createElement('div');
+                item.className = 'league-item';
+                item.dataset.league = leagueId;
+                item.innerHTML = `
+                    <span class="league-indicator"></span>
+                    <span class="league-name">${league.name || 'Unknown League'}</span>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                const config = await response.json();
+                appConfig.currentSeason = config.current_season;
+                appConfig.leagues = config.leagues || [];
+
+                LEAGUES = {};
+                appConfig.leagues.forEach((league) => {
+                    LEAGUES[league.id] = {
+                        name: league.name || 'Unknown League',
+                        country: league.country || 'Unknown'
+                    };
+                });
+            } catch (error) {
+                console.error('Error loading config:', error);
+            }
+
+            renderLeagueList();
+        }
 
         // =============================================================================
         // DETAIL PANEL SYSTEM (visionOS-style in-context navigation)
@@ -2724,7 +2745,9 @@
 
         async function fetchStandings(leagueId) {
             try {
-                const response = await fetch(`/standings?league=${leagueId}&season=2025`);
+                const season = appConfig.currentSeason;
+                if (!season) return [];
+                const response = await fetch(`/standings?league=${leagueId}&season=${season}`);
                 const data = await response.json();
                 return data.standings || [];
             } catch (error) {
@@ -2735,7 +2758,9 @@
 
         async function fetchTopScorers(leagueId) {
             try {
-                const response = await fetch(`/players/top-scorers?league=${leagueId}&season=2025&limit=5`);
+                const season = appConfig.currentSeason;
+                if (!season) return [];
+                const response = await fetch(`/players/top-scorers?league=${leagueId}&season=${season}&limit=5`);
                 const data = await response.json();
                 console.log(`fetchTopScorers for league ${leagueId}:`, data);
                 return data.players || [];
@@ -3124,7 +3149,7 @@
 
         async function renderCompetitionsView() {
             const container = document.getElementById('competitionsView');
-            const leagueIds = [39, 140, 78, 135, 61, 2]; // All leagues including UCL
+            const leagueIds = getLeagueIds();
 
             // Start with loading state
             container.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div>Loading competitions...</div>';
@@ -3218,7 +3243,7 @@
         }
 
         async function renderGlobalTopScorers() {
-            const leagueIds = [39, 140, 78, 135, 61]; // Top 5 domestic leagues (not UCL for scorer ranking)
+            const leagueIds = getLeagueIds();
             const allScorers = [];
 
             for (const lid of leagueIds) {
@@ -3572,7 +3597,7 @@
 
         // Fetch top scorers from all top 5 leagues
         async function fetchCombinedTopScorers() {
-            const leagueIds = [39, 140, 78, 135, 61]; // Top 5 leagues
+            const leagueIds = getLeagueIds();
             const allScorers = [];
 
             for (const lid of leagueIds) {
@@ -3648,7 +3673,7 @@
         // Render league leaders (1st place from each league) instead of a single standings
         async function renderLeagueLeaders() {
             const container = document.getElementById('standingsContent');
-            const leagueIds = [39, 140, 78, 135, 61];
+            const leagueIds = getLeagueIds();
             const leaders = [];
 
             for (const lid of leagueIds) {
@@ -3714,7 +3739,7 @@
                 modal.classList.add('active');
 
                 // Fetch all league standings
-                const leagueIds = [39, 140, 78, 135, 61];
+                const leagueIds = getLeagueIds();
                 let html = '';
 
                 for (const lid of leagueIds) {
@@ -3912,6 +3937,7 @@
         }
 
         async function init() {
+            await loadConfig();
             setupEventListeners();
             updateDateDisplay();
 

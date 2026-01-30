@@ -1,52 +1,40 @@
 """
-Human-friendly search utilities
-Handles text normalization and alias resolution for teams and players
+Legacy search utilities (deprecated).
+
+Deprecated in favor of app.utils.search.entities and the unified search pipeline.
 """
-import json
-import re
-import os
+import warnings
 from typing import Optional, Dict, Any, List, Tuple
 from pathlib import Path
 
-# Load aliases from JSON file
-ALIASES_FILE = Path(__file__).parent / "aliases.json"
+from app.utils.search.entities import AliasDatabase, normalize_for_matching
 
-_aliases_cache: Optional[Dict[str, Any]] = None
+# Legacy file kept for compatibility, now pointing to unified aliases
+ALIASES_FILE = Path(__file__).parent.parent / "data" / "aliases.json"
+
+_alias_db: Optional[AliasDatabase] = None
 
 
-def _load_aliases() -> Dict[str, Any]:
-    """Load aliases from JSON file (cached)."""
-    global _aliases_cache
-    if _aliases_cache is None:
-        if ALIASES_FILE.exists():
-            with open(ALIASES_FILE, "r", encoding="utf-8") as f:
-                _aliases_cache = json.load(f)
-        else:
-            _aliases_cache = {"teams": {}, "players": {}}
-    return _aliases_cache
+def _warn_deprecated() -> None:
+    warnings.warn(
+        "app.search_utils is deprecated. Use app.utils.search.entities instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+
+def _get_alias_db() -> AliasDatabase:
+    """Load aliases from unified JSON file (cached)."""
+    global _alias_db
+    if _alias_db is None:
+        _alias_db = AliasDatabase(str(ALIASES_FILE))
+    return _alias_db
 
 
 def normalize_text(text: str) -> str:
-    """
-    Normalize text for search matching.
-    - Lowercase
-    - Strip punctuation
-    - Trim spaces
-    - Remove common club suffixes (FC, AFC, United, City when standalone)
-    """
-    if not text:
-        return ""
-
-    # Lowercase and strip
-    normalized = text.lower().strip()
-
-    # Remove punctuation except hyphens (for names like Alexander-Arnold)
-    normalized = re.sub(r"[^\w\s\-]", "", normalized)
-
-    # Collapse multiple spaces
-    normalized = re.sub(r"\s+", " ", normalized)
-
-    return normalized.strip()
+    """Normalize text for search matching (legacy wrapper)."""
+    _warn_deprecated()
+    return normalize_for_matching(text or "")
 
 
 def resolve_team_alias(query: str) -> Tuple[Optional[str], Optional[int]]:
@@ -54,25 +42,13 @@ def resolve_team_alias(query: str) -> Tuple[Optional[str], Optional[int]]:
     Check if query matches a team alias.
     Returns (canonical_name, team_id) or (None, None) if no match.
     """
-    aliases = _load_aliases()
-    normalized = normalize_text(query)
-
-    team_aliases = aliases.get("teams", {})
-
-    # Iterate through all teams and check their aliases
-    for team_id, team_data in team_aliases.items():
-        canonical = team_data.get("canonical", "")
-        alias_list = team_data.get("aliases", [])
-
-        # Check if normalized query matches canonical name or any alias
-        if normalized == normalize_text(canonical):
-            return canonical, int(team_id)
-
-        for alias in alias_list:
-            if normalized == normalize_text(alias):
-                return canonical, int(team_id)
-
-    return None, None
+    _warn_deprecated()
+    alias_db = _get_alias_db()
+    matches = alias_db.match_team(query)
+    if not matches:
+        return None, None
+    match = matches[0]
+    return match.name, int(match.entity_id)
 
 
 def resolve_player_alias(query: str) -> Tuple[Optional[str], Optional[int]]:
@@ -80,25 +56,13 @@ def resolve_player_alias(query: str) -> Tuple[Optional[str], Optional[int]]:
     Check if query matches a player alias.
     Returns (canonical_name, player_id) or (None, None) if no match.
     """
-    aliases = _load_aliases()
-    normalized = normalize_text(query)
-
-    player_aliases = aliases.get("players", {})
-
-    # Iterate through all players and check their aliases
-    for player_id, player_data in player_aliases.items():
-        canonical = player_data.get("canonical", "")
-        alias_list = player_data.get("aliases", [])
-
-        # Check if normalized query matches canonical name or any alias
-        if normalized == normalize_text(canonical):
-            return canonical, int(player_id)
-
-        for alias in alias_list:
-            if normalized == normalize_text(alias):
-                return canonical, int(player_id)
-
-    return None, None
+    _warn_deprecated()
+    alias_db = _get_alias_db()
+    matches = alias_db.match_player(query)
+    if not matches:
+        return None, None
+    match = matches[0]
+    return match.name, int(match.entity_id)
 
 
 def resolve_alias(query: str) -> Dict[str, Any]:
@@ -106,6 +70,7 @@ def resolve_alias(query: str) -> Dict[str, Any]:
     Resolve a query against both team and player aliases.
     Returns dict with resolution info.
     """
+    _warn_deprecated()
     normalized = normalize_text(query)
 
     # Check team aliases
