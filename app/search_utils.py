@@ -58,9 +58,19 @@ def resolve_team_alias(query: str) -> Tuple[Optional[str], Optional[int]]:
     normalized = normalize_text(query)
 
     team_aliases = aliases.get("teams", {})
-    if normalized in team_aliases:
-        alias_data = team_aliases[normalized]
-        return alias_data.get("canonical"), alias_data.get("id")
+
+    # Iterate through all teams and check their aliases
+    for team_id, team_data in team_aliases.items():
+        canonical = team_data.get("canonical", "")
+        alias_list = team_data.get("aliases", [])
+
+        # Check if normalized query matches canonical name or any alias
+        if normalized == normalize_text(canonical):
+            return canonical, int(team_id)
+
+        for alias in alias_list:
+            if normalized == normalize_text(alias):
+                return canonical, int(team_id)
 
     return None, None
 
@@ -74,9 +84,19 @@ def resolve_player_alias(query: str) -> Tuple[Optional[str], Optional[int]]:
     normalized = normalize_text(query)
 
     player_aliases = aliases.get("players", {})
-    if normalized in player_aliases:
-        alias_data = player_aliases[normalized]
-        return alias_data.get("canonical"), alias_data.get("id")
+
+    # Iterate through all players and check their aliases
+    for player_id, player_data in player_aliases.items():
+        canonical = player_data.get("canonical", "")
+        alias_list = player_data.get("aliases", [])
+
+        # Check if normalized query matches canonical name or any alias
+        if normalized == normalize_text(canonical):
+            return canonical, int(player_id)
+
+        for alias in alias_list:
+            if normalized == normalize_text(alias):
+                return canonical, int(player_id)
 
     return None, None
 

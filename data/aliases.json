@@ -481,7 +481,8 @@
         "leicester city",
         "lcfc",
         "the foxes"
-      ]
+      ],
+      "league_id": 39
     },
     "57": {
       "canonical": "Ipswich",
@@ -490,7 +491,8 @@
         "ipswich town",
         "itfc",
         "the tractor boys"
-      ]
+      ],
+      "league_id": 39
     },
     "41": {
       "canonical": "Southampton",
@@ -499,7 +501,8 @@
         "saints",
         "the saints",
         "soton"
-      ]
+      ],
+      "league_id": 39
     },
     "62": {
       "canonical": "Sheffield United",
@@ -508,7 +511,8 @@
         "sheff utd",
         "the blades",
         "sufc"
-      ]
+      ],
+      "league_id": 39
     },
     "489": {
       "canonical": "AC Milan",
@@ -517,7 +521,8 @@
         "milan",
         "rossoneri",
         "acm"
-      ]
+      ],
+      "league_id": 135
     },
     "212": {
       "canonical": "Porto",
@@ -526,7 +531,8 @@
         "fc porto",
         "the dragons",
         "dragoes"
-      ]
+      ],
+      "league_id": 94
     }
   },
   "players": {
@@ -1600,7 +1606,7 @@
       ],
       "team_id": 40
     },
-    "284": {
+    "1485": {
       "canonical": "Bruno Fernandes",
       "aliases": [
         "bruno",

@@ -339,6 +339,7 @@ class ResponseFormatter:
                 standings_position=standing.get("position", 0) if standing else 0,
                 league_name=data.get("league_name"),
                 league_id=data.get("league_id"),
+                standing=standing,  # Include full standings data for stats display
                 recent_results=data.get("recent_fixtures", []),
                 upcoming=data.get("upcoming_fixtures", []),
                 top_scorer=data.get("top_players", [{}])[0] if data.get("top_players") else None,
@@ -435,30 +436,90 @@ class ResponseFormatter:
         entities = data.get("entities", [])
 
         if comparison_type == "team":
+            # Extract stats for easier access
+            s1 = entities[0].get("stats", {}) if len(entities) > 0 else {}
+            s2 = entities[1].get("stats", {}) if len(entities) > 1 else {}
+
+            # Calculate additional metrics
+            t1_gd = (s1.get("goals_for") or 0) - (s1.get("goals_against") or 0)
+            t2_gd = (s2.get("goals_for") or 0) - (s2.get("goals_against") or 0)
+            t1_played = s1.get("played") or 0
+            t2_played = s2.get("played") or 0
+            t1_won = s1.get("won") or 0
+            t2_won = s2.get("won") or 0
+            t1_drawn = s1.get("drawn") or 0
+            t2_drawn = s2.get("drawn") or 0
+            t1_lost = s1.get("lost") or 0
+            t2_lost = s2.get("lost") or 0
+            t1_win_pct = round(100 * t1_won / t1_played) if t1_played > 0 else 0
+            t2_win_pct = round(100 * t2_won / t2_played) if t2_played > 0 else 0
+            t1_gpg = round(s1.get("goals_for", 0) / t1_played, 2) if t1_played > 0 else 0
+            t2_gpg = round(s2.get("goals_for", 0) / t2_played, 2) if t2_played > 0 else 0
+
             metrics = [
                 ComparisonMetric(
                     metric_id="position",
                     label="League Position",
-                    values=[e.get("stats", {}).get("position") for e in entities],
-                    winner_index=0 if entities[0].get("stats", {}).get("position", 99) < entities[1].get("stats", {}).get("position", 99) else 1,
+                    values=[s1.get("position"), s2.get("position")],
+                    winner_index=0 if (s1.get("position") or 99) < (s2.get("position") or 99) else 1,
                 ),
                 ComparisonMetric(
                     metric_id="points",
                     label="Points",
-                    values=[e.get("stats", {}).get("points") for e in entities],
-                    winner_index=0 if (entities[0].get("stats", {}).get("points") or 0) > (entities[1].get("stats", {}).get("points") or 0) else 1,
+                    values=[s1.get("points"), s2.get("points")],
+                    winner_index=0 if (s1.get("points") or 0) > (s2.get("points") or 0) else 1,
+                ),
+                ComparisonMetric(
+                    metric_id="played",
+                    label="Played",
+                    values=[t1_played, t2_played],
+                ),
+                ComparisonMetric(
+                    metric_id="won",
+                    label="Won",
+                    values=[t1_won, t2_won],
+                    winner_index=0 if t1_won > t2_won else (1 if t2_won > t1_won else None),
+                ),
+                ComparisonMetric(
+                    metric_id="drawn",
+                    label="Drawn",
+                    values=[t1_drawn, t2_drawn],
+                ),
+                ComparisonMetric(
+                    metric_id="lost",
+                    label="Lost",
+                    values=[t1_lost, t2_lost],
+                    winner_index=0 if t1_lost < t2_lost else (1 if t2_lost < t1_lost else None),
+                ),
+                ComparisonMetric(
+                    metric_id="win_pct",
+                    label="Win %",
+                    values=[f"{t1_win_pct}%", f"{t2_win_pct}%"],
+                    winner_index=0 if t1_win_pct > t2_win_pct else (1 if t2_win_pct > t1_win_pct else None),
                 ),
                 ComparisonMetric(
                     metric_id="goals_for",
                     label="Goals Scored",
-                    values=[e.get("stats", {}).get("goals_for") for e in entities],
-                    winner_index=0 if (entities[0].get("stats", {}).get("goals_for") or 0) > (entities[1].get("stats", {}).get("goals_for") or 0) else 1,
+                    values=[s1.get("goals_for"), s2.get("goals_for")],
+                    winner_index=0 if (s1.get("goals_for") or 0) > (s2.get("goals_for") or 0) else 1,
                 ),
                 ComparisonMetric(
                     metric_id="goals_against",
                     label="Goals Conceded",
-                    values=[e.get("stats", {}).get("goals_against") for e in entities],
-                    winner_index=0 if (entities[0].get("stats", {}).get("goals_against") or 99) < (entities[1].get("stats", {}).get("goals_against") or 99) else 1,
+                    values=[s1.get("goals_against"), s2.get("goals_against")],
+                    winner_index=0 if (s1.get("goals_against") or 99) < (s2.get("goals_against") or 99) else 1,
+                ),
+                ComparisonMetric(
+                    metric_id="goal_diff",
+                    label="Goal Difference",
+                    values=[t1_gd, t2_gd],
+                    winner_index=0 if t1_gd > t2_gd else (1 if t2_gd > t1_gd else None),
+                ),
+                ComparisonMetric(
+                    metric_id="goals_per_game",
+                    label="Goals/Game",
+                    values=[t1_gpg, t2_gpg],
+                    winner_index=0 if t1_gpg > t2_gpg else (1 if t2_gpg > t1_gpg else None),
                 ),
             ]
         else:
@@ -475,6 +536,26 @@ class ResponseFormatter:
             p2_assists = get_player_stat(entities[1], "assists") or 0
             p1_apps = get_player_stat(entities[0], "appearances") or 0
             p2_apps = get_player_stat(entities[1], "appearances") or 0
+            p1_mins = get_player_stat(entities[0], "minutes") or 0
+            p2_mins = get_player_stat(entities[1], "minutes") or 0
+
+            # Calculate per-90 stats
+            p1_g90 = round(p1_goals / (p1_mins / 90), 2) if p1_mins > 0 else 0
+            p2_g90 = round(p2_goals / (p2_mins / 90), 2) if p2_mins > 0 else 0
+            p1_a90 = round(p1_assists / (p1_mins / 90), 2) if p1_mins > 0 else 0
+            p2_a90 = round(p2_assists / (p2_mins / 90), 2) if p2_mins > 0 else 0
+            p1_ga = p1_goals + p1_assists
+            p2_ga = p2_goals + p2_assists
+
+            # Additional calculated stats
+            p1_ga90 = round(p1_ga / (p1_mins / 90), 2) if p1_mins > 0 else 0
+            p2_ga90 = round(p2_ga / (p2_mins / 90), 2) if p2_mins > 0 else 0
+            p1_mins_per_goal = round(p1_mins / p1_goals) if p1_goals > 0 else 0
+            p2_mins_per_goal = round(p2_mins / p2_goals) if p2_goals > 0 else 0
+            p1_mins_per_ga = round(p1_mins / p1_ga) if p1_ga > 0 else 0
+            p2_mins_per_ga = round(p2_mins / p2_ga) if p2_ga > 0 else 0
+            p1_mins_per_app = round(p1_mins / p1_apps) if p1_apps > 0 else 0
+            p2_mins_per_app = round(p2_mins / p2_apps) if p2_apps > 0 else 0
 
             metrics = [
                 ComparisonMetric(
@@ -490,9 +571,57 @@ class ResponseFormatter:
                     winner_index=0 if p1_assists > p2_assists else (1 if p2_assists > p1_assists else None),
                 ),
                 ComparisonMetric(
+                    metric_id="goal_contributions",
+                    label="G+A",
+                    values=[p1_ga, p2_ga],
+                    winner_index=0 if p1_ga > p2_ga else (1 if p2_ga > p1_ga else None),
+                ),
+                ComparisonMetric(
                     metric_id="appearances",
                     label="Appearances",
                     values=[p1_apps, p2_apps],
+                ),
+                ComparisonMetric(
+                    metric_id="minutes",
+                    label="Minutes",
+                    values=[p1_mins, p2_mins],
+                    winner_index=0 if p1_mins > p2_mins else (1 if p2_mins > p1_mins else None),
+                ),
+                ComparisonMetric(
+                    metric_id="mins_per_app",
+                    label="Mins/Game",
+                    values=[p1_mins_per_app, p2_mins_per_app],
+                    winner_index=0 if p1_mins_per_app > p2_mins_per_app else (1 if p2_mins_per_app > p1_mins_per_app else None),
+                ),
+                ComparisonMetric(
+                    metric_id="goals_per_90",
+                    label="Goals/90",
+                    values=[p1_g90, p2_g90],
+                    winner_index=0 if p1_g90 > p2_g90 else (1 if p2_g90 > p1_g90 else None),
+                ),
+                ComparisonMetric(
+                    metric_id="assists_per_90",
+                    label="Assists/90",
+                    values=[p1_a90, p2_a90],
+                    winner_index=0 if p1_a90 > p2_a90 else (1 if p2_a90 > p1_a90 else None),
+                ),
+                ComparisonMetric(
+                    metric_id="ga_per_90",
+                    label="G+A/90",
+                    values=[p1_ga90, p2_ga90],
+                    winner_index=0 if p1_ga90 > p2_ga90 else (1 if p2_ga90 > p1_ga90 else None),
+                ),
+                ComparisonMetric(
+                    metric_id="mins_per_goal",
+                    label="Mins/Goal",
+                    values=[p1_mins_per_goal or '-', p2_mins_per_goal or '-'],
+                    winner_index=0 if (p1_mins_per_goal and p2_mins_per_goal and p1_mins_per_goal < p2_mins_per_goal) else (1 if (p1_mins_per_goal and p2_mins_per_goal and p2_mins_per_goal < p1_mins_per_goal) else None),
+                ),
+                ComparisonMetric(
+                    metric_id="mins_per_ga",
+                    label="Mins/G+A",
+                    values=[p1_mins_per_ga or '-', p2_mins_per_ga or '-'],
+                    winner_index=0 if (p1_mins_per_ga and p2_mins_per_ga and p1_mins_per_ga < p2_mins_per_ga) else (1 if (p1_mins_per_ga and p2_mins_per_ga and p2_mins_per_ga < p1_mins_per_ga) else None),
                 ),
             ]
 

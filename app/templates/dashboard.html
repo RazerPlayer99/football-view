@@ -9,44 +9,64 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* =============================================================================
-           CSS VARIABLES - Dark Theme (FotMob/SofaScore inspired)
+           CSS VARIABLES - Apple Liquid Glass Theme
            ============================================================================= */
         :root {
-            --bg-primary: #0d0d0d;
-            --bg-secondary: #1a1a1a;
-            --bg-tertiary: #242424;
-            --bg-card: #1a1a1a;
-            --bg-hover: #2a2a2a;
+            /* Liquid Glass backgrounds - frosted translucent panels */
+            --bg-primary: linear-gradient(135deg, #1a1f35 0%, #0f1225 50%, #151a30 100%);
+            --bg-solid: #12162a;
+            --bg-secondary: rgba(255, 255, 255, 0.08);
+            --bg-tertiary: rgba(255, 255, 255, 0.05);
+            --bg-card: rgba(255, 255, 255, 0.06);
+            --bg-hover: rgba(255, 255, 255, 0.12);
+            --bg-glass: rgba(255, 255, 255, 0.1);
+            --bg-glass-strong: rgba(255, 255, 255, 0.15);
 
             --text-primary: #ffffff;
-            --text-secondary: #a0a0a0;
-            --text-tertiary: #666666;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-tertiary: rgba(255, 255, 255, 0.45);
 
-            --accent: #3b82f6;
-            --accent-hover: #2563eb;
-            --accent-light: rgba(59, 130, 246, 0.15);
+            --accent: #5e9eff;
+            --accent-hover: #4a8df0;
+            --accent-light: rgba(94, 158, 255, 0.2);
+            --accent-glow: rgba(94, 158, 255, 0.4);
 
-            --live: #ef4444;
-            --live-bg: rgba(239, 68, 68, 0.15);
-            --win: #22c55e;
-            --draw: #a0a0a0;
-            --loss: #ef4444;
+            --live: #ff6b6b;
+            --live-bg: rgba(255, 107, 107, 0.2);
+            --win: #4ade80;
+            --draw: rgba(255, 255, 255, 0.5);
+            --loss: #ff6b6b;
 
-            --border: rgba(255, 255, 255, 0.08);
-            --border-strong: rgba(255, 255, 255, 0.15);
+            --gold: #ffd700;
+            --silver: #c0c0c0;
+            --bronze: #cd7f32;
 
-            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --border: rgba(255, 255, 255, 0.1);
+            --border-strong: rgba(255, 255, 255, 0.2);
+            --border-glass: rgba(255, 255, 255, 0.15);
 
-            --radius-sm: 6px;
-            --radius-md: 10px;
-            --radius-lg: 14px;
+            /* Liquid glass shadows - soft glow effect */
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.15);
+            --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.25), 0 8px 16px rgba(0, 0, 0, 0.2);
+            --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            --shadow-glow: 0 0 20px rgba(94, 158, 255, 0.3);
+
+            /* Larger, softer radii for liquid feel */
+            --radius-sm: 10px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
+
+            /* Glass blur */
+            --blur-glass: blur(20px);
+            --blur-glass-heavy: blur(40px);
 
             --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         /* =============================================================================
-           BASE STYLES
+           BASE STYLES - Liquid Glass Foundation
            ============================================================================= */
         * {
             box-sizing: border-box;
@@ -56,19 +76,33 @@
 
         body {
             font-family: var(--font-family);
-            background: var(--bg-primary);
+            background: var(--bg-solid);
+            background-image: var(--bg-primary);
+            background-attachment: fixed;
             color: var(--text-primary);
             line-height: 1.5;
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
         }
 
+        /* Glass panel base class */
+        .glass-panel {
+            background: var(--bg-glass);
+            backdrop-filter: var(--blur-glass);
+            -webkit-backdrop-filter: var(--blur-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-glass);
+        }
+
         /* =============================================================================
-           HEADER
+           HEADER - Liquid Glass Navigation
            ============================================================================= */
         .header {
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border);
+            background: rgba(18, 22, 42, 0.85);
+            backdrop-filter: var(--blur-glass-heavy);
+            -webkit-backdrop-filter: var(--blur-glass-heavy);
+            border-bottom: 1px solid var(--border-glass);
             padding: 16px 24px;
             position: sticky;
             top: 0;
@@ -430,8 +464,12 @@
         }
 
         .sidebar-section {
-            background: var(--bg-secondary);
-            border-radius: var(--radius-md);
+            background: var(--bg-glass);
+            backdrop-filter: var(--blur-glass);
+            -webkit-backdrop-filter: var(--blur-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-glass);
             padding: 16px;
             margin-bottom: 16px;
         }
@@ -507,18 +545,28 @@
         }
 
         .competition-group {
-            background: var(--bg-secondary);
-            border-radius: var(--radius-md);
+            background: var(--bg-glass);
+            backdrop-filter: var(--blur-glass);
+            -webkit-backdrop-filter: var(--blur-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-glass);
             overflow: hidden;
+            margin-bottom: 12px;
         }
 
         .competition-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 14px 16px;
-            background: var(--bg-tertiary);
+            padding: 16px 20px;
+            background: var(--bg-glass-strong);
             cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .competition-header:hover {
+            background: var(--bg-hover);
         }
 
         .competition-info {
@@ -557,23 +605,23 @@
             display: grid;
             grid-template-columns: 1fr auto 1fr;
             align-items: center;
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border);
+            padding: 14px 18px;
+            margin: 4px 8px;
+            border-radius: var(--radius-md);
             gap: 12px;
             cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .match-row:last-child {
-            border-bottom: none;
+            transition: all 0.2s ease;
+            background: transparent;
         }
 
         .match-row:hover {
-            background: var(--bg-hover);
+            background: var(--bg-glass);
+            transform: translateY(-1px);
         }
 
         .match-row.live {
             background: var(--live-bg);
+            border: 1px solid rgba(255, 107, 107, 0.3);
         }
 
         .team {
@@ -635,6 +683,26 @@
         .match-time.live {
             color: var(--live);
             font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .match-time.upcoming {
+            color: var(--text-secondary);
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--live);
+            border-radius: 50%;
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
         }
 
         .match-status {
@@ -667,8 +735,12 @@
         }
 
         .stats-card {
-            background: var(--bg-secondary);
-            border-radius: var(--radius-md);
+            background: var(--bg-glass);
+            backdrop-filter: var(--blur-glass);
+            -webkit-backdrop-filter: var(--blur-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-glass);
             overflow: hidden;
         }
 
@@ -1498,13 +1570,16 @@
             width: 480px;
             max-width: 100%;
             height: 100vh;
-            background: var(--bg-secondary);
+            background: rgba(18, 22, 42, 0.95);
+            backdrop-filter: var(--blur-glass-heavy);
+            -webkit-backdrop-filter: var(--blur-glass-heavy);
             transform: translateX(100%);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 1001;
             display: flex;
             flex-direction: column;
-            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
+            box-shadow: -8px 0 40px rgba(0, 0, 0, 0.5), inset 1px 0 0 rgba(255, 255, 255, 0.1);
+            border-left: 1px solid var(--border-glass);
         }
 
         .detail-panel.active {
@@ -1515,9 +1590,9 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
-            background: var(--bg-tertiary);
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border-glass);
+            background: var(--bg-glass-strong);
         }
 
         .detail-panel-title {
@@ -2056,7 +2131,8 @@
         // =============================================================================
         // STATE
         // =============================================================================
-        let currentDate = new Date();
+        // Use today's date in the 2025-26 season (Jan 2026)
+        let currentDate = new Date('2026-01-30');
         let selectedLeague = 'all';
         let selectedStatus = 'all';
         let currentTab = 'all';
@@ -2207,17 +2283,19 @@
                         <div class="search-result-meta">${fixture.date || ''}</div>
                     </div>
                 </div>`;
-            } else if (data.type === 'disambiguation' && data.data?.disambiguation) {
+            } else if (data.type === 'disambiguation' && data.data) {
                 // Multiple options - must choose
-                const options = data.data.disambiguation.options || [];
+                const options = data.data.options || [];
+                const question = data.data.question || 'Did you mean?';
                 html = `<div class="search-result-item" style="cursor:default;background:var(--bg-tertiary);">
                     <div class="search-result-info">
-                        <div class="search-result-name" style="color:var(--text-secondary);">${data.data.disambiguation.question}</div>
+                        <div class="search-result-name" style="color:var(--text-secondary);">${question}</div>
                     </div>
                 </div>`;
                 options.forEach(opt => {
                     const icon = opt.entity_type === 'player' ? '⚽' : '🏟️';
-                    html += `<div class="search-result-item" onclick="showTeamDetail('${opt.label}')">
+                    const clickHandler = opt.entity_type === 'player' ? `searchAndResolve('${opt.label}')` : `showTeamDetail('${opt.label}')`;
+                    html += `<div class="search-result-item" onclick="${clickHandler}">
                         <div class="search-result-icon">${icon}</div>
                         <div class="search-result-info">
                             <div class="search-result-name">${opt.label}</div>
@@ -2266,8 +2344,12 @@
         // DETAIL PANEL CONTENT RENDERERS
         // =============================================================================
         function showTeamInPanel() {
+            console.log('showTeamInPanel called, lastSearchData:', lastSearchData);
             const data = lastSearchData?.data;
-            if (!data) return;
+            if (!data) {
+                console.log('showTeamInPanel: No data available');
+                return;
+            }
 
             const team = data.team || {};
             const standing = data.standing || {};
@@ -2312,26 +2394,36 @@
                 ${recent.length > 0 ? `
                 <div class="detail-panel-section">
                     <div class="detail-panel-section-title">Recent Results</div>
-                    ${recent.map(f => `
-                        <div class="fixture-list-item" onclick="showMatchDetailById(${f.fixture_id})">
+                    ${recent.map(f => {
+                        const homeTeam = f.home_team?.name || f.home_team_name || '';
+                        const awayTeam = f.away_team?.name || f.away_team_name || '';
+                        const homeGoals = f.home_goals ?? f.home_score ?? '-';
+                        const awayGoals = f.away_goals ?? f.away_score ?? '-';
+                        const fixtureId = f.id || f.fixture_id || 0;
+                        return `
+                        <div class="fixture-list-item" onclick="showMatchDetailById(${fixtureId})">
                             <div class="fixture-list-date">${f.date?.substring(5, 10) || ''}</div>
-                            <div class="fixture-list-teams">${f.home_team_name || ''} vs ${f.away_team_name || ''}</div>
-                            <div class="fixture-list-score">${f.home_score ?? '-'} - ${f.away_score ?? '-'}</div>
+                            <div class="fixture-list-teams">${homeTeam} vs ${awayTeam}</div>
+                            <div class="fixture-list-score">${homeGoals} - ${awayGoals}</div>
                         </div>
-                    `).join('')}
+                    `}).join('')}
                 </div>
                 ` : ''}
 
                 ${upcoming.length > 0 ? `
                 <div class="detail-panel-section">
                     <div class="detail-panel-section-title">Upcoming Fixtures</div>
-                    ${upcoming.map(f => `
-                        <div class="fixture-list-item" onclick="showMatchDetailById(${f.fixture_id})">
+                    ${upcoming.map(f => {
+                        const homeTeam = f.home_team?.name || f.home_team_name || '';
+                        const awayTeam = f.away_team?.name || f.away_team_name || '';
+                        const fixtureId = f.id || f.fixture_id || 0;
+                        return `
+                        <div class="fixture-list-item" onclick="showMatchDetailById(${fixtureId})">
                             <div class="fixture-list-date">${f.date?.substring(5, 10) || ''}</div>
-                            <div class="fixture-list-teams">${f.home_team_name || ''} vs ${f.away_team_name || ''}</div>
+                            <div class="fixture-list-teams">${homeTeam} vs ${awayTeam}</div>
                             <div class="fixture-list-score">${f.time || 'TBD'}</div>
                         </div>
-                    `).join('')}
+                    `}).join('')}
                 </div>
                 ` : ''}
 
@@ -2417,37 +2509,62 @@
 
             const entities = data.entities || [];
             const metrics = data.comparison_metrics || [];
-            const isPlayer = data.comparison_type === 'player';
+            const isPlayer = data.comparison_type === 'player' || data.entity_type === 'player';
 
-            let content = '<div style="display:flex;gap:16px;margin-bottom:24px;">';
+            // Enhanced player cards with larger photos and team info
+            let content = '<div style="display:flex;gap:12px;margin-bottom:24px;">';
             entities.forEach((e, idx) => {
-                const name = isPlayer ? (e.player?.name || 'Player') : (e.team?.name || 'Team');
-                const logo = isPlayer ? (e.player?.photo || '') : (e.team?.logo || '');
-                content += `
-                    <div style="flex:1;text-align:center;padding:16px;background:var(--bg-tertiary);border-radius:var(--radius-md);">
-                        <img src="${logo}" alt="" style="width:48px;height:48px;object-fit:contain;margin-bottom:8px;" onerror="this.style.display='none'">
-                        <div style="font-weight:600;">${name}</div>
-                        ${e.team?.league ? `<div style="font-size:11px;color:var(--text-tertiary);">${e.team.league}</div>` : ''}
-                    </div>
-                `;
+                const player = e.player || {};
+                const team = e.team || {};
+                const name = isPlayer ? (player.name || 'Player') : (team.name || 'Team');
+                const logo = isPlayer ? (player.photo || '') : (team.logo || '');
+                const teamName = isPlayer ? (player.premier_league?.team || player.competitions?.[0]?.team || '') : '';
+                const position = player.premier_league?.position || player.competitions?.[0]?.position || '';
+                const nationality = player.nationality || '';
+                const age = player.age || '';
+
+                if (isPlayer) {
+                    content += `
+                        <div style="flex:1;text-align:center;padding:20px 16px;background:var(--bg-tertiary);border-radius:var(--radius-lg);border:1px solid var(--border);">
+                            <div style="position:relative;display:inline-block;margin-bottom:12px;">
+                                <img src="${logo}" alt="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--border);background:var(--bg-secondary);" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23333%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2260%22 font-size=%2240%22 text-anchor=%22middle%22 fill=%22%23888%22>⚽</text></svg>'">
+                            </div>
+                            <div style="font-weight:700;font-size:16px;margin-bottom:4px;">${name}</div>
+                            ${teamName ? `<div style="font-size:13px;color:var(--text-secondary);margin-bottom:2px;">${teamName}</div>` : ''}
+                            ${position ? `<div style="font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;">${position}</div>` : ''}
+                            ${nationality || age ? `<div style="font-size:11px;color:var(--text-tertiary);margin-top:8px;">${nationality}${nationality && age ? ' • ' : ''}${age ? age + ' yrs' : ''}</div>` : ''}
+                        </div>
+                    `;
+                } else {
+                    content += `
+                        <div style="flex:1;text-align:center;padding:20px 16px;background:var(--bg-tertiary);border-radius:var(--radius-lg);border:1px solid var(--border);">
+                            <img src="${logo}" alt="" style="width:64px;height:64px;object-fit:contain;margin-bottom:12px;" onerror="this.style.display='none'">
+                            <div style="font-weight:700;font-size:16px;margin-bottom:4px;">${name}</div>
+                            ${team.league ? `<div style="font-size:12px;color:var(--text-tertiary);">${team.league}</div>` : ''}
+                        </div>
+                    `;
+                }
             });
             content += '</div>';
 
+            // Enhanced metrics table
             if (metrics.length > 0) {
-                content += '<div class="detail-panel-section"><div class="detail-panel-section-title">Comparison</div>';
-                metrics.forEach(m => {
+                content += '<div class="detail-panel-section"><div class="detail-panel-section-title">Stats Comparison</div>';
+                content += '<div style="background:var(--bg-tertiary);border-radius:var(--radius-md);overflow:hidden;">';
+                metrics.forEach((m, i) => {
                     const val1 = m.values?.[0] ?? '-';
                     const val2 = m.values?.[1] ?? '-';
                     const winner = m.winner_index;
+                    const isLast = i === metrics.length - 1;
                     content += `
-                        <div style="display:flex;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);">
+                        <div style="display:flex;align-items:center;padding:14px 16px;${!isLast ? 'border-bottom:1px solid var(--border);' : ''}">
                             <div style="flex:1;text-align:center;font-size:18px;font-weight:${winner === 0 ? '700' : '400'};color:${winner === 0 ? 'var(--accent)' : 'var(--text-primary)'};">${val1}</div>
-                            <div style="flex:1;text-align:center;font-size:12px;color:var(--text-tertiary);">${m.label}</div>
+                            <div style="flex:1.2;text-align:center;font-size:12px;color:var(--text-secondary);font-weight:500;">${m.label}</div>
                             <div style="flex:1;text-align:center;font-size:18px;font-weight:${winner === 1 ? '700' : '400'};color:${winner === 1 ? 'var(--accent)' : 'var(--text-primary)'};">${val2}</div>
                         </div>
                     `;
                 });
-                content += '</div>';
+                content += '</div></div>';
             }
 
             document.getElementById('searchResults').classList.remove('active');
@@ -2554,7 +2671,40 @@
         function showGenericInPanel() {
             const data = lastSearchData;
             document.getElementById('searchResults').classList.remove('active');
-            openDetailPanel('Results', '🔍', `<pre style="font-size:11px;overflow:auto;">${JSON.stringify(data, null, 2)}</pre>`);
+
+            // Try to extract something useful from the response
+            let content = '';
+
+            if (data?.data) {
+                // Check for common patterns
+                if (data.data.standings) {
+                    showStandingsInPanel(lastSearchQuery);
+                    return;
+                }
+                if (data.data.team) {
+                    showTeamInPanel();
+                    return;
+                }
+                if (data.data.player) {
+                    showPlayerInPanel();
+                    return;
+                }
+            }
+
+            // Fallback - show a friendly message instead of raw JSON
+            content = `
+                <div style="text-align:center;padding:40px 20px;">
+                    <div style="font-size:48px;margin-bottom:16px;">🤔</div>
+                    <h3 style="margin-bottom:8px;">Couldn't parse results</h3>
+                    <p style="color:var(--text-secondary);margin-bottom:20px;">Try searching for:</p>
+                    <div style="display:flex;flex-direction:column;gap:8px;max-width:250px;margin:0 auto;">
+                        <button onclick="performSearch('Arsenal')" style="padding:10px;border-radius:8px;background:var(--bg-glass);border:1px solid var(--border);color:var(--text-primary);cursor:pointer;">A team: "Arsenal"</button>
+                        <button onclick="performSearch('Salah')" style="padding:10px;border-radius:8px;background:var(--bg-glass);border:1px solid var(--border);color:var(--text-primary);cursor:pointer;">A player: "Salah"</button>
+                        <button onclick="performSearch('Salah vs Haaland')" style="padding:10px;border-radius:8px;background:var(--bg-glass);border:1px solid var(--border);color:var(--text-primary);cursor:pointer;">A comparison: "Salah vs Haaland"</button>
+                    </div>
+                </div>
+            `;
+            openDetailPanel('Results', '🔍', content);
         }
 
         // =============================================================================
@@ -2587,6 +2737,7 @@
             try {
                 const response = await fetch(`/players/top-scorers?league=${leagueId}&season=2025&limit=5`);
                 const data = await response.json();
+                console.log(`fetchTopScorers for league ${leagueId}:`, data);
                 return data.players || [];
             } catch (error) {
                 console.error('Error fetching top scorers:', error);
@@ -2598,19 +2749,28 @@
         // RENDERING
         // =============================================================================
         function formatDate(date) {
-            return date.toISOString().split('T')[0];
+            // Use local date components to avoid UTC conversion issues
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
         }
 
         function formatDisplayDate(date) {
             const today = new Date();
+            // Reset time components for accurate date comparison
+            today.setHours(0, 0, 0, 0);
+            const compareDate = new Date(date);
+            compareDate.setHours(0, 0, 0, 0);
+
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
             const yesterday = new Date(today);
             yesterday.setDate(yesterday.getDate() - 1);
 
-            if (formatDate(date) === formatDate(today)) return 'Today';
-            if (formatDate(date) === formatDate(tomorrow)) return 'Tomorrow';
-            if (formatDate(date) === formatDate(yesterday)) return 'Yesterday';
+            if (compareDate.getTime() === today.getTime()) return 'Today';
+            if (compareDate.getTime() === tomorrow.getTime()) return 'Tomorrow';
+            if (compareDate.getTime() === yesterday.getTime()) return 'Yesterday';
 
             return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
         }
@@ -2700,7 +2860,8 @@
             const homeGoals = match.home_goals ?? match.goals?.home ?? '-';
             const awayGoals = match.away_goals ?? match.goals?.away ?? '-';
             const status = getMatchStatus(match);
-            const matchTime = match.time || match.fixture?.date?.split('T')[1]?.slice(0, 5) || '';
+            const rawTime = match.time || match.fixture?.date?.split('T')[1]?.slice(0, 5) || '';
+            const matchDate = match.date || match.fixture?.date || '';
             const elapsed = match.elapsed || match.fixture?.status?.elapsed || '';
             const matchId = match.fixture_id || match.fixture?.id || '';
             const compName = competition || match.competition || match.league_name || '';
@@ -2708,26 +2869,43 @@
             const isLive = status === 'live';
             const isFinished = status === 'finished';
 
+            // Format kickoff time in user's local timezone
+            let localKickoff = rawTime;
+            if (matchDate && !isLive && !isFinished) {
+                try {
+                    const kickoffDate = new Date(matchDate);
+                    localKickoff = kickoffDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                } catch (e) {
+                    localKickoff = rawTime;
+                }
+            }
+
             let timeDisplay = '';
             let statusText = '';
             if (isLive) {
-                timeDisplay = `<span class="match-time live">${elapsed}'</span>`;
+                // Live: show elapsed with pulsing dot and data-match-id for live update
+                const elapsedMin = parseInt(elapsed) || 0;
+                timeDisplay = `<span class="match-time live" data-match-id="${matchId}" data-kickoff="${matchDate}"><span class="live-dot"></span>${elapsedMin}'</span>`;
                 statusText = 'LIVE';
             } else if (isFinished) {
                 timeDisplay = `<span class="match-status ft">FT</span>`;
                 statusText = 'FT';
             } else {
-                timeDisplay = `<span class="match-time">${matchTime}</span>`;
-                statusText = matchTime;
+                // Upcoming: show local kickoff time
+                timeDisplay = `<span class="match-time upcoming">${localKickoff}</span>`;
+                statusText = localKickoff;
             }
 
             // Escape single quotes in names for onclick
             const homeName = (homeTeam.name || '').replace(/'/g, "\\'");
             const awayName = (awayTeam.name || '').replace(/'/g, "\\'");
-            const compNameEsc = compName.replace(/'/g, "\\'");
+            const compNameEsc = (compName || '').replace(/'/g, "\\'");
+            const homeLogoEsc = (homeTeam.logo || '').replace(/'/g, "\\'");
+            const awayLogoEsc = (awayTeam.logo || '').replace(/'/g, "\\'");
+            const safeMatchId = matchId || 0;
 
             return `
-                <div class="match-row ${isLive ? 'live' : ''}" onclick="showMatchDetail(${matchId}, '${homeName}', '${awayName}', '${homeGoals}', '${awayGoals}', '${homeTeam.logo || ''}', '${awayTeam.logo || ''}', '${compNameEsc}', '${statusText}', '${matchTime}')">
+                <div class="match-row ${isLive ? 'live' : ''}" onclick="showMatchDetail(${safeMatchId}, '${homeName}', '${awayName}', '${homeGoals}', '${awayGoals}', '${homeLogoEsc}', '${awayLogoEsc}', '${compNameEsc}', '${statusText}', '${matchTime}')">
                     <div class="team home">
                         <span class="team-name">${homeTeam.name || 'Home'}</span>
                         <img src="${homeTeam.logo || ''}" alt="" class="team-logo" onerror="this.style.display='none'">
@@ -2749,6 +2927,8 @@
         }
 
         function showMatchDetail(matchId, homeName, awayName, homeGoals, awayGoals, homeLogo, awayLogo, competition, status, time) {
+            console.log('showMatchDetail called:', { matchId, homeName, awayName });
+
             // Build match detail content for the slide-in panel
             const content = `
                 <div class="match-detail-header">
@@ -2896,7 +3076,7 @@
                 const teamData = team.team || team;
                 const teamId = teamData.id || '';
                 html += `
-                    <div class="standing-row" onclick="showTeamDetail('${teamData.name}')"
+                    <div class="standing-row" onclick="showTeamDetail('${teamData.name}')">
                         <span class="standing-pos">${team.rank || index + 1}</span>
                         <div class="standing-team">
                             <img src="${teamData.logo || ''}" alt="" class="standing-team-logo" onerror="this.style.display='none'">
@@ -2969,6 +3149,7 @@
             });
 
             const allLeagueData = await Promise.all(dataPromises);
+            console.log('renderCompetitionsView - allLeagueData:', allLeagueData);
 
             // Build HTML for each league
             let html = '<div class="competitions-grid">';
@@ -3110,9 +3291,9 @@
             }
         }
 
-        function showTeamDetail(teamName, leagueId) {
-            // Use the search system to show team in detail panel
-            searchAndResolve(teamName);
+        // searchTeam - search for a team or player by name
+        function searchTeam(name) {
+            searchAndResolve(name);
         }
 
         function selectLeagueFromCompetitions(leagueId) {
@@ -3739,6 +3920,27 @@
 
             // Load initial stats (All Leagues by default)
             await updateStatsPanel('all');
+
+            // Start live match ticker
+            startLiveMatchTicker();
+        }
+
+        // Live match timer - updates elapsed time display every second
+        let liveTickerInterval = null;
+        function startLiveMatchTicker() {
+            if (liveTickerInterval) clearInterval(liveTickerInterval);
+
+            liveTickerInterval = setInterval(() => {
+                const liveTimers = document.querySelectorAll('.match-time.live');
+                liveTimers.forEach(timer => {
+                    const text = timer.textContent || '';
+                    const match = text.match(/(\d+)/);
+                    const elapsed = match ? parseInt(match[1]) : 0;
+                    // Show seconds ticking (visual feedback that match is live)
+                    const seconds = Math.floor((Date.now() / 1000) % 60);
+                    timer.innerHTML = `<span class="live-dot"></span>${elapsed}<span style="font-size:10px;opacity:0.7;">:${String(seconds).padStart(2, '0')}</span>`;
+                });
+            }, 1000);
         }
 
         // Start the app
