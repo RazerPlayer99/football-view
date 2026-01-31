@@ -744,23 +744,22 @@ def api_pre_match(match_id: int):
 
 @app.get("/", response_class=HTMLResponse)
 def home():
-    """Dashboard landing page with matches and league stats."""
-    template_path = Path(__file__).parent / "templates" / "dashboard.html"
-    if template_path.exists():
-        return HTMLResponse(content=template_path.read_text(encoding="utf-8"))
-    else:
-        # Fallback if template doesn't exist
-        return HTMLResponse(content="<h1>Dashboard template not found</h1>", status_code=500)
-
-
-@app.get("/v4", response_class=HTMLResponse)
-def dashboard_v4():
-    """New mobile-first dashboard design (v4)."""
+    """Dashboard landing page - serves the v4 mobile-first design."""
     template_path = Path(__file__).parent / "templates" / "dashboard-v4.html"
     if template_path.exists():
         return HTMLResponse(content=template_path.read_text(encoding="utf-8"))
     else:
-        return HTMLResponse(content="<h1>Dashboard V4 template not found</h1>", status_code=500)
+        return HTMLResponse(content="<h1>Dashboard template not found</h1>", status_code=500)
+
+
+@app.get("/legacy", response_class=HTMLResponse)
+def dashboard_legacy():
+    """Legacy dashboard design (kept for reference)."""
+    template_path = Path(__file__).parent / "templates" / "dashboard.html"
+    if template_path.exists():
+        return HTMLResponse(content=template_path.read_text(encoding="utf-8"))
+    else:
+        return HTMLResponse(content="<h1>Legacy dashboard template not found</h1>", status_code=500)
 
 
 @app.get("/old-home", response_class=HTMLResponse)
