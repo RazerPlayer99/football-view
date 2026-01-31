@@ -1,5 +1,127 @@
 # Football View Changelog
 
+## v0.2.4 - UI Enhancements and Stability (2026-01-31)
+
+### ✨ Pre-Match View
+
+**Full Pre-Match Overlay**
+- New slide-up overlay for upcoming matches with smooth Apple-esque transitions
+- Hero section with team crests, names, and recent form (W/D/L badges)
+- Live countdown timer to kickoff
+- Match info section (venue, referee, competition, round)
+
+**Predicted XI Integration**
+- Pitch visualization with formation-based player positioning
+- Supports common formations: 4-3-3, 4-4-2, 3-5-2, 4-2-3-1, 3-4-3, 5-3-2, 5-4-1
+- Players displayed with names on interactive pitch graphic
+- Powered by the existing prediction engine
+
+**Head-to-Head Stats**
+- H2H record bar showing wins/draws distribution
+- Counts wins by team_id regardless of home/away position
+- Ignores matches with null scores
+
+**Season Stats Comparison**
+- Side-by-side stats for both teams (rank, points, W/D/L, goals)
+- Data pulled from current standings
+
+**Coming Soon Sections**
+- Weather and "Where to Watch" placeholders for future features
+
+---
+
+### 🔄 Live Match System
+
+**Real-Time Polling**
+- Dashboard now polls every 30 seconds when live matches are active
+- Smart polling - only activates when matches are live or starting within 5 minutes
+- Pauses when browser tab is hidden (Visibility API)
+- Resumes with immediate refresh when tab becomes visible
+
+**Client-Side Timer**
+- Match elapsed time updates every second for smooth UX
+- Syncs with server data every 30 seconds
+- Detects halftime/break states and pauses timer appropriately
+- Caps at reasonable bounds (+5 for first half, +10 for second half)
+
+---
+
+### 🎯 Payload Contracts & API Stability
+
+**View Models Architecture**
+- New `MatchCardPayload` - stable contract for match cards on dashboard
+- New `PreMatchPayload` - complete pre-match data structure
+- New `H2HPayload.aggregate()` - proper H2H calculation by team_id
+- New `SeasonStatsPayload` - standings data extraction
+- `get_team_form()` helper for W/D/L form extraction
+- `find_team_in_standings()` helper for stats lookup
+
+**API Endpoints**
+- `/api/dashboard` now returns `MatchCardPayload[]` with normalized structure
+- `/api/pre-match/{match_id}` returns comprehensive pre-match data
+- Both endpoints use stable payload contracts, shielding UI from API changes
+
+---
+
+### 🐛 Bug Fixes
+
+**Predicted XI Engine**
+- Fixed `'PredictedLineup' object has no attribute 'predicted_xi'` - now uses `starting_xi`
+- Fixed `'PredictedPlayer' object has no attribute 'name'` - now uses `player_name`
+- Fixed `'number'` attribute - now uses `squad_number`
+
+**Coming Up Section**
+- Clicking upcoming match now opens pre-match overlay directly (was navigating to date)
+- No more double-click required to see match preview
+
+**Dashboard Compatibility**
+- UI now supports both old and new payload formats for backward compatibility
+- `renderMatchRow` and `renderLiveSection` updated for new structure
+
+---
+
+### 📁 Files Modified
+
+| File | Changes |
+|------|---------|
+| `app/main.py` | Version bump to v0.2.4, fixed predicted XI attributes, added MatchCardPayload to dashboard |
+| `app/view_models.py` | Added payload contracts (MatchCardPayload, H2HPayload, PreMatchPayload, etc.) |
+| `app/templates/dashboard-v4.html` | Pre-match overlay, live polling, timer system, Coming Up fix |
+
+---
+
+### 🔧 Technical Details
+
+**New JavaScript Functions**
+```javascript
+// Pre-Match Overlay
+openPreMatch(matchId)      // Fetch and display pre-match view
+closePreMatch()            // Dismiss overlay
+renderPreMatch(data)       // Render pre-match content
+renderPitchPlayers(lineup, side)  // Position players on pitch
+startCountdown(kickoffDate)       // Live countdown timer
+
+// Live Polling System
+startLivePolling()         // Begin 30s API poll + 1s timer
+stopLivePolling()          // Pause all polling
+pollLiveUpdates()          // Fetch fresh data
+syncLiveTimers(matches)    // Sync client timers with server
+updateLiveTimerDisplays()  // Update DOM every second
+getLiveDisplayTime(matchId) // Get interpolated elapsed time
+```
+
+**Formation Positioning**
+```javascript
+FORMATION_POSITIONS = {
+    "4-3-3": { home: [...], away: [...] },
+    "4-4-2": { ... },
+    "3-5-2": { ... },
+    // ... 7 formations supported
+}
+```
+
+---
+
 ## v0.2.2 - Stability Update (2026-01-30)
 
 ### 🐛 Bug Fixes & Stability Improvements

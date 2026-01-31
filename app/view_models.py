@@ -10,6 +10,371 @@ from datetime import datetime, timezone, timedelta
 
 from app.utils.helpers import safe_lower, safe_str
 
+
+# =============================================================================
+# PAYLOAD CONTRACTS (UI-Stable View Models)
+# =============================================================================
+# These contracts define the EXACT shape the UI expects. The UI should ONLY
+# consume these payloads, never raw API responses. This shields the UI from
+# API structure changes.
+
+
+@dataclass
+class TeamPayload:
+    """Stable team payload for UI consumption."""
+    id: int
+    name: str
+    logo: str
+    score: Optional[int] = None  # Only present for match context
+
+
+@dataclass
+class CompetitionPayload:
+    """Stable competition payload."""
+    id: int
+    name: str
+    round: Optional[str] = None
+    logo: Optional[str] = None
+
+
+@dataclass
+class MatchCardPayload:
+    """
+    Stable payload for match cards on landing/dashboard.
+    UI relies on these exact field names.
+    """
+    id: int
+    status: str  # "upcoming" | "live" | "finished"
+    kickoff_utc: str  # ISO string
+    kickoff_local: str  # Formatted for display
+    competition: CompetitionPayload
+    home: TeamPayload
+    away: TeamPayload
+
+    @classmethod
+    def from_raw_match(cls, raw: Dict[str, Any]) -> "MatchCardPayload":
+        """Map raw API match data to stable payload."""
+        # Normalize status
+        raw_status = (raw.get("status") or "").lower()
+        if raw_status in ("not started", "ns", "tbd", "pst"):
+            status = "upcoming"
+        elif raw_status in ("1h", "2h", "ht", "et", "p", "live", "bt"):
+            status = "live"
+        elif raw_status in ("ft", "aet", "pen", "match finished", "finished"):
+            status = "finished"
+        else:
+            status = "upcoming"
+
+        # Format kickoff time
+        kickoff_utc = raw.get("date", "")
+        kickoff_local = ""
+        if kickoff_utc:
+            try:
+                dt = datetime.fromisoformat(kickoff_utc.replace("Z", "+00:00"))
+                kickoff_local = dt.strftime("%a %b %d • %H:%M")
+            except:
+                kickoff_local = kickoff_utc[:16] if len(kickoff_utc) > 16 else kickoff_utc
+
+        # Extract team data
+        home_team = raw.get("home_team", {}) or {}
+        away_team = raw.get("away_team", {}) or {}
+
+        return cls(
+            id=raw.get("id", 0),
+            status=status,
+            kickoff_utc=kickoff_utc,
+            kickoff_local=kickoff_local,
+            competition=CompetitionPayload(
+                id=raw.get("league_id", 0),
+                name=raw.get("competition", ""),
+                round=raw.get("round"),
+                logo=raw.get("league_logo"),
+            ),
+            home=TeamPayload(
+                id=home_team.get("id", 0),
+                name=home_team.get("name", "Home"),
+                logo=home_team.get("logo", ""),
+                score=raw.get("home_goals"),
+            ),
+            away=TeamPayload(
+                id=away_team.get("id", 0),
+                name=away_team.get("name", "Away"),
+                logo=away_team.get("logo", ""),
+                score=raw.get("away_goals"),
+            ),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dict for JSON serialization."""
+        return {
+            "id": self.id,
+            "status": self.status,
+            "kickoff_utc": self.kickoff_utc,
+            "kickoff_local": self.kickoff_local,
+            "competition": {
+                "id": self.competition.id,
+                "name": self.competition.name,
+                "round": self.competition.round,
+                "logo": self.competition.logo,
+            },
+            "home": {
+                "id": self.home.id,
+                "name": self.home.name,
+                "logo": self.home.logo,
+                "score": self.home.score,
+            },
+            "away": {
+                "id": self.away.id,
+                "name": self.away.name,
+                "logo": self.away.logo,
+                "score": self.away.score,
+            },
+        }
+
+
+@dataclass
+class H2HPayload:
+    """Head-to-head summary payload."""
+    total_matches: int
+    home_wins: int  # Wins by the "home" team in current match context
+    away_wins: int  # Wins by the "away" team in current match context
+    draws: int
+    recent_matches: List[Dict[str, Any]]  # Last 5 H2H fixtures
+
+    @classmethod
+    def aggregate(
+        cls,
+        raw_matches: List[Dict[str, Any]],
+        team1_id: int,
+        team2_id: int,
+    ) -> "H2HPayload":
+        """
+        Aggregate H2H from raw match list.
+        Counts wins by team_id regardless of home/away position in each match.
+        Ignores matches with null scores.
+        """
+        team1_wins = 0
+        team2_wins = 0
+        draws = 0
+        recent = []
+
+        for m in raw_matches:
+            home = m.get("home_team", {}) or {}
+            away = m.get("away_team", {}) or {}
+            h_goals = m.get("home_goals")
+            a_goals = m.get("away_goals")
+
+            # Skip null scores
+            if h_goals is None or a_goals is None:
+                continue
+
+            home_id = home.get("id", 0)
+            away_id = away.get("id", 0)
+
+            # Determine winner by team_id, not by home/away position
+            if h_goals > a_goals:
+                winner_id = home_id
+            elif a_goals > h_goals:
+                winner_id = away_id
+            else:
+                winner_id = None  # Draw
+
+            if winner_id == team1_id:
+                team1_wins += 1
+            elif winner_id == team2_id:
+                team2_wins += 1
+            elif winner_id is None:
+                draws += 1
+
+            recent.append({
+                "date": m.get("date"),
+                "home_team": home.get("name"),
+                "away_team": away.get("name"),
+                "home_goals": h_goals,
+                "away_goals": a_goals,
+            })
+
+        return cls(
+            total_matches=len(recent),
+            home_wins=team1_wins,
+            away_wins=team2_wins,
+            draws=draws,
+            recent_matches=recent[:5],
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "total_matches": self.total_matches,
+            "home_wins": self.home_wins,
+            "away_wins": self.away_wins,
+            "draws": self.draws,
+            "recent_matches": self.recent_matches,
+        }
+
+
+@dataclass
+class SeasonStatsPayload:
+    """Basic season stats from standings."""
+    rank: Optional[int]
+    points: Optional[int]
+    played: Optional[int]
+    won: Optional[int]
+    drawn: Optional[int]
+    lost: Optional[int]
+    goals_for: Optional[int]
+    goals_against: Optional[int]
+    goal_diff: Optional[int]
+
+    @classmethod
+    def from_standings_row(cls, row: Dict[str, Any]) -> "SeasonStatsPayload":
+        return cls(
+            rank=row.get("rank") or row.get("position"),
+            points=row.get("points"),
+            played=row.get("played"),
+            won=row.get("won"),
+            drawn=row.get("drawn"),
+            lost=row.get("lost"),
+            goals_for=row.get("goals_for"),
+            goals_against=row.get("goals_against"),
+            goal_diff=row.get("goal_diff") or row.get("goal_difference"),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "rank": self.rank,
+            "points": self.points,
+            "played": self.played,
+            "won": self.won,
+            "drawn": self.drawn,
+            "lost": self.lost,
+            "goals_for": self.goals_for,
+            "goals_against": self.goals_against,
+            "goal_diff": self.goal_diff,
+        }
+
+
+@dataclass
+class LineupPlayerPayload:
+    """Player in a lineup."""
+    name: str
+    position: str
+    player_id: Optional[int] = None
+    number: Optional[int] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "name": self.name,
+            "position": self.position,
+            "player_id": self.player_id,
+            "number": self.number,
+        }
+
+
+@dataclass
+class LineupPayload:
+    """Team lineup payload."""
+    formation: Optional[str]
+    players: List[LineupPlayerPayload]
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "formation": self.formation,
+            "players": [p.to_dict() for p in self.players],
+        }
+
+
+@dataclass
+class PreMatchTeamPayload:
+    """Team payload for pre-match view with form and stats."""
+    id: int
+    name: str
+    logo: str
+    form: List[str]  # ["W", "D", "L", "W", "W"]
+    season_stats: Optional[SeasonStatsPayload]
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "logo": self.logo,
+            "form": self.form,
+            "season_stats": self.season_stats.to_dict() if self.season_stats else None,
+        }
+
+
+@dataclass
+class PreMatchPayload:
+    """
+    Complete pre-match payload for upcoming match overlay.
+    This is THE contract the UI relies on.
+    """
+    match: Dict[str, Any]  # Basic match info
+    home_team: PreMatchTeamPayload
+    away_team: PreMatchTeamPayload
+    h2h: H2HPayload
+    lineups: Dict[str, Optional[LineupPayload]]  # {"home": ..., "away": ...}
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "match": self.match,
+            "home_team": self.home_team.to_dict(),
+            "away_team": self.away_team.to_dict(),
+            "h2h": self.h2h.to_dict(),
+            "lineups": {
+                "home": self.lineups.get("home").to_dict() if self.lineups.get("home") else None,
+                "away": self.lineups.get("away").to_dict() if self.lineups.get("away") else None,
+            },
+        }
+
+
+# =============================================================================
+# MAPPER FUNCTIONS
+# =============================================================================
+
+def map_fixtures_to_match_cards(raw_matches: List[Dict[str, Any]]) -> List[MatchCardPayload]:
+    """Convert raw API matches to stable MatchCardPayload list."""
+    return [MatchCardPayload.from_raw_match(m) for m in raw_matches]
+
+
+def get_team_form(team_id: int, past_matches: List[Dict[str, Any]], limit: int = 5) -> List[str]:
+    """
+    Extract team form (W/D/L) from past matches.
+    """
+    form = []
+    for m in past_matches[:limit]:
+        home = m.get("home_team", {}) or {}
+        away = m.get("away_team", {}) or {}
+        h_goals = m.get("home_goals")
+        a_goals = m.get("away_goals")
+
+        if h_goals is None or a_goals is None:
+            continue
+
+        is_home = home.get("id") == team_id
+        team_goals = h_goals if is_home else a_goals
+        opp_goals = a_goals if is_home else h_goals
+
+        if team_goals > opp_goals:
+            form.append("W")
+        elif team_goals < opp_goals:
+            form.append("L")
+        else:
+            form.append("D")
+
+    return form
+
+
+def find_team_in_standings(
+    standings: List[Dict[str, Any]],
+    team_id: int,
+) -> Optional[SeasonStatsPayload]:
+    """Find team in standings and return stats payload."""
+    for row in standings:
+        row_team_id = row.get("team_id") or row.get("team", {}).get("id")
+        if row_team_id == team_id:
+            return SeasonStatsPayload.from_standings_row(row)
+    return None
+
 # Timezone for display (CST = UTC-6)
 CST = timezone(timedelta(hours=-6))
 

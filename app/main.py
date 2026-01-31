@@ -20,7 +20,7 @@ from app.view_models import (
 from config.settings import settings
 
 # Version tracking
-APP_VERSION = "v0.2.2"
+APP_VERSION = "v0.2.4"
 APP_NAME = "Football View"
 APP_STAGE = "Pre-Alpha"
 
@@ -164,8 +164,10 @@ def api_dashboard(
     Get dashboard data: matches for a specific date across all leagues.
 
     Returns matches grouped by competition for the landing page.
+    Uses MatchCardPayload for stable UI contract.
     """
     from datetime import datetime, timedelta
+    from app.view_models import MatchCardPayload
 
     # Parse date or use today
     if date:
@@ -187,12 +189,23 @@ def api_dashboard(
             limit_per_league=20,
         )
 
+        # Convert raw matches to stable MatchCardPayload
+        raw_matches = result.get("all_matches", [])
+        match_payloads = [MatchCardPayload.from_raw_match(m).to_dict() for m in raw_matches]
+
+        # Also convert by_competition
+        by_competition_payloads = {}
+        for comp_name, comp_matches in result.get("by_competition", {}).items():
+            by_competition_payloads[comp_name] = [
+                MatchCardPayload.from_raw_match(m).to_dict() for m in comp_matches
+            ]
+
         return {
             "date": date_str,
             "season": season,
-            "by_competition": result.get("by_competition", {}),
-            "all_matches": result.get("all_matches", []),
-            "total_matches": len(result.get("all_matches", [])),
+            "by_competition": by_competition_payloads,
+            "all_matches": match_payloads,
+            "total_matches": len(match_payloads),
         }
     except Exception as e:
         return {
@@ -511,16 +524,16 @@ def api_predicted_xi(
                         "formation_confidence": prediction.formation_confidence,
                         "players": [
                             {
-                                "name": p.name,
+                                "name": p.player_name,
                                 "position": p.position,
                                 "confidence": p.confidence,
                                 "player_id": p.player_id,
                             }
-                            for p in prediction.predicted_xi
+                            for p in prediction.starting_xi
                         ],
                         "bench": [
                             {
-                                "name": p.name,
+                                "name": p.player_name,
                                 "position": p.position,
                                 "player_id": p.player_id,
                             }
@@ -534,6 +547,201 @@ def api_predicted_xi(
         return {"home": None, "away": None, "error": str(e)}
 
 
+@app.get("/api/pre-match/{match_id}")
+def api_pre_match(match_id: int):
+    """
+    Get comprehensive pre-match data for an upcoming fixture.
+    Returns PreMatchPayload - a stable contract the UI depends on.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+    from app.predicted_xi import get_predicted_xi_provider
+    from app.view_models import (
+        H2HPayload, SeasonStatsPayload, LineupPayload, LineupPlayerPayload,
+        PreMatchTeamPayload, get_team_form, find_team_in_standings
+    )
+
+    # Get match data first
+    match_data = api_client.get_match_by_id(match_id)
+    if not match_data:
+        raise HTTPException(status_code=404, detail="Match not found")
+
+    home_team = match_data.get("home_team", {}) or {}
+    away_team = match_data.get("away_team", {}) or {}
+    home_team_id = home_team.get("id")
+    away_team_id = away_team.get("id")
+    league_id = match_data.get("league", {}).get("id")
+
+    # Initialize result with stable payload structure
+    result = {
+        "match": {
+            "id": match_id,
+            "date": match_data.get("date"),
+            "venue": match_data.get("venue"),
+            "referee": match_data.get("referee"),
+            "status": match_data.get("status"),
+            "league": match_data.get("league", {}).get("name"),
+            "round": match_data.get("league", {}).get("round"),
+            "league_id": league_id,
+        },
+        "home_team": {
+            "id": home_team_id,
+            "name": home_team.get("name"),
+            "logo": home_team.get("logo"),
+            "form": [],
+            "season_stats": None,
+        },
+        "away_team": {
+            "id": away_team_id,
+            "name": away_team.get("name"),
+            "logo": away_team.get("logo"),
+            "form": [],
+            "season_stats": None,
+        },
+        "h2h": {
+            "total_matches": 0,
+            "home_wins": 0,
+            "away_wins": 0,
+            "draws": 0,
+            "recent_matches": [],
+        },
+        "lineups": {"home": None, "away": None},
+    }
+
+    # Fetch data in parallel
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = {}
+
+        # Get team fixtures for form
+        if home_team_id:
+            futures["home_fixtures"] = executor.submit(
+                api_client.get_team_fixtures,
+                home_team_id, CURRENT_SEASON, league_id or 39, 10
+            )
+        if away_team_id:
+            futures["away_fixtures"] = executor.submit(
+                api_client.get_team_fixtures,
+                away_team_id, CURRENT_SEASON, league_id or 39, 10
+            )
+
+        # Get standings for season stats
+        if league_id:
+            futures["standings"] = executor.submit(
+                api_client.get_standings,
+                CURRENT_SEASON, league_id
+            )
+
+        # Get H2H matches
+        if home_team_id and away_team_id:
+            futures["h2h"] = executor.submit(
+                api_client.get_matches,
+                CURRENT_SEASON, league_id, home_team_id, 30
+            )
+
+        # Get predicted lineups from prediction engine
+        predicted_provider = get_predicted_xi_provider()
+        if home_team_id:
+            futures["home_lineup"] = executor.submit(
+                predicted_provider.get_or_generate_prediction,
+                match_id=match_id, team_id=home_team_id
+            )
+        if away_team_id:
+            futures["away_lineup"] = executor.submit(
+                predicted_provider.get_or_generate_prediction,
+                match_id=match_id, team_id=away_team_id
+            )
+
+        # Process results using view_models helpers
+        try:
+            if "home_fixtures" in futures:
+                home_fix = futures["home_fixtures"].result()
+                result["home_team"]["form"] = get_team_form(
+                    home_team_id, home_fix.get("past", [])
+                )
+        except Exception:
+            pass
+
+        try:
+            if "away_fixtures" in futures:
+                away_fix = futures["away_fixtures"].result()
+                result["away_team"]["form"] = get_team_form(
+                    away_team_id, away_fix.get("past", [])
+                )
+        except Exception:
+            pass
+
+        try:
+            if "standings" in futures:
+                standings_data = futures["standings"].result()
+                standings = standings_data.get("standings", [])
+
+                home_stats = find_team_in_standings(standings, home_team_id)
+                if home_stats:
+                    result["home_team"]["season_stats"] = home_stats.to_dict()
+
+                away_stats = find_team_in_standings(standings, away_team_id)
+                if away_stats:
+                    result["away_team"]["season_stats"] = away_stats.to_dict()
+        except Exception:
+            pass
+
+        try:
+            if "h2h" in futures:
+                h2h_data = futures["h2h"].result()
+                all_matches = h2h_data.get("matches", [])
+                # Filter to only matches between these two teams
+                h2h_matches = [
+                    m for m in all_matches
+                    if (m.get("home_team", {}).get("id") == away_team_id or
+                        m.get("away_team", {}).get("id") == away_team_id)
+                ]
+                # Use payload contract for H2H aggregation
+                h2h_payload = H2HPayload.aggregate(h2h_matches, home_team_id, away_team_id)
+                result["h2h"] = h2h_payload.to_dict()
+        except Exception:
+            pass
+
+        # Process predicted lineups - UI doesn't care about source
+        try:
+            if "home_lineup" in futures:
+                prediction = futures["home_lineup"].result()
+                if prediction and prediction.starting_xi:
+                    result["lineups"]["home"] = {
+                        "formation": prediction.formation,
+                        "players": [
+                            {
+                                "name": p.player_name,
+                                "position": p.position,
+                                "player_id": p.player_id,
+                                "number": getattr(p, 'squad_number', None),
+                            }
+                            for p in prediction.starting_xi
+                        ],
+                    }
+        except Exception:
+            pass
+
+        try:
+            if "away_lineup" in futures:
+                prediction = futures["away_lineup"].result()
+                if prediction and prediction.starting_xi:
+                    result["lineups"]["away"] = {
+                        "formation": prediction.formation,
+                        "players": [
+                            {
+                                "name": p.player_name,
+                                "position": p.position,
+                                "player_id": p.player_id,
+                                "number": getattr(p, 'squad_number', None),
+                            }
+                            for p in prediction.starting_xi
+                        ],
+                    }
+        except Exception:
+            pass
+
+    return result
+
+
 @app.get("/", response_class=HTMLResponse)
 def home():
     """Dashboard landing page with matches and league stats."""
@@ -543,6 +751,16 @@ def home():
     else:
         # Fallback if template doesn't exist
         return HTMLResponse(content="<h1>Dashboard template not found</h1>", status_code=500)
+
+
+@app.get("/v4", response_class=HTMLResponse)
+def dashboard_v4():
+    """New mobile-first dashboard design (v4)."""
+    template_path = Path(__file__).parent / "templates" / "dashboard-v4.html"
+    if template_path.exists():
+        return HTMLResponse(content=template_path.read_text(encoding="utf-8"))
+    else:
+        return HTMLResponse(content="<h1>Dashboard V4 template not found</h1>", status_code=500)
 
 
 @app.get("/old-home", response_class=HTMLResponse)
