@@ -5,12 +5,14 @@ All data fetched LIVE from API-Football - no local database
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
 from datetime import datetime
 from pathlib import Path
 
 from app import api_client
+from app import sportmonks_client
 from app.utils.search.pipeline import search as unified_search
 from app.utils.search.models.responses import SearchResponse
 from app.view_models import (
@@ -20,7 +22,7 @@ from app.view_models import (
 from config.settings import settings
 
 # Version tracking
-APP_VERSION = "v0.2.4"
+APP_VERSION = "v0.2.5"
 APP_NAME = "Football View"
 APP_STAGE = "Pre-Alpha"
 
@@ -32,6 +34,9 @@ app = FastAPI(
 
 # Use centralized season config
 CURRENT_SEASON = settings.current_season
+
+# Jinja2 templates for match center
+templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
 
 def parse_season(season_str: str) -> int:
@@ -164,10 +169,9 @@ def api_dashboard(
     Get dashboard data: matches for a specific date across all leagues.
 
     Returns matches grouped by competition for the landing page.
-    Uses MatchCardPayload for stable UI contract.
+    Now powered by Sportmonks API for unified match IDs.
     """
     from datetime import datetime, timedelta
-    from app.view_models import MatchCardPayload
 
     # Parse date or use today
     if date:
@@ -181,33 +185,84 @@ def api_dashboard(
     date_str = target_date.strftime("%Y-%m-%d")
 
     try:
-        # Fetch matches for all supported leagues on this date
-        result = api_client.get_matches_multi_league(
-            season=season,
-            from_date=date_str,
-            to_date=date_str,
-            limit_per_league=20,
-        )
+        # Fetch matches from Sportmonks
+        sportmonks_matches = sportmonks_client.get_fixtures_by_date(date_str)
 
-        # Convert raw matches to stable MatchCardPayload
-        raw_matches = result.get("all_matches", [])
-        match_payloads = [MatchCardPayload.from_raw_match(m).to_dict() for m in raw_matches]
+        # Transform Sportmonks data to match expected dashboard format
+        def transform_match(m):
+            state = m.get("state", {})
+            state_short = state.get("short", "NS")
 
-        # Also convert by_competition
-        by_competition_payloads = {}
-        for comp_name, comp_matches in result.get("by_competition", {}).items():
-            by_competition_payloads[comp_name] = [
-                MatchCardPayload.from_raw_match(m).to_dict() for m in comp_matches
-            ]
+            # Normalize status
+            if state.get("is_live"):
+                status = "live"
+            elif state.get("is_finished"):
+                status = "finished"
+            else:
+                status = "upcoming"
+
+            # Format kickoff time
+            kickoff_utc = m.get("starting_at", "")
+            kickoff_local = ""
+            if kickoff_utc:
+                try:
+                    # Sportmonks returns "2026-01-31 15:00:00" format
+                    dt = datetime.strptime(kickoff_utc, "%Y-%m-%d %H:%M:%S")
+                    kickoff_local = dt.strftime("%a %b %d • %H:%M")
+                except:
+                    kickoff_local = kickoff_utc[:16] if len(kickoff_utc) > 16 else kickoff_utc
+
+            home_team = m.get("home_team", {}) or {}
+            away_team = m.get("away_team", {}) or {}
+            league = m.get("league", {}) or {}
+
+            return {
+                "id": m.get("id"),
+                "status": status,
+                "status_short": state_short,
+                "elapsed": m.get("elapsed"),
+                "kickoff_utc": kickoff_utc,
+                "kickoff_local": kickoff_local,
+                "competition": {
+                    "id": league.get("id"),
+                    "name": league.get("name", ""),
+                    "logo": league.get("logo"),
+                    "round": None,  # Could extract from fixture data if available
+                },
+                "home": {
+                    "id": home_team.get("id"),
+                    "name": home_team.get("name", ""),
+                    "logo": home_team.get("logo"),
+                    "goals": m.get("home_score"),
+                },
+                "away": {
+                    "id": away_team.get("id"),
+                    "name": away_team.get("name", ""),
+                    "logo": away_team.get("logo"),
+                    "goals": m.get("away_score"),
+                },
+            }
+
+        all_matches = [transform_match(m) for m in sportmonks_matches]
+
+        # Group by competition
+        by_competition = {}
+        for match in all_matches:
+            comp_name = match["competition"]["name"] or "Other"
+            if comp_name not in by_competition:
+                by_competition[comp_name] = []
+            by_competition[comp_name].append(match)
 
         return {
             "date": date_str,
             "season": season,
-            "by_competition": by_competition_payloads,
-            "all_matches": match_payloads,
-            "total_matches": len(match_payloads),
+            "by_competition": by_competition,
+            "all_matches": all_matches,
+            "total_matches": len(all_matches),
         }
     except Exception as e:
+        import logging
+        logging.error(f"Dashboard API error: {e}", exc_info=True)
         return {
             "date": date_str,
             "season": season,
@@ -470,6 +525,7 @@ def api_predicted_xi(
     fixture_id: int = Query(..., description="Fixture/match ID"),
     home_team_id: Optional[int] = Query(None, description="Home team ID (optional, will be fetched if not provided)"),
     away_team_id: Optional[int] = Query(None, description="Away team ID (optional, will be fetched if not provided)"),
+    force: bool = Query(False, description="Force regeneration even if prediction exists"),
 ):
     """
     Get predicted starting XI for a match.
@@ -508,12 +564,14 @@ def api_predicted_xi(
                     predicted_provider.get_or_generate_prediction,
                     match_id=fixture_id,
                     team_id=home_team_id,
+                    force_regenerate=force,
                 )
             if away_team_id:
                 futures["away"] = executor.submit(
                     predicted_provider.get_or_generate_prediction,
                     match_id=fixture_id,
                     team_id=away_team_id,
+                    force_regenerate=force,
                 )
 
             for key, future in futures.items():
@@ -544,7 +602,302 @@ def api_predicted_xi(
 
         return result
     except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Predicted XI error: {e}", exc_info=True)
         return {"home": None, "away": None, "error": str(e)}
+
+
+@app.get("/api/pre-match/sportmonks/{match_id}")
+def api_pre_match_sportmonks(match_id: int):
+    """
+    Get comprehensive pre-match data for an upcoming fixture using Sportmonks API.
+    Returns PreMatchPayload compatible with the dashboard overlay.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+
+    # Get match data from Sportmonks
+    match_data = sportmonks_client.get_fixture_by_id(match_id)
+    if not match_data:
+        raise HTTPException(status_code=404, detail="Match not found")
+
+    home_team = match_data.get("home_team", {}) or {}
+    away_team = match_data.get("away_team", {}) or {}
+    home_team_id = home_team.get("id")
+    away_team_id = away_team.get("id")
+    league_info = match_data.get("league", {}) or {}
+    league_id = league_info.get("id")
+
+    # Initialize result with stable payload structure
+    result = {
+        "match": {
+            "id": match_id,
+            "date": match_data.get("starting_at"),
+            "venue": match_data.get("venue", {}).get("name") if match_data.get("venue") else None,
+            "referee": None,  # Sportmonks doesn't include referee in basic fixture data
+            "status": match_data.get("state", {}).get("long", "Scheduled"),
+            "league": league_info.get("name"),
+            "round": None,
+            "league_id": league_id,
+        },
+        "home_team": {
+            "id": home_team_id,
+            "name": home_team.get("name"),
+            "logo": home_team.get("logo"),
+            "form": [],
+            "season_stats": None,
+        },
+        "away_team": {
+            "id": away_team_id,
+            "name": away_team.get("name"),
+            "logo": away_team.get("logo"),
+            "form": [],
+            "season_stats": None,
+        },
+        "h2h": {
+            "total_matches": 0,
+            "home_wins": 0,
+            "away_wins": 0,
+            "draws": 0,
+            "recent_matches": [],
+        },
+        "lineups": {"home": None, "away": None},
+    }
+
+    # Fetch data in parallel
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = {}
+
+        # Get team form (last 5 results)
+        if home_team_id:
+            futures["home_form"] = executor.submit(
+                sportmonks_client.get_team_form, home_team_id, 5
+            )
+        if away_team_id:
+            futures["away_form"] = executor.submit(
+                sportmonks_client.get_team_form, away_team_id, 5
+            )
+
+        # Get team recent matches for season stats calculation
+        if home_team_id:
+            futures["home_recent"] = executor.submit(
+                sportmonks_client.get_team_recent_matches, home_team_id, 10
+            )
+        if away_team_id:
+            futures["away_recent"] = executor.submit(
+                sportmonks_client.get_team_recent_matches, away_team_id, 10
+            )
+
+        # Get H2H matches
+        if home_team_id and away_team_id:
+            futures["h2h"] = executor.submit(
+                sportmonks_client.get_head_to_head, home_team_id, away_team_id, 5
+            )
+
+        # Get standings for league position
+        if league_id:
+            futures["standings"] = executor.submit(
+                sportmonks_client.get_standings, league_id=league_id
+            )
+
+        # Check if official lineups are already available (typically ~1 hour before kickoff)
+        official_lineups = match_data.get("lineups", {})
+        has_official_lineups = bool(official_lineups.get("home") or official_lineups.get("away"))
+
+        # Only fetch predicted XI if official lineups not available
+        if not has_official_lineups:
+            from app.predicted_xi import get_predicted_xi_provider
+            predicted_provider = get_predicted_xi_provider()
+            if home_team_id:
+                futures["predicted_home"] = executor.submit(
+                    predicted_provider.get_or_generate_prediction,
+                    match_id=match_id,
+                    team_id=home_team_id,
+                )
+            if away_team_id:
+                futures["predicted_away"] = executor.submit(
+                    predicted_provider.get_or_generate_prediction,
+                    match_id=match_id,
+                    team_id=away_team_id,
+                )
+
+        # Process results
+        try:
+            if "home_form" in futures:
+                result["home_team"]["form"] = futures["home_form"].result() or []
+        except Exception:
+            pass
+
+        try:
+            if "away_form" in futures:
+                result["away_team"]["form"] = futures["away_form"].result() or []
+        except Exception:
+            pass
+
+        # Calculate season stats from recent matches
+        try:
+            if "home_recent" in futures:
+                recent = futures["home_recent"].result() or []
+                if recent:
+                    result["home_team"]["season_stats"] = {
+                        "played": len(recent),
+                        "won": sum(1 for m in recent if m.get("result") == "W"),
+                        "drawn": sum(1 for m in recent if m.get("result") == "D"),
+                        "lost": sum(1 for m in recent if m.get("result") == "L"),
+                        "goals_for": sum(m.get("team_score", 0) or 0 for m in recent),
+                        "goals_against": sum(m.get("opponent_score", 0) or 0 for m in recent),
+                    }
+        except Exception:
+            pass
+
+        try:
+            if "away_recent" in futures:
+                recent = futures["away_recent"].result() or []
+                if recent:
+                    result["away_team"]["season_stats"] = {
+                        "played": len(recent),
+                        "won": sum(1 for m in recent if m.get("result") == "W"),
+                        "drawn": sum(1 for m in recent if m.get("result") == "D"),
+                        "lost": sum(1 for m in recent if m.get("result") == "L"),
+                        "goals_for": sum(m.get("team_score", 0) or 0 for m in recent),
+                        "goals_against": sum(m.get("opponent_score", 0) or 0 for m in recent),
+                    }
+        except Exception:
+            pass
+
+        # Process H2H
+        try:
+            if "h2h" in futures:
+                h2h_data = futures["h2h"].result() or {}
+                result["h2h"] = {
+                    "total_matches": len(h2h_data.get("matches", [])),
+                    "home_wins": h2h_data.get("team1_wins", 0),
+                    "away_wins": h2h_data.get("team2_wins", 0),
+                    "draws": h2h_data.get("draws", 0),
+                    "recent_matches": [
+                        {
+                            "date": m.get("starting_at"),
+                            "home_team": m.get("home_team", {}).get("name"),
+                            "away_team": m.get("away_team", {}).get("name"),
+                            "home_score": m.get("home_score", 0),
+                            "away_score": m.get("away_score", 0),
+                        }
+                        for m in h2h_data.get("matches", [])[:5]
+                    ],
+                }
+        except Exception:
+            pass
+
+        # Add league position from standings
+        try:
+            if "standings" in futures:
+                standings = futures["standings"].result() or []
+                for standing in standings:
+                    if standing.get("team_id") == home_team_id:
+                        if result["home_team"]["season_stats"]:
+                            result["home_team"]["season_stats"]["position"] = standing.get("position")
+                            result["home_team"]["season_stats"]["points"] = standing.get("points")
+                    elif standing.get("team_id") == away_team_id:
+                        if result["away_team"]["season_stats"]:
+                            result["away_team"]["season_stats"]["position"] = standing.get("position")
+                            result["away_team"]["season_stats"]["points"] = standing.get("points")
+        except Exception:
+            pass
+
+        # Process lineups - use official if available, otherwise predicted
+        import logging
+        logger = logging.getLogger(__name__)
+
+        # Check if we have official lineups from the match data
+        if has_official_lineups:
+            logger.info(f"Pre-match: Using official lineups for match {match_id}")
+            result["lineups_type"] = "official"
+
+            # Process official home lineup
+            if official_lineups.get("home"):
+                home_players = official_lineups["home"]
+                starters = [p for p in home_players if p.get("is_starter")]
+                result["lineups"]["home"] = {
+                    "formation": match_data.get("formations", {}).get("home", "4-4-2"),
+                    "players": [
+                        {
+                            "name": p.get("name", "Unknown"),
+                            "position": p.get("position", ""),
+                            "player_id": p.get("id"),
+                            "jersey_number": p.get("number"),
+                        }
+                        for p in starters[:11]
+                    ],
+                    "is_official": True,
+                }
+
+            # Process official away lineup
+            if official_lineups.get("away"):
+                away_players = official_lineups["away"]
+                starters = [p for p in away_players if p.get("is_starter")]
+                result["lineups"]["away"] = {
+                    "formation": match_data.get("formations", {}).get("away", "4-4-2"),
+                    "players": [
+                        {
+                            "name": p.get("name", "Unknown"),
+                            "position": p.get("position", ""),
+                            "player_id": p.get("id"),
+                            "jersey_number": p.get("number"),
+                        }
+                        for p in starters[:11]
+                    ],
+                    "is_official": True,
+                }
+        else:
+            # Process predicted lineups
+            result["lineups_type"] = "predicted"
+
+            try:
+                if "predicted_home" in futures:
+                    prediction = futures["predicted_home"].result()
+                    logger.info(f"Pre-match: Got home prediction: {prediction is not None}")
+                    if prediction:
+                        result["lineups"]["home"] = {
+                            "formation": prediction.formation,
+                            "formation_confidence": prediction.formation_confidence,
+                            "players": [
+                                {
+                                    "name": p.player_name,
+                                    "position": p.position,
+                                    "confidence": p.confidence,
+                                    "player_id": p.player_id,
+                                }
+                                for p in prediction.starting_xi
+                            ],
+                            "overall_confidence": prediction.overall_confidence,
+                            "is_official": False,
+                        }
+            except Exception as e:
+                logger.error(f"Pre-match: Home prediction error: {e}", exc_info=True)
+
+            try:
+                if "predicted_away" in futures:
+                    prediction = futures["predicted_away"].result()
+                    logger.info(f"Pre-match: Got away prediction: {prediction is not None}")
+                    if prediction:
+                        result["lineups"]["away"] = {
+                            "formation": prediction.formation,
+                            "formation_confidence": prediction.formation_confidence,
+                            "players": [
+                                {
+                                    "name": p.player_name,
+                                    "position": p.position,
+                                    "confidence": p.confidence,
+                                    "player_id": p.player_id,
+                                }
+                                for p in prediction.starting_xi
+                            ],
+                            "overall_confidence": prediction.overall_confidence,
+                            "is_official": False,
+                        }
+            except Exception as e:
+                logger.error(f"Pre-match: Away prediction error: {e}", exc_info=True)
+
+    return result
 
 
 @app.get("/api/pre-match/{match_id}")
@@ -3772,3 +4125,556 @@ def match_center_ui(
             """,
             status_code=500
         )
+
+
+# =============================================================================
+# MATCH CENTER - Sportmonks Integration
+# =============================================================================
+
+def _predicted_to_lineup(prediction: dict, team: dict) -> list:
+    """Convert predicted XI format to lineup format for the template."""
+    if not prediction or not prediction.get("players"):
+        return []
+
+    lineup = []
+    for i, player in enumerate(prediction.get("players", [])[:11]):
+        lineup.append({
+            "id": player.get("player_id", f"pred_{i}"),
+            "name": player.get("name", "Unknown"),
+            "number": player.get("jersey_number"),
+            "position": player.get("position", ""),
+            "formation_position": i + 1,
+            "is_starter": True,
+            "rating": None,  # No ratings for predicted
+        })
+    return lineup
+
+
+@app.get("/match/{fixture_id}", response_class=HTMLResponse)
+def match_center(request: Request, fixture_id: int):
+    """
+    Match Center page - powered by Sportmonks API.
+    Shows live/pre-match/post-match data with real-time updates.
+    """
+    try:
+        # Fetch match data from Sportmonks
+        match = sportmonks_client.get_fixture_by_id(fixture_id)
+        if not match:
+            return HTMLResponse(
+                content="<h1>Match not found</h1><p><a href='/'>← Back to Dashboard</a></p>",
+                status_code=404
+            )
+
+        # Get team forms
+        home_form = []
+        away_form = []
+        if match.get("home_team"):
+            home_form = sportmonks_client.get_team_form(match["home_team"]["id"], limit=5)
+        if match.get("away_team"):
+            away_form = sportmonks_client.get_team_form(match["away_team"]["id"], limit=5)
+
+        # Calculate momentum from attacks (fallback for premium momentum)
+        momentum = sportmonks_client.calculate_attacks_momentum(match.get("statistics", {}))
+
+        # Get H2H data
+        h2h = {"matches": [], "team1_wins": 0, "team2_wins": 0, "draws": 0}
+        if match.get("home_team") and match.get("away_team"):
+            h2h = sportmonks_client.get_head_to_head(
+                match["home_team"]["id"],
+                match["away_team"]["id"],
+                limit=5
+            )
+
+        # Check for xG data (premium feature)
+        xg_data = sportmonks_client.get_xg_data(fixture_id)
+
+        # Check if we have official lineups, otherwise try predicted XI
+        is_predicted_lineup = False
+        lineups = match.get("lineups", {})
+        has_official_lineups = bool(lineups.get("home") or lineups.get("away"))
+
+        if not has_official_lineups and not match.get("state", {}).get("is_finished"):
+            # No official lineups and match hasn't ended - try predicted XI
+            try:
+                from app.predicted_xi import get_predicted_xi_provider
+                predicted_provider = get_predicted_xi_provider()
+
+                home_team = match.get("home_team", {})
+                away_team = match.get("away_team", {})
+
+                predicted_home = predicted_provider.get_or_generate_prediction(
+                    match_id=fixture_id,
+                    team_id=home_team.get("id")
+                ) if home_team.get("id") else None
+
+                predicted_away = predicted_provider.get_or_generate_prediction(
+                    match_id=fixture_id,
+                    team_id=away_team.get("id")
+                ) if away_team.get("id") else None
+
+                # Convert predicted XI to lineup format
+                if predicted_home or predicted_away:
+                    is_predicted_lineup = True
+                    match["lineups"] = {
+                        "home": _predicted_to_lineup(predicted_home, home_team) if predicted_home else [],
+                        "away": _predicted_to_lineup(predicted_away, away_team) if predicted_away else [],
+                    }
+                    # Set formations from predictions
+                    if not match.get("formations"):
+                        match["formations"] = {}
+                    if predicted_home and predicted_home.get("formation"):
+                        match["formations"]["home"] = predicted_home["formation"]
+                    if predicted_away and predicted_away.get("formation"):
+                        match["formations"]["away"] = predicted_away["formation"]
+            except Exception as e:
+                import logging
+                logging.warning(f"Could not load predicted XI: {e}")
+
+        return templates.TemplateResponse(
+            "match-center.html",
+            {
+                "request": request,
+                "match": match,
+                "home_form": home_form,
+                "away_form": away_form,
+                "momentum": momentum,
+                "h2h": h2h,
+                "xg": xg_data,
+                "is_predicted_lineup": is_predicted_lineup,
+            }
+        )
+    except Exception as e:
+        import logging
+        logging.error(f"Match center error for fixture_id={fixture_id}: {e}", exc_info=True)
+        return HTMLResponse(
+            content=f"<h1>Error loading match</h1><p>{type(e).__name__}: {str(e)}</p><p><a href='/'>← Back</a></p>",
+            status_code=500
+        )
+
+
+@app.get("/api/match/{fixture_id}/live")
+def match_live_update(fixture_id: int, include_ratings: bool = Query(False)):
+    """
+    API endpoint for live match updates (called by polling).
+    Returns minimal data for efficient updates.
+    Set include_ratings=true to get player ratings (more expensive API call).
+    """
+    try:
+        match = sportmonks_client.get_fixture_by_id(
+            fixture_id,
+            include_lineups=include_ratings,  # Include lineups only if ratings requested
+        )
+        if not match:
+            raise HTTPException(status_code=404, detail="Match not found")
+
+        # Calculate momentum
+        momentum = sportmonks_client.calculate_attacks_momentum(match.get("statistics", {}))
+
+        # Check for xG (premium)
+        xg_data = sportmonks_client.get_xg_data(fixture_id)
+
+        # Check if official lineups are now available
+        lineups = match.get("lineups", {})
+        has_official_lineups = bool(lineups.get("home") or lineups.get("away"))
+
+        response = {
+            "id": match["id"],
+            "home_score": match.get("home_score", 0),
+            "away_score": match.get("away_score", 0),
+            "elapsed": match.get("elapsed"),
+            "state": match.get("state"),
+            "momentum": momentum,
+            "xg": xg_data,
+            "events": match.get("events", [])[:5],  # Last 5 events
+            "statistics": match.get("statistics", {}),
+            "has_official_lineups": has_official_lineups,  # For replacing predicted XI
+        }
+
+        # Include player ratings if requested
+        if include_ratings:
+            response["ratings"] = {
+                "home": [{"id": p["id"], "rating": p.get("rating")} for p in lineups.get("home", []) if p.get("rating")],
+                "away": [{"id": p["id"], "rating": p.get("rating")} for p in lineups.get("away", []) if p.get("rating")],
+            }
+
+        # Include full lineups if official ones just became available
+        if has_official_lineups:
+            response["lineups"] = {
+                "home": lineups.get("home", []),
+                "away": lineups.get("away", []),
+            }
+            response["formations"] = match.get("formations", {})
+
+        return response
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/sportmonks/livescores")
+def sportmonks_livescores():
+    """Get all current live matches from Sportmonks."""
+    try:
+        matches = sportmonks_client.get_livescores()
+        return {"matches": matches, "count": len(matches)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/sportmonks/fixtures/{date}")
+def sportmonks_fixtures_by_date(date: str):
+    """
+    Get fixtures for a specific date from Sportmonks.
+    Date format: YYYY-MM-DD
+    """
+    try:
+        matches = sportmonks_client.get_fixtures_by_date(date)
+        return {"date": date, "matches": matches, "count": len(matches)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/sportmonks/find-match")
+def sportmonks_find_match(
+    date: str = Query(..., description="Date in YYYY-MM-DD format"),
+    home: str = Query(..., description="Home team name (partial match)"),
+    away: str = Query(..., description="Away team name (partial match)"),
+):
+    """
+    Find a Sportmonks fixture by date and team names.
+    Used to bridge API-Football matches to Sportmonks match center.
+    """
+    try:
+        matches = sportmonks_client.get_fixtures_by_date(date)
+
+        home_lower = home.lower()
+        away_lower = away.lower()
+
+        for match in matches:
+            home_team = match.get("home_team", {}).get("name", "").lower()
+            away_team = match.get("away_team", {}).get("name", "").lower()
+
+            # Check if team names match (partial match)
+            if (home_lower in home_team or home_team in home_lower) and \
+               (away_lower in away_team or away_team in away_lower):
+                return {
+                    "found": True,
+                    "fixture_id": match.get("id"),
+                    "match": match,
+                }
+
+        return {"found": False, "message": "No matching fixture found"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/sportmonks/find-team")
+def sportmonks_find_team(
+    name: str = Query(..., description="Team name to search for"),
+):
+    """
+    Find a Sportmonks team ID by name.
+    Used to navigate to team hub from dashboard.
+    """
+    try:
+        # Search using Sportmonks API
+        data = sportmonks_client._make_request(
+            "teams/search/" + name,
+            params={"per_page": 10}
+        )
+
+        teams = []
+        for team in data.get("data", []):
+            teams.append({
+                "id": team.get("id"),
+                "name": team.get("name"),
+                "short_code": team.get("short_code"),
+                "logo": team.get("image_path"),
+                "country": team.get("country", {}).get("name") if team.get("country") else None,
+            })
+
+        if teams:
+            return {"found": True, "teams": teams, "best_match": teams[0]}
+        return {"found": False, "teams": [], "message": "No teams found"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
+# TEAM HUB - Sportmonks Integration
+# =============================================================================
+
+@app.get("/team/{team_id}", response_class=HTMLResponse)
+def team_hub(request: Request, team_id: int):
+    """
+    Team Hub page - powered by Sportmonks API.
+    Shows team overview, recent form, upcoming matches, squad, and stats.
+    """
+    try:
+        # Fetch team details
+        team = sportmonks_client.get_team_details(team_id)
+        if not team:
+            return HTMLResponse(
+                content="<h1>Team not found</h1><p><a href='/'>← Back to Dashboard</a></p>",
+                status_code=404
+            )
+
+        # Get recent form (last 5 matches) - do this first to extract league info
+        recent_matches = sportmonks_client.get_team_recent_matches(team_id, limit=5) or []
+
+        # Try to get team's league info from API first
+        league_info = sportmonks_client.get_team_league_info(team_id)
+
+        # If API fails (404), extract league info from recent matches
+        if not league_info and recent_matches:
+            # Find the primary league from recent matches (most common league)
+            league_counts = {}
+            for match in recent_matches:
+                league = match.get("league", {})
+                league_id = league.get("id")
+                if league_id:
+                    if league_id not in league_counts:
+                        league_counts[league_id] = {"league": league, "count": 0}
+                    league_counts[league_id]["count"] += 1
+
+            # Use the most common league
+            if league_counts:
+                most_common = max(league_counts.values(), key=lambda x: x["count"])
+                primary_league = most_common["league"]
+                league_info = {
+                    "id": primary_league.get("id"),
+                    "name": primary_league.get("name"),
+                    "logo": primary_league.get("logo"),
+                }
+
+        league_id = league_info.get("id") if league_info else None
+        season_id = league_info.get("season_id") if league_info else None
+
+        # Get next match
+        next_match = sportmonks_client.get_team_next_match(team_id)
+
+        # Get opponent form if there's a next match
+        opponent_form = []
+        if next_match:
+            opponent_id = next_match.get("opponent", {}).get("id")
+            if opponent_id:
+                opponent_recent = sportmonks_client.get_team_recent_matches(opponent_id, limit=5)
+                opponent_form = [m.get("result", "?") for m in opponent_recent]
+
+        # Get standings if we have league/season info
+        standings = []
+        team_standing = None
+        if season_id:
+            standings = sportmonks_client.get_standings(season_id=season_id)
+            # Find this team's position in standings
+            for standing in standings:
+                if standing.get("team_id") == team_id:
+                    team_standing = standing
+                    break
+        elif league_id:
+            # Try live standings by league_id if no season_id
+            standings = sportmonks_client.get_standings(league_id=league_id)
+            for standing in standings:
+                if standing.get("team_id") == team_id:
+                    team_standing = standing
+                    break
+
+        # Get squad and top performers
+        squad = sportmonks_client.get_team_squad(team_id)
+        top_scorers = sportmonks_client.get_team_top_scorers(team_id, limit=3)
+
+        # Calculate current streak
+        streak = sportmonks_client.get_current_streak(team_id)
+
+        # Calculate team form string (W/D/L)
+        team_form = [m.get("result", "?") for m in recent_matches]
+
+        # Calculate season stats from recent matches (more reliable than failing API)
+        # Get more matches for accurate stats
+        all_recent = sportmonks_client.get_team_recent_matches(team_id, limit=20) or []
+
+        season_stats = {
+            "played": len(all_recent),
+            "won": sum(1 for m in all_recent if m.get("result") == "W"),
+            "drawn": sum(1 for m in all_recent if m.get("result") == "D"),
+            "lost": sum(1 for m in all_recent if m.get("result") == "L"),
+            "goals_for": sum(m.get("team_score", 0) or 0 for m in all_recent),
+            "goals_against": sum(m.get("opponent_score", 0) or 0 for m in all_recent),
+            "goal_difference": 0,
+            "points": 0,
+            "position": team_standing.get("position", 0) if team_standing else 0,
+            "clean_sheets": sum(1 for m in all_recent if (m.get("opponent_score", 0) or 0) == 0),
+        }
+        season_stats["goal_difference"] = season_stats["goals_for"] - season_stats["goals_against"]
+        season_stats["points"] = season_stats["won"] * 3 + season_stats["drawn"]
+
+        # Override with standings data if available (more accurate for full season)
+        if team_standing:
+            season_stats.update({
+                "played": team_standing.get("played") or season_stats["played"],
+                "won": team_standing.get("won") or season_stats["won"],
+                "drawn": team_standing.get("drawn") or season_stats["drawn"],
+                "lost": team_standing.get("lost") or season_stats["lost"],
+                "goals_for": team_standing.get("goals_for") or season_stats["goals_for"],
+                "goals_against": team_standing.get("goals_against") or season_stats["goals_against"],
+                "goal_difference": team_standing.get("goal_diff") or season_stats["goal_difference"],
+                "points": team_standing.get("points") or season_stats["points"],
+                "position": team_standing.get("position") or season_stats["position"],
+            })
+
+        # Sort squad by different metrics for top performers
+        top_rated = sorted(squad, key=lambda p: p.get("stats", {}).get("rating", 0) or 0, reverse=True)[:3] if squad else []
+        top_assists = sorted(squad, key=lambda p: p.get("stats", {}).get("assists", 0) or 0, reverse=True)[:3] if squad else []
+
+        # Create standings slice (5 teams around current team position)
+        standings_slice = []
+        if standings and team_standing:
+            pos = team_standing.get("position", 1)
+            start = max(0, pos - 3)
+            end = min(len(standings), pos + 2)
+            standings_slice = standings[start:end]
+        elif standings:
+            standings_slice = standings[:5]
+
+        # Form for next match teams
+        home_next_form = []
+        away_next_form = []
+        if next_match:
+            home_id = next_match.get("home_team", {}).get("id")
+            away_id = next_match.get("away_team", {}).get("id")
+            if home_id == team_id:
+                home_next_form = team_form
+                away_next_form = opponent_form
+            else:
+                away_next_form = team_form
+                home_next_form = opponent_form
+
+        return templates.TemplateResponse(
+            "team-hub.html",
+            {
+                "request": request,
+                "team": team,
+                "league": league_info,  # Use 'league' to match template
+                "league_info": league_info,
+                "recent_matches": recent_matches,
+                "next_match": next_match,
+                "opponent_form": opponent_form,
+                "team_form": team_form,
+                "home_next_form": home_next_form,
+                "away_next_form": away_next_form,
+                "standings": standings[:10] if standings else [],
+                "standings_slice": standings_slice,
+                "standing": team_standing,  # Use 'standing' to match template
+                "team_standing": team_standing,
+                "squad": squad,
+                "top_scorers": top_scorers,
+                "top_rated": top_rated,
+                "top_assists": top_assists,
+                "streak": streak,
+                "season_stats": season_stats,
+            }
+        )
+    except Exception as e:
+        import logging
+        logging.error(f"Team hub error for team_id={team_id}: {e}", exc_info=True)
+        return HTMLResponse(
+            content=f"<h1>Error loading team</h1><p>{type(e).__name__}: {str(e)}</p><p><a href='/'>← Back</a></p>",
+            status_code=500
+        )
+
+
+@app.get("/api/team/{team_id}")
+def team_api(team_id: int):
+    """
+    API endpoint for team data.
+    Returns comprehensive team info for AJAX updates.
+    """
+    try:
+        team = sportmonks_client.get_team_details(team_id)
+        if not team:
+            raise HTTPException(status_code=404, detail="Team not found")
+
+        # Get league info
+        league_info = sportmonks_client.get_team_league_info(team_id)
+        season_id = league_info.get("season_id") if league_info else None
+
+        # Get recent form
+        recent_matches = sportmonks_client.get_team_recent_matches(team_id, limit=5)
+
+        # Get next match
+        next_match = sportmonks_client.get_team_next_match(team_id)
+
+        # Get standings
+        standings = []
+        team_standing = None
+        if season_id:
+            standings = sportmonks_client.get_standings(season_id)
+            for standing in standings:
+                if standing.get("team_id") == team_id:
+                    team_standing = standing
+                    break
+
+        # Get top scorers
+        top_scorers = sportmonks_client.get_team_top_scorers(team_id, limit=3)
+
+        # Calculate streak
+        streak = sportmonks_client.get_current_streak(team_id)
+
+        return {
+            "team": team,
+            "league_info": league_info,
+            "recent_matches": recent_matches,
+            "next_match": next_match,
+            "team_standing": team_standing,
+            "top_scorers": top_scorers,
+            "streak": streak,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/team/{team_id}/fixtures")
+def team_fixtures_api(
+    team_id: int,
+    upcoming: bool = True,
+    limit: int = 10
+):
+    """
+    API endpoint for team fixtures.
+    Returns upcoming or past fixtures for a team.
+    """
+    try:
+        if upcoming:
+            fixtures = sportmonks_client.get_team_fixtures(team_id, upcoming=True)
+        else:
+            fixtures = sportmonks_client.get_team_recent_matches(team_id, limit=limit)
+
+        return {
+            "team_id": team_id,
+            "fixtures": fixtures[:limit],
+            "count": len(fixtures[:limit]),
+            "type": "upcoming" if upcoming else "recent"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/team/{team_id}/squad")
+def team_squad_api(team_id: int):
+    """
+    API endpoint for team squad.
+    Returns current squad with player details.
+    """
+    try:
+        squad = sportmonks_client.get_team_squad(team_id)
+        return {
+            "team_id": team_id,
+            "squad": squad,
+            "count": len(squad)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+# Trigger reload

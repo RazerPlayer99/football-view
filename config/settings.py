@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     # Claude LLM configuration (for search fallback)
     anthropic_api_key: Optional[str] = None
 
+    # Sportmonks API configuration
+    sportmonks_api_key: Optional[str] = None
+
     # Cache settings
     cache_enabled: bool = True
     cache_directory: Path = Path("./cache")

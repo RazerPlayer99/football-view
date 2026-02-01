@@ -499,6 +499,92 @@
             color: var(--md-text-3);
         }
 
+        /* ===== COLLAPSIBLE LEAGUE HEADERS ===== */
+        .md-league-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            background: var(--md-bg-card);
+            border: 1px solid var(--md-border);
+            border-radius: 14px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+            user-select: none;
+        }
+
+        .md-league-header:hover {
+            background: var(--md-bg-hover);
+        }
+
+        .md-league-header:active {
+            transform: scale(0.995);
+        }
+
+        .md-league-chevron {
+            font-size: 16px;
+            color: var(--md-text-3);
+            transition: transform 0.2s ease;
+            margin-left: auto;
+        }
+
+        .md-league:not(.collapsed) .md-league-chevron {
+            transform: rotate(90deg);
+        }
+
+        .md-league.collapsed .md-match-list {
+            display: none;
+        }
+
+        /* Favorites Section Special Styling */
+        .md-favorites-section .md-league-header {
+            background: linear-gradient(135deg, rgba(234,179,8,0.1), rgba(234,179,8,0.02));
+            border-color: rgba(234,179,8,0.2);
+        }
+
+        .md-favorites-section .md-league-header:hover {
+            background: linear-gradient(135deg, rgba(234,179,8,0.15), rgba(234,179,8,0.05));
+        }
+
+        .md-favorites-section .md-league-name {
+            color: var(--md-yellow);
+        }
+
+        .md-favorites-section.has-matches .md-league-header {
+            background: linear-gradient(135deg, rgba(234,179,8,0.15), rgba(234,179,8,0.05));
+            border-color: rgba(234,179,8,0.3);
+        }
+
+        /* Follow button styling */
+        .md-follow-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: transparent;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: background 0.15s, transform 0.1s;
+            opacity: 0.5;
+        }
+
+        .md-follow-btn:hover {
+            background: var(--md-bg-hover);
+            opacity: 1;
+        }
+
+        .md-follow-btn.active {
+            opacity: 1;
+        }
+
+        .md-follow-btn:active {
+            transform: scale(0.9);
+        }
+
         /* UCL Special Styling */
         .md-league.ucl .md-league-head {
             padding: 10px 14px;
@@ -1112,6 +1198,27 @@
             font-size: 16px;
             font-weight: 700;
             margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .pm-team-name .pm-follow-star {
+            font-size: 14px;
+            cursor: pointer;
+            opacity: 0.4;
+            transition: opacity 0.15s, transform 0.1s;
+        }
+
+        .pm-team-name .pm-follow-star:hover {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+
+        .pm-team-name .pm-follow-star.active {
+            opacity: 1;
+            color: var(--md-yellow);
         }
 
         .pm-team-form {
@@ -1707,7 +1814,7 @@
 
         // State
         // Simulated "today" - use explicit local time to avoid timezone issues
-        let currentDate = new Date(2026, 0, 30); // Jan 30, 2026 (month is 0-indexed)
+        let currentDate = new Date(2026, 0, 31); // Jan 31, 2026 (month is 0-indexed)
         let matchesData = {};
         let searchTimeout = null;
         let appConfig = { currentSeason: null, leagues: [] };
@@ -1746,6 +1853,81 @@
             // Ligue 1
             'PSG', 'Paris Saint Germain', 'Paris Saint-Germain'
         ]);
+
+        // =============================================================================
+        // FAVORITES SYSTEM
+        // =============================================================================
+
+        const FAVORITES_KEY = 'matchday_favorites';
+
+        // League priority for sorting (lower = higher priority)
+        const LEAGUE_PRIORITY = {
+            'Premier League': 1,
+            'Bundesliga': 2,
+            'La Liga': 3,
+            'Serie A': 4,
+            'Ligue 1': 5,
+        };
+
+        function getFavorites() {
+            try {
+                const stored = localStorage.getItem(FAVORITES_KEY);
+                return stored ? JSON.parse(stored) : [];
+            } catch (e) {
+                console.error('Error reading favorites:', e);
+                return [];
+            }
+        }
+
+        function setFavorites(favorites) {
+            try {
+                localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+            } catch (e) {
+                console.error('Error saving favorites:', e);
+            }
+        }
+
+        function isFavorite(teamId) {
+            const favorites = getFavorites();
+            return favorites.some(f => f.id === teamId);
+        }
+
+        function toggleFavorite(teamId, teamName, teamLogo) {
+            const favorites = getFavorites();
+            const index = favorites.findIndex(f => f.id === teamId);
+
+            if (index >= 0) {
+                // Remove from favorites
+                favorites.splice(index, 1);
+            } else {
+                // Add to favorites
+                favorites.push({ id: teamId, name: teamName, logo: teamLogo });
+            }
+
+            setFavorites(favorites);
+
+            // Update UI if on dashboard
+            if (typeof renderMatches === 'function' && matchesData) {
+                renderMatches(matchesData);
+            }
+
+            // Update any follow buttons on the page
+            updateFollowButtons(teamId);
+
+            return !index >= 0; // Return new favorite state
+        }
+
+        function updateFollowButtons(teamId) {
+            const isNowFavorite = isFavorite(teamId);
+            document.querySelectorAll(`.md-follow-btn[data-team-id="${teamId}"]`).forEach(btn => {
+                btn.classList.toggle('active', isNowFavorite);
+                btn.textContent = isNowFavorite ? '★' : '☆';
+            });
+        }
+
+        function toggleLeagueCollapse(leagueElement) {
+            leagueElement.classList.toggle('collapsed');
+        }
 
         // =============================================================================
         // CONFIG & DATA LOADING
@@ -1795,7 +1977,7 @@
 
         function getSimulatedToday() {
             // Use explicit local time to avoid timezone issues
-            return new Date(2026, 0, 30); // Jan 30, 2026 (month is 0-indexed)
+            return new Date(2026, 0, 31); // Jan 31, 2026 (month is 0-indexed)
         }
 
         function formatDateLabel(date) {
@@ -1878,6 +2060,9 @@
         function renderMatches(data) {
             const container = document.getElementById('matchesContainer');
 
+            // Store data for re-rendering when favorites change
+            matchesData = data;
+
             if (!data || !data.by_competition || Object.keys(data.by_competition).length === 0) {
                 container.innerHTML = `
                     <div class="md-empty-state" style="grid-column: 1 / -1;">
@@ -1891,38 +2076,95 @@
             // Sync live timers from match data
             syncLiveTimers(data.all_matches);
 
+            // Get favorites
+            const favorites = getFavorites();
+            const favoriteIds = new Set(favorites.map(f => f.id));
+
+            // Separate favorite matches from regular matches
+            let favoriteMatches = [];
+            let favoriteMatchIds = new Set();
             let liveMatches = [];
-            let html = '';
 
-            // Sort competitions: UCL first, then by match count
-            const competitions = Object.entries(data.by_competition).sort((a, b) => {
-                // UCL always first
-                if (a[0] === 'Champions League') return -1;
-                if (b[0] === 'Champions League') return 1;
-                return b[1].length - a[1].length;
-            });
-
-            for (const [competition, matches] of competitions) {
-                const leagueId = getLeagueIdByName(competition);
-                const isUCL = leagueId === UCL_LEAGUE_ID || competition.toLowerCase().includes('champions');
-                const flag = LEAGUE_FLAGS[leagueId] || '⚽';
-
-                // Collect live matches for the live section
+            // First pass: identify favorite matches
+            for (const [competition, matches] of Object.entries(data.by_competition)) {
                 matches.forEach(match => {
+                    const homeTeam = match.home || match.home_team || {};
+                    const awayTeam = match.away || match.away_team || {};
+
+                    if (favoriteIds.has(homeTeam.id) || favoriteIds.has(awayTeam.id)) {
+                        favoriteMatches.push({ ...match, competition });
+                        favoriteMatchIds.add(match.id);
+                    }
+
+                    // Collect live matches for the live section
                     if (getMatchStatus(match) === 'live') {
                         liveMatches.push({ ...match, competition });
                     }
                 });
+            }
+
+            // Sort competitions by priority
+            const competitions = Object.entries(data.by_competition).sort((a, b) => {
+                const priorityA = LEAGUE_PRIORITY[a[0]] || 100;
+                const priorityB = LEAGUE_PRIORITY[b[0]] || 100;
+
+                // If same priority tier (both in top 5 or both outside), sort by match count
+                if (priorityA === priorityB) {
+                    return b[1].length - a[1].length;
+                }
+
+                // Champions League gets special treatment - appears after top 5 but before others
+                if (a[0] === 'Champions League') return priorityB <= 5 ? 1 : -1;
+                if (b[0] === 'Champions League') return priorityA <= 5 ? -1 : 1;
+
+                return priorityA - priorityB;
+            });
+
+            let html = '';
+
+            // Render Favorites section first
+            const hasFavoriteMatches = favoriteMatches.length > 0;
+            const favoritesCollapsed = !hasFavoriteMatches;
+
+            html += `
+                <div class="md-league md-favorites-section ${favoritesCollapsed ? 'collapsed' : ''} ${hasFavoriteMatches ? 'has-matches' : ''}" data-league="Favorites">
+                    <div class="md-league-header" onclick="toggleLeagueCollapse(this.parentElement)">
+                        <span class="md-league-flag">⭐</span>
+                        <span class="md-league-name">Favorites</span>
+                        <span class="md-league-count">${favoriteMatches.length}</span>
+                        <span class="md-league-chevron">›</span>
+                    </div>
+                    <div class="md-match-list">
+                        ${favoriteMatches.length > 0
+                            ? favoriteMatches.map(match => renderMatchRow(match, false)).join('')
+                            : '<div class="md-match" style="justify-content:center;color:var(--md-text-3);font-size:13px;cursor:default;">Follow teams to see their matches here</div>'
+                        }
+                    </div>
+                </div>
+            `;
+
+            // Render each league (excluding matches already in favorites)
+            for (const [competition, matches] of competitions) {
+                // Filter out matches that are in favorites
+                const leagueMatches = matches.filter(m => !favoriteMatchIds.has(m.id));
+
+                // Skip empty leagues
+                if (leagueMatches.length === 0) continue;
+
+                const leagueId = getLeagueIdByName(competition);
+                const isUCL = leagueId === UCL_LEAGUE_ID || competition.toLowerCase().includes('champions');
+                const flag = LEAGUE_FLAGS[leagueId] || '⚽';
 
                 html += `
-                    <div class="md-league ${isUCL ? 'ucl' : ''}">
-                        <div class="md-league-head">
+                    <div class="md-league ${isUCL ? 'ucl' : ''}" data-league="${competition}">
+                        <div class="md-league-header" onclick="toggleLeagueCollapse(this.parentElement)">
                             <span class="md-league-flag">${flag}</span>
                             <span class="md-league-name">${competition}</span>
-                            <span class="md-league-count">${matches.length}</span>
+                            <span class="md-league-count">${leagueMatches.length}</span>
+                            <span class="md-league-chevron">›</span>
                         </div>
                         <div class="md-match-list">
-                            ${matches.map(match => renderMatchRow(match, isUCL)).join('')}
+                            ${leagueMatches.map(match => renderMatchRow(match, isUCL)).join('')}
                         </div>
                     </div>
                 `;
@@ -1947,9 +2189,9 @@
             const homeTeamId = homeTeam.id || 0;
             const awayTeamId = awayTeam.id || 0;
 
-            // Support both score formats: new (home.score) and old (home_goals)
-            const homeGoals = homeTeam.score ?? match.home_goals ?? '-';
-            const awayGoals = awayTeam.score ?? match.away_goals ?? '-';
+            // Support multiple score formats: goals (Sportmonks), score (old), home_goals (legacy)
+            const homeGoals = homeTeam.goals ?? homeTeam.score ?? match.home_goals ?? '-';
+            const awayGoals = awayTeam.goals ?? awayTeam.score ?? match.away_goals ?? '-';
 
             // Determine winner for styling
             const homeWin = status === 'finished' && homeGoals > awayGoals;
@@ -2021,8 +2263,8 @@
                 // Support both old and new payload formats
                 const homeTeam = match.home || match.home_team || {};
                 const awayTeam = match.away || match.away_team || {};
-                const homeGoals = homeTeam.score ?? match.home_goals ?? 0;
-                const awayGoals = awayTeam.score ?? match.away_goals ?? 0;
+                const homeGoals = homeTeam.goals ?? homeTeam.score ?? match.home_goals ?? 0;
+                const awayGoals = awayTeam.goals ?? awayTeam.score ?? match.away_goals ?? 0;
                 const elapsed = getElapsedTime(match);
                 const matchId = match.id || 0;
                 const compName = match.competition?.name || match.competition || '';
@@ -2107,6 +2349,12 @@
                 return;
             }
 
+            // Navigate to Sportmonks-powered match center for live/finished matches
+            // Dashboard now uses Sportmonks IDs directly
+            window.location.href = `/match/${matchId}`;
+            return;
+
+            // Legacy inline detail panel (kept for reference)
             const content = `
                 <div class="md-detail-section">
                     <div style="display:flex;align-items:center;justify-content:space-between;padding:20px;background:var(--md-bg-card);border-radius:16px;margin-bottom:20px;">
@@ -2699,7 +2947,7 @@
             document.body.style.overflow = 'hidden';
 
             try {
-                const response = await fetch(`/api/pre-match/${matchId}`);
+                const response = await fetch(`/api/pre-match/sportmonks/${matchId}`);
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
@@ -2731,6 +2979,10 @@
             if (countdownInterval) {
                 clearInterval(countdownInterval);
                 countdownInterval = null;
+            }
+            if (preMatchPollTimer) {
+                clearInterval(preMatchPollTimer);
+                preMatchPollTimer = null;
             }
         }
 
@@ -2781,10 +3033,17 @@
 
                     <div class="pm-teams">
                         <div class="pm-team home">
-                            <div class="pm-team-crest">
-                                ${home.logo ? `<img src="${home.logo}" alt="">` : ''}
+                            <a href="/team/${home.id}" style="text-decoration:none;color:inherit;">
+                                <div class="pm-team-crest">
+                                    ${home.logo ? `<img src="${home.logo}" alt="">` : ''}
+                                </div>
+                            </a>
+                            <div class="pm-team-name">
+                                <a href="/team/${home.id}" style="text-decoration:none;color:inherit;">${home.name || 'Home'}</a>
+                                <span class="pm-follow-star ${isFavorite(home.id) ? 'active' : ''}"
+                                      onclick="event.stopPropagation(); toggleFavorite(${home.id}, '${(home.name || '').replace(/'/g, "\\'")}', '${(home.logo || '').replace(/'/g, "\\'")}'); this.classList.toggle('active'); this.textContent = this.classList.contains('active') ? '★' : '☆';"
+                                >${isFavorite(home.id) ? '★' : '☆'}</span>
                             </div>
-                            <div class="pm-team-name">${home.name || 'Home'}</div>
                             <div class="pm-team-form">
                                 ${(home.form || []).map(f => `<span class="pm-form-dot ${f}">${f}</span>`).join('')}
                             </div>
@@ -2793,10 +3052,17 @@
                         <div class="pm-vs">VS</div>
 
                         <div class="pm-team away">
-                            <div class="pm-team-crest">
-                                ${away.logo ? `<img src="${away.logo}" alt="">` : ''}
+                            <a href="/team/${away.id}" style="text-decoration:none;color:inherit;">
+                                <div class="pm-team-crest">
+                                    ${away.logo ? `<img src="${away.logo}" alt="">` : ''}
+                                </div>
+                            </a>
+                            <div class="pm-team-name">
+                                <a href="/team/${away.id}" style="text-decoration:none;color:inherit;">${away.name || 'Away'}</a>
+                                <span class="pm-follow-star ${isFavorite(away.id) ? 'active' : ''}"
+                                      onclick="event.stopPropagation(); toggleFavorite(${away.id}, '${(away.name || '').replace(/'/g, "\\'")}', '${(away.logo || '').replace(/'/g, "\\'")}'); this.classList.toggle('active'); this.textContent = this.classList.contains('active') ? '★' : '☆';"
+                                >${isFavorite(away.id) ? '★' : '☆'}</span>
                             </div>
-                            <div class="pm-team-name">${away.name || 'Away'}</div>
                             <div class="pm-team-form">
                                 ${(away.form || []).map(f => `<span class="pm-form-dot ${f}">${f}</span>`).join('')}
                             </div>
@@ -2893,10 +3159,12 @@
                     </section>
                     ` : ''}
 
-                    <!-- Predicted Lineups -->
+                    <!-- Lineups (Predicted or Official) -->
                     ${(lineups.home || lineups.away) ? `
                     <section class="pm-section">
-                        <div class="pm-section-title">Predicted Lineups</div>
+                        <div class="pm-section-title">
+                            ${data.lineups_type === 'official' ? '✓ Official Lineups' : '🔮 Predicted Lineups'}
+                        </div>
                         <div class="pm-pitch-container">
                             <div class="pm-pitch-header">
                                 <div class="pm-pitch-team home">
@@ -3012,8 +3280,12 @@
             return lastName.length > 8 ? lastName.substring(0, 8) + '.' : lastName;
         }
 
+        let preMatchPollTimer = null;
+
         function startCountdown(kickoffDate) {
             if (!kickoffDate) return;
+
+            const matchId = preMatchData?.match?.id;
 
             const update = () => {
                 const now = new Date();
@@ -3025,6 +3297,11 @@
                     document.getElementById('pmHours').textContent = '00';
                     document.getElementById('pmMins').textContent = '00';
                     if (countdownInterval) clearInterval(countdownInterval);
+
+                    // Start polling to check if match has started
+                    if (matchId && !preMatchPollTimer) {
+                        startPreMatchPolling(matchId);
+                    }
                     return;
                 }
 
@@ -3039,10 +3316,43 @@
                 if (daysEl) daysEl.textContent = String(days).padStart(2, '0');
                 if (hoursEl) hoursEl.textContent = String(hours).padStart(2, '0');
                 if (minsEl) minsEl.textContent = String(mins).padStart(2, '0');
+
+                // Start polling when within 2 minutes of kickoff to detect match start
+                if (diff <= 2 * 60 * 1000 && matchId && !preMatchPollTimer) {
+                    startPreMatchPolling(matchId);
+                }
             };
 
             update();
             countdownInterval = setInterval(update, 60000); // Update every minute
+        }
+
+        function startPreMatchPolling(matchId) {
+            // Poll every 15 seconds to check if match has started
+            preMatchPollTimer = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/match/${matchId}/live`);
+                    if (!response.ok) return;
+
+                    const data = await response.json();
+
+                    // Check if match has started (is_live) or if official lineups are now available
+                    if (data.state?.is_live) {
+                        // Match has started - redirect to Match Center
+                        clearInterval(preMatchPollTimer);
+                        preMatchPollTimer = null;
+                        closePreMatch();
+                        window.location.href = `/match/${matchId}`;
+                    } else if (data.has_official_lineups && preMatchData?.lineups_type === 'predicted') {
+                        // Official lineups are now available - refresh pre-match data
+                        clearInterval(preMatchPollTimer);
+                        preMatchPollTimer = null;
+                        openPreMatch(matchId, preMatchData.home_team?.id, preMatchData.away_team?.id);
+                    }
+                } catch (e) {
+                    console.error('Pre-match poll error:', e);
+                }
+            }, 15000);
         }
 
         // ESC to close pre-match

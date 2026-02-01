@@ -1,5 +1,194 @@
 # Football View Changelog
 
+## v0.2.5 - Match Center & Live System Overhaul (2026-01-31)
+
+### ⚽ New Match Center Page
+
+**Complete Redesign**
+- New dedicated Match Center page (`/match/{fixture_id}`) with premium dark UI
+- Scoreboard header with team crests, score, and match status
+- Team form indicators (last 5 results as W/D/L pips)
+- Follow stars on team names to favorite teams
+
+**Formation Display**
+- Visual pitch representation with player positions
+- Formation labels at top (home) and bottom (away) of pitch
+- Player circles with jersey numbers
+- Live player ratings with color-coded badges (green ≥7.5, yellow 6.5-7.4, red <6.5)
+- Supports all common formations parsed dynamically from formation string
+
+**Live Statistics**
+- Real-time possession, shots, shots on target, corners, fouls
+- Animated bar comparisons between teams
+- Match momentum/pressure indicator using attacks data
+
+**Events Timeline**
+- Live events with minute markers
+- Goal, card, substitution, VAR icons
+- Player names and assist info
+- Dynamically updates during live matches
+
+**Head-to-Head Section**
+- Win/draw/loss summary
+- Last 5 meetings with scores
+
+---
+
+### 🔄 Tiered Live Polling System
+
+**Smart Polling Rates**
+- **Live matches**: 10 second intervals (aggressive)
+- **Pre-match**: 60 second intervals (detect kickoff)
+- **Post-match**: Polling stops after FT
+
+**Auto State Transitions**
+- Detects when match starts → switches to aggressive polling
+- Detects when match ends → stops polling
+- Updates UI elements (badge, timer) on state change
+
+**Live Data Updates**
+- Score and elapsed time
+- Statistics bars (animated transitions)
+- Events timeline (new events inserted at top)
+- Player ratings (every 30 seconds to reduce API load)
+- Momentum/attacks data
+- xG when available (premium)
+
+---
+
+### ⭐ Favorites System
+
+**localStorage Persistence**
+- Favorites stored as JSON array with team id, name, logo
+- Key: `matchday_favorites`
+
+**Dashboard Integration**
+- Favorites section appears at top of match list
+- Matches with favorited teams extracted from league sections (no duplicates)
+- Favorites section auto-expands when favorites have matches
+- Collapsed with "0" count when no favorites playing
+
+**Follow Buttons**
+- Star icons on team names in Match Center
+- Star icons in pre-match overlay team headers
+- Star button in Team Hub header
+- Click to toggle follow state
+
+---
+
+### 🏆 League Priority Sorting
+
+**Top 5 Leagues First**
+1. Premier League
+2. Bundesliga
+3. La Liga
+4. Serie A
+5. Ligue 1
+
+All other leagues sorted by match count after Top 5.
+
+---
+
+### 📂 Collapsible League Sections
+
+**Dashboard UX**
+- League headers are now clickable cards
+- Chevron arrow rotates on expand/collapse
+- Match list hides when collapsed
+- Favorites section starts collapsed (expands if matches exist)
+
+---
+
+### 🔮 Predicted XI → Official Lineup Transition
+
+**Smart Lineup Detection**
+- Pre-match API checks for official lineups first
+- Falls back to predicted XI only if official not available
+- Returns `lineups_type: "official"` or `"predicted"` flag
+- Pre-match overlay shows "✓ Official Lineups" or "🔮 Predicted Lineups"
+
+**Auto-Refresh on Lineup Release**
+- Pre-match overlay polls when within 2 minutes of kickoff
+- Detects when official lineups become available
+- Refreshes pre-match data to show official lineup
+
+**Pre-match → Match Center Redirect**
+- Polls to detect when `state.is_live` becomes true
+- Automatically redirects to Match Center when match starts
+
+---
+
+### 🐛 Bug Fixes
+
+**API Pagination Fix**
+- Sportmonks fixtures API was only returning 25 matches (first page)
+- Now fetches all pages → 68 matches on a full matchday
+
+**Formation Display Fix**
+- Players were stacking vertically instead of in formation rows
+- Added JavaScript to parse formation string and organize into proper rows
+- Increased spacing between players
+
+**Dashboard Scores**
+- Fixed matches showing "-" instead of actual scores
+
+---
+
+### 📁 Files Modified
+
+| File | Changes |
+|------|---------|
+| `app/main.py` | Version bump to v0.2.5, predicted XI fallback in match_center, official lineup detection in pre-match API, live endpoint enhancements |
+| `app/sportmonks_client.py` | Pagination fix for fixtures, `lineups.details` include for ratings, rating extraction (type_id 118) |
+| `app/templates/match-center.html` | **NEW** - Complete Match Center page with formations, stats, events, live polling |
+| `app/templates/dashboard-v4.html` | Favorites system, league sorting, collapsible sections, pre-match polling, lineup type display |
+| `app/templates/team-hub.html` | Follow button in header |
+
+---
+
+### 🔧 Technical Details
+
+**New JavaScript (Match Center)**
+```javascript
+// Tiered Polling
+const POLL_RATES = { LIVE: 10000, PRE_MATCH: 60000, POST_MATCH: 0 };
+initPolling()          // Determine initial state
+startPolling(rate)     // Start interval
+stopPolling()          // Clear interval
+
+// Live Updates
+fetchLiveUpdate()      // API call with rating flag
+updateUI(data)         // Update all UI elements
+updateStatistics(stats) // Update stat bars
+updateEvents(events)   // Add new events to timeline
+updatePlayerRatings(ratings) // Update rating badges
+
+// Formation Layout
+organizeFormation(teamElement) // Parse formation, create rows
+```
+
+**New JavaScript (Dashboard)**
+```javascript
+// Favorites
+getFavorites() / setFavorites()
+isFavorite(teamId)
+toggleFavorite(id, name, logo)
+
+// Pre-match Polling
+startPreMatchPolling(matchId)  // 15s interval near kickoff
+// Auto-redirects to Match Center when match starts
+// Auto-refreshes when official lineups available
+```
+
+**API Enhancements**
+- `/api/match/{id}/live` now returns:
+  - `has_official_lineups` flag
+  - `lineups` and `formations` when official available
+  - `statistics` for live stat updates
+  - `events` for timeline updates
+
+---
+
 ## v0.2.4 - UI Enhancements and Stability (2026-01-31)
 
 ### ✨ Pre-Match View

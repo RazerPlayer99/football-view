@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Team Hub — {{ team.name }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #000000;
+            --bg-card: #111111;
+            --bg-elevated: #1a1a1a;
+            --bg-subtle: #0a0a0a;
+            --team-primary: #dc052d;
+            --team-secondary: #0066b2;
+            --accent-green: #22c55e;
+            --accent-yellow: #eab308;
+            --accent-red: #ef4444;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --text-muted: #52525b;
+            --border: rgba(255,255,255,0.08);
+            --glow: rgba(220, 5, 45, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html { font-size: 16px; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-base);
+            color: var(--text-primary);
+            line-height: 1.5;
+            overflow-x: hidden;
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            padding: 60px 20px 32px;
+            background: linear-gradient(180deg, var(--team-primary) 0%, rgba(220,5,45,0.3) 50%, transparent 100%);
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .hero-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 10px 16px;
+            border-radius: 20px;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            border: none;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-btn.following {
+            background: white;
+            color: black;
+        }
+
+        .team-identity {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .team-crest {
+            width: 88px;
+            height: 88px;
+            margin: 0 auto 16px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .team-crest img {
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+        }
+
+        .team-crest::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .team-name {
+            font-family: 'Instrument Serif', serif;
+            font-size: 32px;
+            font-weight: 400;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+        }
+
+        .team-meta {
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .team-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            padding: 20px;
+            margin: -16px 20px 0;
+            background: var(--bg-card);
+            border-radius: 16px;
+            position: relative;
+            z-index: 2;
+            border: 1px solid var(--border);
+        }
+
+        .status-item {
+            text-align: center;
+        }
+
+        .status-value {
+            font-size: 24px;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .status-value.rank { color: var(--accent-green); }
+        .status-value.points { color: var(--text-primary); }
+        .status-value.streak { color: var(--accent-green); }
+        .status-value.streak.losing { color: var(--accent-red); }
+
+        .status-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Content Flow */
+        .content {
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .section-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-left: 8px;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+        }
+
+        .section-action {
+            font-size: 12px;
+            color: var(--team-primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        /* Next Match - Hero Card */
+        .next-match-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .next-match-card::before {
+            content: 'NEXT';
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--team-primary);
+            background: rgba(220,5,45,0.15);
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .match-date {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .match-date strong {
+            color: var(--text-primary);
+        }
+
+        .match-teams {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .match-team {
+            flex: 1;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            padding: 8px;
+            border-radius: 12px;
+        }
+
+        .match-team:hover {
+            transform: scale(1.05);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .match-team-crest {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 10px;
+            background: var(--bg-elevated);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            border: 2px solid var(--border);
+            overflow: hidden;
+        }
+
+        .match-team-crest img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+
+        .match-team-crest.highlight {
+            background: var(--team-primary);
+            border-color: var(--team-primary);
+        }
+
+        .match-team-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .match-team-form {
+            display: flex;
+            justify-content: center;
+            gap: 3px;
+        }
+
+        .form-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .form-dot.w { background: var(--accent-green); }
+        .form-dot.d { background: var(--accent-yellow); }
+        .form-dot.l { background: var(--accent-red); }
+
+        .match-vs {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .match-time {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .match-comp {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .match-venue {
+            text-align: center;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .match-venue strong {
+            color: var(--text-primary);
+        }
+
+        .no-next-match {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 20px;
+        }
+
+        /* Form & Momentum */
+        .form-section {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .form-insight {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .form-insight-text {
+            font-family: 'Instrument Serif', serif;
+            font-size: 20px;
+            font-style: italic;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+
+        .form-insight-text span {
+            color: var(--accent-green);
+        }
+
+        .form-insight-text span.negative {
+            color: var(--accent-red);
+        }
+
+        .form-matches {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .form-match {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-subtle);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .form-match:hover {
+            background: var(--bg-card);
+            transform: translateX(4px);
+        }
+
+        .form-match-result {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .form-match-result.w {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--accent-green);
+        }
+
+        .form-match-result.d {
+            background: rgba(234, 179, 8, 0.15);
+            color: var(--accent-yellow);
+        }
+
+        .form-match-result.l {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+        }
+
+        .form-match-info {
+            flex: 1;
+        }
+
+        .form-match-opponent {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 2px;
+            display: inline-block;
+        }
+
+        .form-match-opponent:hover {
+            text-decoration: underline;
+        }
+
+        .form-match-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .form-match-score {
+            font-weight: 800;
+            font-size: 16px;
+        }
+
+        /* Squad Section */
+        .squad-section {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+        /* Formation Visual (XI pitch view) */
+        .formation-visual {
+            background: linear-gradient(180deg, #1a3a1a 0%, #0f250f 100%);
+            border-radius: 16px;
+            padding: 24px 16px;
+            margin-bottom: 20px;
+            position: relative;
+            aspect-ratio: 1 / 1.1;
+            overflow: hidden;
+        }
+
+        .pitch-markings {
+            position: absolute;
+            inset: 16px;
+            border: 2px solid rgba(255,255,255,0.15);
+            border-radius: 4px;
+        }
+
+        .pitch-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            border: 2px solid rgba(255,255,255,0.15);
+            border-radius: 50%;
+        }
+
+        .pitch-center-line {
+            position: absolute;
+            top: 50%;
+            left: 16px;
+            right: 16px;
+            height: 2px;
+            background: rgba(255,255,255,0.15);
+        }
+
+        .formation-players {
+            position: relative;
+            z-index: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+
+        .formation-row {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .formation-player {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .player-dot {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--team-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            position: relative;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .player-rating {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            background: var(--accent-green);
+            color: black;
+            font-size: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .player-rating.mid { background: var(--accent-yellow); }
+        .player-rating.low { background: var(--accent-red); color: white; }
+
+        .player-name {
+            font-size: 9px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.8);
+            text-align: center;
+            max-width: 50px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .top-performers {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .performer-card {
+            background: var(--bg-subtle);
+            border-radius: 14px;
+            padding: 16px 12px;
+            text-align: center;
+        }
+
+        .performer-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--team-primary), #ff4d6d);
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            overflow: hidden;
+        }
+
+        .performer-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .performer-name {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .performer-stat {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .performer-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--team-primary);
+            margin-top: 6px;
+        }
+
+        /* League Standing */
+        .standing-section {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .standing-mini-table {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .standing-row {
+            display: grid;
+            grid-template-columns: 32px 1fr auto auto auto;
+            gap: 12px;
+            align-items: center;
+            padding: 12px;
+            background: var(--bg-subtle);
+            border-radius: 12px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .standing-row:hover {
+            background: var(--bg-card);
+            transform: translateX(4px);
+        }
+
+        .standing-row.highlight {
+            background: linear-gradient(135deg, rgba(220,5,45,0.2), rgba(220,5,45,0.05));
+            border: 1px solid rgba(220,5,45,0.3);
+        }
+
+        .standing-pos {
+            font-weight: 800;
+            color: var(--text-muted);
+        }
+
+        .standing-row.highlight .standing-pos {
+            color: var(--team-primary);
+        }
+
+        .standing-team {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .standing-crest {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--bg-elevated);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            font-weight: 700;
+            overflow: hidden;
+        }
+
+        .standing-crest img {
+            width: 18px;
+            height: 18px;
+            object-fit: contain;
+        }
+
+        .standing-row.highlight .standing-crest {
+            background: var(--team-primary);
+        }
+
+        .standing-name {
+            font-weight: 600;
+        }
+
+        .standing-stat {
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .standing-pts {
+            font-weight: 800;
+            color: var(--text-primary);
+            min-width: 32px;
+            text-align: right;
+        }
+
+        .standing-row.highlight .standing-pts {
+            color: var(--team-primary);
+        }
+
+        /* Club Identity */
+        .identity-section {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .identity-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .identity-card {
+            background: var(--bg-subtle);
+            border-radius: 14px;
+            padding: 16px;
+        }
+
+        .identity-card.full {
+            grid-column: span 2;
+        }
+
+        .identity-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--bg-elevated);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .identity-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .identity-value {
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .identity-sub {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* Team Stats Section */
+        .stats-section {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .stat-card {
+            background: var(--bg-subtle);
+            border-radius: 14px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .stat-value.green { color: var(--accent-green); }
+        .stat-value.red { color: var(--accent-red); }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+            padding: 12px 20px 28px;
+            display: flex;
+            justify-content: space-around;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-muted);
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            color: var(--team-primary);
+        }
+
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        /* Animations */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero { animation: fadeUp 0.5s ease-out; }
+        .status-bar { animation: fadeUp 0.5s ease-out 0.1s backwards; }
+        .content > *:nth-child(1) { animation: fadeUp 0.5s ease-out 0.15s backwards; }
+        .content > *:nth-child(2) { animation: fadeUp 0.5s ease-out 0.2s backwards; }
+        .content > *:nth-child(3) { animation: fadeUp 0.5s ease-out 0.25s backwards; }
+        .content > *:nth-child(4) { animation: fadeUp 0.5s ease-out 0.3s backwards; }
+        .content > *:nth-child(5) { animation: fadeUp 0.5s ease-out 0.35s backwards; }
+        .content > *:nth-child(6) { animation: fadeUp 0.5s ease-out 0.4s backwards; }
+
+        @media (min-width: 600px) {
+            .content {
+                max-width: 500px;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-header">
+            <a href="/" class="back-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </a>
+            <div class="hero-actions">
+                <button class="action-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
+                    </svg>
+                </button>
+                <button class="action-btn follow-btn" id="followBtn" onclick="toggleFollow()">
+                    <span id="followIcon">☆</span>
+                    <span id="followText">Follow</span>
+                </button>
+            </div>
+        </div>
+        <div class="team-identity">
+            <div class="team-crest">
+                {% if team.logo %}
+                <img src="{{ team.logo }}" alt="{{ team.name }}" onerror="this.style.display='none'">
+                {% else %}
+                {{ team.short_code }}
+                {% endif %}
+            </div>
+            <h1 class="team-name">{{ team.name }}</h1>
+            <div class="team-meta">
+                {% if team.country %}
+                <span>🌍 {{ team.country }}</span>
+                <span>•</span>
+                {% endif %}
+                {% if team.founded %}
+                <span>Est. {{ team.founded }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-item">
+            <div class="status-value rank">{{ standing.position if standing else '-' }}{{ 'st' if standing and standing.position == 1 else 'nd' if standing and standing.position == 2 else 'rd' if standing and standing.position == 3 else 'th' if standing else '' }}</div>
+            <div class="status-label">{{ league.name if league else 'League' }}</div>
+        </div>
+        <div class="status-item">
+            <div class="status-value points">{{ standing.points if standing else '-' }}</div>
+            <div class="status-label">Points</div>
+        </div>
+        <div class="status-item">
+            <div class="status-value streak {{ 'losing' if streak.type == 'L' else '' }}">{{ streak.display }}</div>
+            <div class="status-label">Streak</div>
+        </div>
+    </div>
+
+    <!-- Content Flow -->
+    <main class="content">
+        <!-- Next Match -->
+        {% if next_match %}
+        <section class="next-match-card">
+            <div class="match-date">
+                <strong>{{ next_match.starting_at[:10] if next_match.starting_at else 'TBD' }}</strong>
+            </div>
+            <div class="match-teams">
+                <a href="/team/{{ next_match.home_team.id if next_match.home_team else '' }}" class="match-team" style="text-decoration:none;color:inherit;">
+                    <div class="match-team-crest {{ 'highlight' if next_match.home_team and next_match.home_team.id == team.id else '' }}">
+                        {% if next_match.home_team and next_match.home_team.logo %}
+                        <img src="{{ next_match.home_team.logo }}" alt="{{ next_match.home_team.name }}">
+                        {% else %}
+                        {{ next_match.home_team.short_code if next_match.home_team else '?' }}
+                        {% endif %}
+                    </div>
+                    <div class="match-team-name">{{ next_match.home_team.name if next_match.home_team else 'TBD' }}</div>
+                    <div class="match-team-form">
+                        {% for result in home_next_form %}
+                        <span class="form-dot {{ result|lower }}"></span>
+                        {% endfor %}
+                    </div>
+                </a>
+                <div class="match-vs">
+                    <div class="match-time">{{ next_match.starting_at[11:16] if next_match.starting_at else 'TBD' }}</div>
+                    <div class="match-comp">{{ next_match.league.name if next_match.league else '' }}</div>
+                </div>
+                <a href="/team/{{ next_match.away_team.id if next_match.away_team else '' }}" class="match-team" style="text-decoration:none;color:inherit;">
+                    <div class="match-team-crest {{ 'highlight' if next_match.away_team and next_match.away_team.id == team.id else '' }}">
+                        {% if next_match.away_team and next_match.away_team.logo %}
+                        <img src="{{ next_match.away_team.logo }}" alt="{{ next_match.away_team.name }}">
+                        {% else %}
+                        {{ next_match.away_team.short_code if next_match.away_team else '?' }}
+                        {% endif %}
+                    </div>
+                    <div class="match-team-name">{{ next_match.away_team.name if next_match.away_team else 'TBD' }}</div>
+                    <div class="match-team-form">
+                        {% for result in away_next_form %}
+                        <span class="form-dot {{ result|lower }}"></span>
+                        {% endfor %}
+                    </div>
+                </a>
+            </div>
+            {% if next_match.venue %}
+            <div class="match-venue">
+                <strong>{{ next_match.venue.name }}</strong> · {{ next_match.venue.city or '' }}
+            </div>
+            {% endif %}
+        </section>
+        {% else %}
+        <section class="next-match-card">
+            <div class="no-next-match">No upcoming match scheduled</div>
+        </section>
+        {% endif %}
+
+        <!-- Form & Recent Matches -->
+        <section class="form-section">
+            <div class="section-header">
+                <span class="section-title">Recent Form</span>
+                <span class="section-action">All Matches →</span>
+            </div>
+            {% if recent_matches %}
+            <div class="form-insight">
+                <p class="form-insight-text">
+                    {% set wins = recent_matches|selectattr('result', 'equalto', 'W')|list|length %}
+                    {% set losses = recent_matches|selectattr('result', 'equalto', 'L')|list|length %}
+                    {% if wins >= 3 %}
+                    <span>Strong form</span> — {{ wins }} wins in last {{ recent_matches|length }} matches
+                    {% elif losses >= 3 %}
+                    <span class="negative">Struggling</span> — {{ losses }} losses in last {{ recent_matches|length }} matches
+                    {% else %}
+                    Mixed results in recent matches
+                    {% endif %}
+                </p>
+            </div>
+            <div class="form-matches">
+                {% for match in recent_matches[:5] %}
+                <div class="form-match" onclick="window.location='/match/{{ match.id if match.id else '' }}'" style="cursor:pointer;">
+                    <div class="form-match-result {{ match.result|lower }}">{{ match.result }}</div>
+                    <div class="form-match-info">
+                        <a href="/team/{{ match.opponent.id if match.opponent else '' }}"
+                           class="form-match-opponent"
+                           onclick="event.stopPropagation()"
+                           style="text-decoration:none;color:inherit;">
+                            {{ match.opponent.name if match.opponent else 'Unknown' }}
+                        </a>
+                        <div class="form-match-meta">{{ match.league.name if match.league else '' }} · {{ 'Home' if match.is_home else 'Away' }}</div>
+                    </div>
+                    <div class="form-match-score">{{ match.team_score }} - {{ match.opponent_score }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="no-next-match">No recent matches</div>
+            {% endif %}
+        </section>
+
+        <!-- Squad Pulse / Top Performers -->
+        <section class="squad-section">
+            <div class="section-header">
+                <span class="section-title">Squad Pulse</span>
+                <a href="/team/{{ team.id }}/squad" class="section-action">Full Squad →</a>
+            </div>
+
+            {% if squad %}
+            <!-- Formation Visual (4-3-3 layout with top performers) -->
+            <div class="formation-visual">
+                <div class="pitch-markings"></div>
+                <div class="pitch-center"></div>
+                <div class="pitch-center-line"></div>
+                <div class="formation-players">
+                    <!-- Forward row (top scorers) -->
+                    <div class="formation-row">
+                        {% for player in top_scorers[:3] %}
+                        <div class="formation-player">
+                            <div class="player-dot">
+                                {{ player.name[:2]|upper if player.name else '?' }}
+                                {% if player.stats and player.stats.rating %}
+                                <span class="player-rating {{ 'mid' if player.stats.rating < 7.5 else '' }}{{ 'low' if player.stats.rating < 7.0 else '' }}">{{ "%.1f"|format(player.stats.rating) }}</span>
+                                {% endif %}
+                            </div>
+                            <span class="player-name">{{ player.name.split()[-1] if player.name else '?' }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <!-- Midfield row (top rated) -->
+                    <div class="formation-row">
+                        {% for player in top_rated[:3] %}
+                        <div class="formation-player">
+                            <div class="player-dot">
+                                {{ player.name[:2]|upper if player.name else '?' }}
+                                {% if player.stats and player.stats.rating %}
+                                <span class="player-rating {{ 'mid' if player.stats.rating < 7.5 else '' }}{{ 'low' if player.stats.rating < 7.0 else '' }}">{{ "%.1f"|format(player.stats.rating) }}</span>
+                                {% endif %}
+                            </div>
+                            <span class="player-name">{{ player.name.split()[-1] if player.name else '?' }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <!-- Defense row (top assists) -->
+                    <div class="formation-row">
+                        {% for player in top_assists[:4] %}
+                        <div class="formation-player">
+                            <div class="player-dot">
+                                {{ player.name[:2]|upper if player.name else '?' }}
+                                {% if player.stats and player.stats.rating %}
+                                <span class="player-rating {{ 'mid' if player.stats.rating < 7.5 else '' }}{{ 'low' if player.stats.rating < 7.0 else '' }}">{{ "%.1f"|format(player.stats.rating) }}</span>
+                                {% endif %}
+                            </div>
+                            <span class="player-name">{{ player.name.split()[-1] if player.name else '?' }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <!-- Goalkeeper row -->
+                    <div class="formation-row">
+                        {% set gk = squad|selectattr('position', 'equalto', 1)|first %}
+                        {% if gk %}
+                        <div class="formation-player">
+                            <div class="player-dot">
+                                {{ gk.name[:2]|upper if gk.name else 'GK' }}
+                                {% if gk.stats and gk.stats.rating %}
+                                <span class="player-rating {{ 'mid' if gk.stats.rating < 7.5 else '' }}{{ 'low' if gk.stats.rating < 7.0 else '' }}">{{ "%.1f"|format(gk.stats.rating) }}</span>
+                                {% endif %}
+                            </div>
+                            <span class="player-name">{{ gk.name.split()[-1] if gk.name else 'GK' }}</span>
+                        </div>
+                        {% else %}
+                        <div class="formation-player">
+                            <div class="player-dot">GK</div>
+                            <span class="player-name">Goalkeeper</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Top Performers Cards -->
+            <div class="top-performers">
+                {% if top_scorers and top_scorers[0] %}
+                <div class="performer-card">
+                    <div class="performer-avatar">
+                        {% if top_scorers[0].image %}
+                        <img src="{{ top_scorers[0].image }}" alt="{{ top_scorers[0].name }}">
+                        {% else %}
+                        {{ top_scorers[0].name[:2]|upper if top_scorers[0].name else '?' }}
+                        {% endif %}
+                    </div>
+                    <div class="performer-name">{{ top_scorers[0].name.split()[-1] if top_scorers[0].name else 'Unknown' }}</div>
+                    <div class="performer-stat">Goals</div>
+                    <div class="performer-value">{{ top_scorers[0].stats.goals if top_scorers[0].stats else 0 }}</div>
+                </div>
+                {% else %}
+                <div class="performer-card">
+                    <div class="performer-avatar">-</div>
+                    <div class="performer-name">N/A</div>
+                    <div class="performer-stat">Goals</div>
+                    <div class="performer-value">-</div>
+                </div>
+                {% endif %}
+
+                {% if top_rated and top_rated[0] %}
+                <div class="performer-card">
+                    <div class="performer-avatar">
+                        {% if top_rated[0].image %}
+                        <img src="{{ top_rated[0].image }}" alt="{{ top_rated[0].name }}">
+                        {% else %}
+                        {{ top_rated[0].name[:2]|upper if top_rated[0].name else '?' }}
+                        {% endif %}
+                    </div>
+                    <div class="performer-name">{{ top_rated[0].name.split()[-1] if top_rated[0].name else 'Unknown' }}</div>
+                    <div class="performer-stat">Rating</div>
+                    <div class="performer-value">{{ "%.2f"|format(top_rated[0].stats.rating) if top_rated[0].stats and top_rated[0].stats.rating else '-' }}</div>
+                </div>
+                {% else %}
+                <div class="performer-card">
+                    <div class="performer-avatar">-</div>
+                    <div class="performer-name">N/A</div>
+                    <div class="performer-stat">Rating</div>
+                    <div class="performer-value">-</div>
+                </div>
+                {% endif %}
+
+                {% if top_assists and top_assists[0] %}
+                <div class="performer-card">
+                    <div class="performer-avatar">
+                        {% if top_assists[0].image %}
+                        <img src="{{ top_assists[0].image }}" alt="{{ top_assists[0].name }}">
+                        {% else %}
+                        {{ top_assists[0].name[:2]|upper if top_assists[0].name else '?' }}
+                        {% endif %}
+                    </div>
+                    <div class="performer-name">{{ top_assists[0].name.split()[-1] if top_assists[0].name else 'Unknown' }}</div>
+                    <div class="performer-stat">Assists</div>
+                    <div class="performer-value">{{ top_assists[0].stats.assists if top_assists[0].stats else 0 }}</div>
+                </div>
+                {% else %}
+                <div class="performer-card">
+                    <div class="performer-avatar">-</div>
+                    <div class="performer-name">N/A</div>
+                    <div class="performer-stat">Assists</div>
+                    <div class="performer-value">-</div>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- Season Stats -->
+        {% if season_stats and season_stats.played and season_stats.played > 0 %}
+        <section class="stats-section">
+            <div class="section-header">
+                <span class="section-title">Season Stats</span>
+                <span class="section-subtitle">Last {{ season_stats.played }} matches</span>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value green">{{ season_stats.goals_for }}</div>
+                    <div class="stat-label">Goals For</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value red">{{ season_stats.goals_against }}</div>
+                    <div class="stat-label">Goals Against</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ season_stats.clean_sheets }}</div>
+                    <div class="stat-label">Clean Sheets</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value green">{{ season_stats.won }}</div>
+                    <div class="stat-label">Wins</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ season_stats.drawn }}</div>
+                    <div class="stat-label">Draws</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value red">{{ season_stats.lost }}</div>
+                    <div class="stat-label">Losses</div>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- League Standing -->
+        {% if standings %}
+        <section class="standing-section">
+            <div class="section-header">
+                <span class="section-title">{{ league.name if league else 'League' }}</span>
+                <a href="/standings/{{ league.id if league else '' }}" class="section-action">Full Table →</a>
+            </div>
+            <div class="standing-mini-table">
+                {% for row in standings_slice %}
+                <a href="/team/{{ row.team_id }}" class="standing-row {{ 'highlight' if row.team_id == team.id else '' }}" style="text-decoration:none;color:inherit;">
+                    <span class="standing-pos">{{ row.position }}</span>
+                    <div class="standing-team">
+                        <div class="standing-crest">
+                            {% if row.team_logo %}
+                            <img src="{{ row.team_logo }}" alt="{{ row.team_name }}">
+                            {% else %}
+                            {{ row.team_short }}
+                            {% endif %}
+                        </div>
+                        <span class="standing-name">{{ row.team_name }}</span>
+                    </div>
+                    <span class="standing-stat">{{ row.played or '-' }}</span>
+                    <span class="standing-stat">{{ '%+d'|format(row.goal_diff) if row.goal_diff else '0' }}</span>
+                    <span class="standing-pts">{{ row.points }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Club Identity -->
+        <section class="identity-section">
+            <div class="section-header">
+                <span class="section-title">Club</span>
+            </div>
+            <div class="identity-grid">
+                {% if team.venue %}
+                <div class="identity-card">
+                    <div class="identity-icon">🏟️</div>
+                    <div class="identity-label">Stadium</div>
+                    <div class="identity-value">{{ team.venue.name }}</div>
+                    {% if team.venue.capacity %}
+                    <div class="identity-sub">{{ "{:,}".format(team.venue.capacity) }} capacity</div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% if team.coach %}
+                <div class="identity-card">
+                    <div class="identity-icon">👔</div>
+                    <div class="identity-label">Manager</div>
+                    <div class="identity-value">{{ team.coach.name }}</div>
+                </div>
+                {% endif %}
+                {% if team.founded %}
+                <div class="identity-card">
+                    <div class="identity-icon">📅</div>
+                    <div class="identity-label">Founded</div>
+                    <div class="identity-value">{{ team.founded }}</div>
+                    <div class="identity-sub">{{ 2026 - team.founded }} years</div>
+                </div>
+                {% endif %}
+                {% if team.country %}
+                <div class="identity-card">
+                    <div class="identity-icon">🌍</div>
+                    <div class="identity-label">Country</div>
+                    <div class="identity-value">{{ team.country }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+    </main>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+        <a href="/" class="nav-item">
+            <div class="nav-icon">⚽</div>
+            <span>Matches</span>
+        </a>
+        <div class="nav-item">
+            <div class="nav-icon">📰</div>
+            <span>News</span>
+        </div>
+        <div class="nav-item active">
+            <div class="nav-icon">🏠</div>
+            <span>Team</span>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon">⭐</div>
+            <span>Following</span>
+        </div>
+        <a href="/search" class="nav-item">
+            <div class="nav-icon">🔍</div>
+            <span>Search</span>
+        </a>
+    </nav>
+
+    <script>
+        // =============================================================================
+        // FAVORITES SYSTEM
+        // =============================================================================
+
+        const FAVORITES_KEY = 'matchday_favorites';
+        const TEAM_ID = {{ team.id }};
+        const TEAM_NAME = "{{ team.name | replace('"', '\\"') }}";
+        const TEAM_LOGO = "{{ team.logo | default('', true) | replace('"', '\\"') }}";
+
+        function getFavorites() {
+            try {
+                const stored = localStorage.getItem(FAVORITES_KEY);
+                return stored ? JSON.parse(stored) : [];
+            } catch (e) {
+                console.error('Error reading favorites:', e);
+                return [];
+            }
+        }
+
+        function setFavorites(favorites) {
+            try {
+                localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+            } catch (e) {
+                console.error('Error saving favorites:', e);
+            }
+        }
+
+        function isFavorite(teamId) {
+            const favorites = getFavorites();
+            return favorites.some(f => f.id === teamId);
+        }
+
+        function toggleFollow() {
+            const favorites = getFavorites();
+            const index = favorites.findIndex(f => f.id === TEAM_ID);
+
+            if (index >= 0) {
+                // Remove from favorites
+                favorites.splice(index, 1);
+            } else {
+                // Add to favorites
+                favorites.push({ id: TEAM_ID, name: TEAM_NAME, logo: TEAM_LOGO });
+            }
+
+            setFavorites(favorites);
+            updateFollowButton();
+        }
+
+        function updateFollowButton() {
+            const btn = document.getElementById('followBtn');
+            const icon = document.getElementById('followIcon');
+            const text = document.getElementById('followText');
+            const isFollowing = isFavorite(TEAM_ID);
+
+            btn.classList.toggle('following', isFollowing);
+            icon.textContent = isFollowing ? '★' : '☆';
+            text.textContent = isFollowing ? 'Following' : 'Follow';
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', updateFollowButton);
+    </script>
+</body>
+</html>
