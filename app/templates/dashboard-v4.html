@@ -494,6 +494,31 @@
             flex: 1;
         }
 
+        .md-league-name-link {
+            font-size: 14px;
+            font-weight: 700;
+            flex: 1;
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+
+        .md-league-name-link:hover {
+            color: var(--md-accent);
+        }
+
+        .md-league.ucl .md-league-name-link {
+            color: var(--md-ucl-accent);
+        }
+
+        .md-league.ucl .md-league-name-link:hover {
+            color: #5dade2;
+        }
+
+        .md-favorites-section .md-league-name-link {
+            color: var(--md-yellow);
+        }
+
         .md-league-count {
             font-size: 12px;
             color: var(--md-text-3);
@@ -1139,6 +1164,17 @@
             border-radius: 8px;
             font-size: 11px;
             font-weight: 600;
+        }
+
+        .pm-badge-link {
+            text-decoration: none;
+            color: inherit;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .pm-badge-link:hover {
+            background: rgba(99,102,241,0.3);
+            color: var(--md-accent);
         }
 
         .pm-notify-btn {
@@ -1813,8 +1849,8 @@
         // =============================================================================
 
         // State
-        // Simulated "today" - use explicit local time to avoid timezone issues
-        let currentDate = new Date(2026, 0, 31); // Jan 31, 2026 (month is 0-indexed)
+        // Use actual current date
+        let currentDate = new Date();
         let matchesData = {};
         let searchTimeout = null;
         let appConfig = { currentSeason: null, leagues: [] };
@@ -1976,8 +2012,8 @@
         }
 
         function getSimulatedToday() {
-            // Use explicit local time to avoid timezone issues
-            return new Date(2026, 0, 31); // Jan 31, 2026 (month is 0-indexed)
+            // Return actual current date
+            return new Date();
         }
 
         function formatDateLabel(date) {
@@ -2152,14 +2188,17 @@
                 if (leagueMatches.length === 0) continue;
 
                 const leagueId = getLeagueIdByName(competition);
-                const isUCL = leagueId === UCL_LEAGUE_ID || competition.toLowerCase().includes('champions');
+                const isUCL = leagueId === UCL_LEAGUE_ID || competition.toLowerCase().includes('champions league');
                 const flag = LEAGUE_FLAGS[leagueId] || '⚽';
 
                 html += `
-                    <div class="md-league ${isUCL ? 'ucl' : ''}" data-league="${competition}">
+                    <div class="md-league ${isUCL ? 'ucl' : ''}" data-league="${competition}" data-league-id="${leagueId}">
                         <div class="md-league-header" onclick="toggleLeagueCollapse(this.parentElement)">
                             <span class="md-league-flag">${flag}</span>
-                            <span class="md-league-name">${competition}</span>
+                            ${leagueId > 0
+                                ? `<a href="/league/${leagueId}" class="md-league-name-link" onclick="event.stopPropagation()">${competition}</a>`
+                                : `<span class="md-league-name">${competition}</span>`
+                            }
                             <span class="md-league-count">${leagueMatches.length}</span>
                             <span class="md-league-chevron">›</span>
                         </div>
@@ -3025,9 +3064,10 @@
                 <header class="pm-hero">
                     <div class="pm-hero-top">
                         <button class="pm-back-btn" onclick="closePreMatch()">←</button>
-                        <div class="pm-badge">
-                            ${flag} ${match.league || 'Match'} ${match.round ? '• ' + match.round : ''}
-                        </div>
+                        ${leagueId > 0
+                            ? `<a href="/league/${leagueId}" class="pm-badge pm-badge-link">${flag} ${match.league || 'Match'} ${match.round ? '• ' + match.round : ''}</a>`
+                            : `<div class="pm-badge">${flag} ${match.league || 'Match'} ${match.round ? '• ' + match.round : ''}</div>`
+                        }
                         <button class="pm-notify-btn">🔔</button>
                     </div>
 

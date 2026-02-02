@@ -932,6 +932,169 @@ def get_top_assists(
     }
 
 
+def get_top_yellow_cards(
+    season: int,
+    league_id: int = PREMIER_LEAGUE_ID,
+    limit: int = 20,
+    force_refresh: bool = False,
+) -> Dict[str, Any]:
+    """
+    Get players with most yellow cards for a league/season.
+    """
+    data = _make_request(
+        "players/topyellowcards",
+        {"league": league_id, "season": season},
+        force_refresh=force_refresh,
+    )
+
+    players = []
+    for item in data.get("response", [])[:limit]:
+        player = item.get("player", {})
+        stats = item.get("statistics", [{}])[0]
+        games = stats.get("games", {})
+        cards = stats.get("cards", {})
+
+        players.append({
+            "id": player.get("id"),
+            "name": player.get("name"),
+            "photo": player.get("photo"),
+            "team": {
+                "id": stats.get("team", {}).get("id"),
+                "name": stats.get("team", {}).get("name"),
+                "logo": stats.get("team", {}).get("logo"),
+            },
+            "position": games.get("position"),
+            "appearances": _safe_int(games.get("appearences")),
+            "yellow_cards": _safe_int(cards.get("yellow")),
+            "red_cards": _safe_int(cards.get("red")),
+        })
+
+    return {
+        "scope": "league_only",
+        "season": season,
+        "league_id": league_id,
+        "players": players,
+    }
+
+
+def get_top_red_cards(
+    season: int,
+    league_id: int = PREMIER_LEAGUE_ID,
+    limit: int = 20,
+    force_refresh: bool = False,
+) -> Dict[str, Any]:
+    """
+    Get players with most red cards for a league/season.
+    """
+    data = _make_request(
+        "players/topredcards",
+        {"league": league_id, "season": season},
+        force_refresh=force_refresh,
+    )
+
+    players = []
+    for item in data.get("response", [])[:limit]:
+        player = item.get("player", {})
+        stats = item.get("statistics", [{}])[0]
+        games = stats.get("games", {})
+        cards = stats.get("cards", {})
+
+        players.append({
+            "id": player.get("id"),
+            "name": player.get("name"),
+            "photo": player.get("photo"),
+            "team": {
+                "id": stats.get("team", {}).get("id"),
+                "name": stats.get("team", {}).get("name"),
+                "logo": stats.get("team", {}).get("logo"),
+            },
+            "position": games.get("position"),
+            "appearances": _safe_int(games.get("appearences")),
+            "yellow_cards": _safe_int(cards.get("yellow")),
+            "red_cards": _safe_int(cards.get("red")),
+        })
+
+    return {
+        "scope": "league_only",
+        "season": season,
+        "league_id": league_id,
+        "players": players,
+    }
+
+
+def get_top_scorers_detailed(
+    season: int,
+    league_id: int = PREMIER_LEAGUE_ID,
+    limit: int = 20,
+    force_refresh: bool = False,
+) -> Dict[str, Any]:
+    """
+    Get top scorers with full detailed statistics including shots, passes, tackles, etc.
+    """
+    data = _make_request(
+        "players/topscorers",
+        {"league": league_id, "season": season},
+        force_refresh=force_refresh,
+    )
+
+    players = []
+    for item in data.get("response", [])[:limit]:
+        player = item.get("player", {})
+        stats = item.get("statistics", [{}])[0]
+        games = stats.get("games", {})
+        goals_data = stats.get("goals", {})
+        cards = stats.get("cards", {})
+        shots = stats.get("shots", {})
+        passes = stats.get("passes", {})
+        tackles = stats.get("tackles", {})
+        duels = stats.get("duels", {})
+        dribbles = stats.get("dribbles", {})
+        fouls = stats.get("fouls", {})
+        penalty = stats.get("penalty", {})
+
+        players.append({
+            "id": player.get("id"),
+            "name": player.get("name"),
+            "photo": player.get("photo"),
+            "nationality": player.get("nationality"),
+            "team": {
+                "id": stats.get("team", {}).get("id"),
+                "name": stats.get("team", {}).get("name"),
+                "logo": stats.get("team", {}).get("logo"),
+            },
+            "position": games.get("position"),
+            "rating": games.get("rating"),
+            "appearances": _safe_int(games.get("appearences")),
+            "minutes": _safe_int(games.get("minutes")),
+            "goals": _safe_int(goals_data.get("total")),
+            "assists": _safe_int(goals_data.get("assists")),
+            "shots_total": _safe_int(shots.get("total")),
+            "shots_on": _safe_int(shots.get("on")),
+            "passes_total": _safe_int(passes.get("total")),
+            "key_passes": _safe_int(passes.get("key")),
+            "tackles": _safe_int(tackles.get("total")),
+            "blocks": _safe_int(tackles.get("blocks")),
+            "interceptions": _safe_int(tackles.get("interceptions")),
+            "duels_total": _safe_int(duels.get("total")),
+            "duels_won": _safe_int(duels.get("won")),
+            "dribbles_attempts": _safe_int(dribbles.get("attempts")),
+            "dribbles_success": _safe_int(dribbles.get("success")),
+            "fouls_drawn": _safe_int(fouls.get("drawn")),
+            "fouls_committed": _safe_int(fouls.get("committed")),
+            "yellow_cards": _safe_int(cards.get("yellow")),
+            "red_cards": _safe_int(cards.get("red")),
+            "penalty_scored": _safe_int(penalty.get("scored")),
+            "penalty_missed": _safe_int(penalty.get("missed")),
+        })
+
+    return {
+        "scope": "league_only",
+        "season": season,
+        "league_id": league_id,
+        "players": players,
+    }
+
+
 # ===== INJURIES =====
 
 def get_injuries_by_league(

@@ -281,7 +281,7 @@ def api_config():
             "id": league_id,
             "name": name,
         }
-        for league_id, name in api_client.SUPPORTED_LEAGUES.items()
+        for league_id, name in sportmonks_client.SUPPORTED_LEAGUES.items()
     ]
     return {
         "current_season": settings.current_season,
@@ -4188,6 +4188,9 @@ def match_center(request: Request, fixture_id: int):
         # Check for xG data (premium feature)
         xg_data = sportmonks_client.get_xg_data(fixture_id)
 
+        # Get trends data for momentum chart
+        trends_data = sportmonks_client.get_trends_data(fixture_id)
+
         # Check if we have official lineups, otherwise try predicted XI
         is_predicted_lineup = False
         lineups = match.get("lineups", {})
@@ -4240,6 +4243,7 @@ def match_center(request: Request, fixture_id: int):
                 "momentum": momentum,
                 "h2h": h2h,
                 "xg": xg_data,
+                "trends": trends_data,
                 "is_predicted_lineup": is_predicted_lineup,
             }
         )
@@ -4273,6 +4277,9 @@ def match_live_update(fixture_id: int, include_ratings: bool = Query(False)):
         # Check for xG (premium)
         xg_data = sportmonks_client.get_xg_data(fixture_id)
 
+        # Get trends data for momentum chart
+        trends_data = sportmonks_client.get_trends_data(fixture_id)
+
         # Check if official lineups are now available
         lineups = match.get("lineups", {})
         has_official_lineups = bool(lineups.get("home") or lineups.get("away"))
@@ -4285,6 +4292,7 @@ def match_live_update(fixture_id: int, include_ratings: bool = Query(False)):
             "state": match.get("state"),
             "momentum": momentum,
             "xg": xg_data,
+            "trends": trends_data,
             "events": match.get("events", [])[:5],  # Last 5 events
             "statistics": match.get("statistics", {}),
             "has_official_lineups": has_official_lineups,  # For replacing predicted XI
@@ -4399,6 +4407,352 @@ def sportmonks_find_team(
         return {"found": False, "teams": [], "message": "No teams found"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
+# LEAGUE HUB - Sportmonks Integration
+# =============================================================================
+
+# League metadata (without flags/colors per user request)
+# Sportmonks IDs: PL=8, Bundesliga=82, La Liga=564, Serie A=384, Ligue 1=301
+# API-Football IDs: PL=39, Bundesliga=78, La Liga=140, Serie A=135, Ligue 1=61
+LEAGUE_META = {
+    # Sportmonks IDs (primary - used by dashboard links)
+    8: {"name": "Premier League", "country": "England", "logo": "⚽", "apifootball_id": 39},
+    82: {"name": "Bundesliga", "country": "Germany", "logo": "⚽", "apifootball_id": 78},
+    564: {"name": "La Liga", "country": "Spain", "logo": "⚽", "apifootball_id": 140},
+    384: {"name": "Serie A", "country": "Italy", "logo": "⚽", "apifootball_id": 135},
+    301: {"name": "Ligue 1", "country": "France", "logo": "⚽", "apifootball_id": 61},
+    2: {"name": "Champions League", "country": "Europe", "logo": "🏆", "apifootball_id": 2},
+    # API-Football IDs (for backwards compatibility)
+    39: {"name": "Premier League", "country": "England", "logo": "⚽", "sportmonks_id": 8, "apifootball_id": 39},
+    78: {"name": "Bundesliga", "country": "Germany", "logo": "⚽", "sportmonks_id": 82, "apifootball_id": 78},
+    140: {"name": "La Liga", "country": "Spain", "logo": "⚽", "sportmonks_id": 564, "apifootball_id": 140},
+    135: {"name": "Serie A", "country": "Italy", "logo": "⚽", "sportmonks_id": 384, "apifootball_id": 135},
+    61: {"name": "Ligue 1", "country": "France", "logo": "⚽", "sportmonks_id": 301, "apifootball_id": 61},
+}
+
+# Zone classification (keyed by Sportmonks ID)
+LEAGUE_ZONES = {
+    8: {"ucl": [1, 2, 3, 4], "uel": [5], "conf": [6], "rel": [18, 19, 20]},  # Premier League
+    82: {"ucl": [1, 2, 3, 4], "uel": [5], "conf": [6], "rel": [17, 18]},  # Bundesliga
+    564: {"ucl": [1, 2, 3, 4], "uel": [5], "conf": [6], "rel": [18, 19, 20]},  # La Liga
+    384: {"ucl": [1, 2, 3, 4], "uel": [5], "conf": [6], "rel": [18, 19, 20]},  # Serie A
+    301: {"ucl": [1, 2, 3], "uel": [4], "conf": [5], "rel": [17, 18]},  # Ligue 1
+    2: {},  # Champions League has no promotion/relegation zones
+    # API-Football IDs (backwards compatibility)
+    39: {"ucl": [1, 2, 3, 4], "uel": [5], "conf": [6], "rel": [18, 19, 20]},
+    78: {"ucl": [1, 2, 3, 4], "uel": [5], "conf": [6], "rel": [17, 18]},
+    140: {"ucl": [1, 2, 3, 4], "uel": [5], "conf": [6], "rel": [18, 19, 20]},
+    135: {"ucl": [1, 2, 3, 4], "uel": [5], "conf": [6], "rel": [18, 19, 20]},
+    61: {"ucl": [1, 2, 3], "uel": [4], "conf": [5], "rel": [17, 18]},
+}
+
+
+def get_initials(name: str) -> str:
+    """Get initials from a player name."""
+    if not name:
+        return "??"
+    parts = name.split()
+    if len(parts) >= 2:
+        return (parts[0][0] + parts[-1][0]).upper()
+    return name[:2].upper()
+
+
+def add_zones_to_standings(standings: list, league_id: int) -> list:
+    """Add zone classification to each standing entry."""
+    zones = LEAGUE_ZONES.get(league_id, {})
+    for team in standings:
+        pos = team.get("position", 0)
+        team["zone"] = ""
+        for zone_name, positions in zones.items():
+            if pos in positions:
+                team["zone"] = zone_name
+                break
+        # Convert form string to list (e.g., "WWDLW" -> ["W", "W", "D", "L", "W"])
+        form_str = team.get("form", "") or ""
+        team["form_list"] = list(form_str[:5])
+        # Calculate movement icon
+        team["movement"] = "same"
+        team["movement_icon"] = "—"
+        # Generate team short code
+        team_name = team.get("team_name", "")
+        team["team_short"] = team_name[:3].upper() if team_name else "???"
+    return standings
+
+
+def calculate_form_points(form_string: str) -> int:
+    """Calculate points from last 5 form (W=3, D=1, L=0)."""
+    points = 0
+    for char in (form_string or "")[:5]:
+        if char.upper() == 'W':
+            points += 3
+        elif char.upper() == 'D':
+            points += 1
+    return points
+
+
+def sort_by_form(standings: list) -> list:
+    """Sort standings by recent form points."""
+    for team in standings:
+        team["form_points"] = calculate_form_points(team.get("form", ""))
+    return sorted(standings, key=lambda t: t["form_points"], reverse=True)
+
+
+@app.get("/league/{league_id}", response_class=HTMLResponse)
+def league_hub(request: Request, league_id: int):
+    """
+    League Hub page - powered by Sportmonks API.
+    Shows overview, standings, fixtures, and stats.
+    """
+    try:
+        # Get league metadata
+        league_meta = LEAGUE_META.get(league_id)
+        if not league_meta:
+            return HTMLResponse(
+                content="<h1>League not found</h1><p><a href='/'>← Back to Dashboard</a></p>",
+                status_code=404
+            )
+
+        # Determine which IDs to use for each API
+        # If we got an API-Football ID, map to Sportmonks ID for standings/fixtures
+        sportmonks_league_id = league_meta.get("sportmonks_id", league_id)
+        apifootball_league_id = league_meta.get("apifootball_id", league_id)
+
+        # Fetch data in parallel would be ideal, but for simplicity we'll do sequential
+        # Get standings from Sportmonks (use Sportmonks league ID)
+        standings = sportmonks_client.get_standings(league_id=sportmonks_league_id)
+
+        # Process standings
+        standings_with_zones = add_zones_to_standings(standings, sportmonks_league_id)
+
+        # Create form table (sorted by recent form)
+        form_table = sort_by_form([dict(team) for team in standings_with_zones])
+
+        # Get top scorers with detailed stats from API-Football
+        scorers_detailed = api_client.get_top_scorers_detailed(
+            season=settings.current_season,
+            league_id=apifootball_league_id,
+            limit=20
+        )
+        assists_data = api_client.get_top_assists(
+            season=settings.current_season,
+            league_id=apifootball_league_id,
+            limit=20
+        )
+        yellow_cards_data = api_client.get_top_yellow_cards(
+            season=settings.current_season,
+            league_id=apifootball_league_id,
+            limit=20
+        )
+        red_cards_data = api_client.get_top_red_cards(
+            season=settings.current_season,
+            league_id=apifootball_league_id,
+            limit=20
+        )
+
+        # Process scorers (use detailed data)
+        scorers = []
+        for player in scorers_detailed.get("players", []):
+            scorers.append({
+                "id": player.get("id"),
+                "name": player.get("name"),
+                "photo": player.get("photo"),
+                "initials": get_initials(player.get("name", "")),
+                "team_name": player.get("team", {}).get("name", ""),
+                "team_logo": player.get("team", {}).get("logo", ""),
+                "goals": player.get("goals", 0),
+                "assists": player.get("assists", 0) or 0,
+                "rating": player.get("rating"),
+                "appearances": player.get("appearances", 0),
+                "minutes": player.get("minutes", 0),
+                "shots_total": player.get("shots_total", 0),
+                "shots_on": player.get("shots_on", 0),
+                "key_passes": player.get("key_passes", 0),
+                "tackles": player.get("tackles", 0),
+                "interceptions": player.get("interceptions", 0),
+                "duels_won": player.get("duels_won", 0),
+                "dribbles_success": player.get("dribbles_success", 0),
+            })
+
+        # Process assists
+        assists = []
+        for player in assists_data.get("players", []):
+            assists.append({
+                "id": player.get("id"),
+                "name": player.get("name"),
+                "photo": player.get("photo"),
+                "initials": get_initials(player.get("name", "")),
+                "team_name": player.get("team", {}).get("name", ""),
+                "team_logo": player.get("team", {}).get("logo", ""),
+                "goals": player.get("goals", 0) or 0,
+                "assists": player.get("assists", 0),
+            })
+
+        # Process yellow cards
+        yellow_cards = []
+        for player in yellow_cards_data.get("players", []):
+            yellow_cards.append({
+                "id": player.get("id"),
+                "name": player.get("name"),
+                "photo": player.get("photo"),
+                "initials": get_initials(player.get("name", "")),
+                "team_name": player.get("team", {}).get("name", ""),
+                "team_logo": player.get("team", {}).get("logo", ""),
+                "yellow_cards": player.get("yellow_cards", 0),
+                "appearances": player.get("appearances", 0),
+            })
+
+        # Process red cards
+        red_cards = []
+        for player in red_cards_data.get("players", []):
+            red_cards.append({
+                "id": player.get("id"),
+                "name": player.get("name"),
+                "photo": player.get("photo"),
+                "initials": get_initials(player.get("name", "")),
+                "team_name": player.get("team", {}).get("name", ""),
+                "team_logo": player.get("team", {}).get("logo", ""),
+                "red_cards": player.get("red_cards", 0),
+                "yellow_cards": player.get("yellow_cards", 0),
+            })
+
+        # Create G+A (Goals + Assists) combined leaderboard
+        player_contributions = {}
+        for player in scorers:
+            pid = player.get("id") or player.get("name")
+            if pid:
+                player_contributions[pid] = {
+                    **player,
+                    "g_plus_a": (player.get("goals") or 0) + (player.get("assists") or 0)
+                }
+        for player in assists:
+            pid = player.get("id") or player.get("name")
+            if pid:
+                if pid in player_contributions:
+                    existing_g_plus_a = player_contributions[pid]["g_plus_a"]
+                    new_g_plus_a = (player.get("goals") or 0) + (player.get("assists") or 0)
+                    if new_g_plus_a > existing_g_plus_a:
+                        player_contributions[pid] = {
+                            **player,
+                            "g_plus_a": new_g_plus_a
+                        }
+                else:
+                    player_contributions[pid] = {
+                        **player,
+                        "g_plus_a": (player.get("goals") or 0) + (player.get("assists") or 0)
+                    }
+        g_plus_a = sorted(
+            player_contributions.values(),
+            key=lambda x: x["g_plus_a"],
+            reverse=True
+        )[:20]
+
+        # Create key passes leaderboard from scorers detailed data
+        key_passes = sorted(
+            [p for p in scorers if p.get("key_passes", 0) > 0],
+            key=lambda x: x.get("key_passes", 0),
+            reverse=True
+        )[:20]
+
+        # Create tackles leaderboard from scorers detailed data
+        top_tackles = sorted(
+            [p for p in scorers if p.get("tackles", 0) > 0],
+            key=lambda x: x.get("tackles", 0),
+            reverse=True
+        )[:20]
+
+        # Create interceptions leaderboard
+        top_interceptions = sorted(
+            [p for p in scorers if p.get("interceptions", 0) > 0],
+            key=lambda x: x.get("interceptions", 0),
+            reverse=True
+        )[:20]
+
+        # Create duels won leaderboard
+        top_duels = sorted(
+            [p for p in scorers if p.get("duels_won", 0) > 0],
+            key=lambda x: x.get("duels_won", 0),
+            reverse=True
+        )[:20]
+
+        # Create dribbles leaderboard
+        top_dribbles = sorted(
+            [p for p in scorers if p.get("dribbles_success", 0) > 0],
+            key=lambda x: x.get("dribbles_success", 0),
+            reverse=True
+        )[:20]
+
+        # Calculate clean sheets from standings (teams with fewest goals against per game)
+        clean_sheets = []
+        for team in standings_with_zones:
+            played = team.get("played") or 1
+            goals_against = team.get("goals_against") or 0
+            # Estimate clean sheets based on defensive record
+            estimated_cs = max(0, played - int(goals_against / 1.5)) if played > 0 else 0
+            clean_sheets.append({
+                "team_id": team.get("team_id"),
+                "team_name": team.get("team_name"),
+                "team_short": team.get("team_short"),
+                "team_logo": team.get("team_logo"),
+                "clean_sheets": estimated_cs,
+                "goals_against": goals_against,
+            })
+        clean_sheets = sorted(clean_sheets, key=lambda x: (-x["clean_sheets"], x["goals_against"]))
+
+        # Best defense (fewest goals against)
+        best_defense = sorted(
+            [t for t in standings_with_zones if t.get("played", 0) > 0],
+            key=lambda x: x.get("goals_against", 999)
+        )[:10]
+
+        # Get fixtures for the league (use Sportmonks league ID)
+        fixtures_data = sportmonks_client.get_league_fixtures(league_id=sportmonks_league_id)
+        fixtures = fixtures_data.get("fixtures", [])
+        recent_fixtures = fixtures_data.get("recent_fixtures", [])
+        current_round = fixtures_data.get("current_round")
+        fixtures_by_round = fixtures_data.get("fixtures_by_round", {})
+        available_rounds = fixtures_data.get("available_rounds", [])
+
+        # Check if this league has zones
+        has_zones = bool(LEAGUE_ZONES.get(sportmonks_league_id, {}))
+
+        return templates.TemplateResponse(
+            "league-hub.html",
+            {
+                "request": request,
+                "league": league_meta,
+                "league_id": league_id,
+                "season": settings.current_season,
+                "standings": standings_with_zones,
+                "scorers": scorers,
+                "assists": assists,
+                "form_table": form_table,
+                "has_zones": has_zones,
+                "g_plus_a": g_plus_a,
+                "clean_sheets": clean_sheets,
+                "best_defense": best_defense,
+                "yellow_cards": yellow_cards,
+                "red_cards": red_cards,
+                "key_passes": key_passes,
+                "top_tackles": top_tackles,
+                "top_interceptions": top_interceptions,
+                "top_duels": top_duels,
+                "top_dribbles": top_dribbles,
+                "fixtures": fixtures,
+                "recent_fixtures": recent_fixtures,
+                "current_round": current_round,
+                "fixtures_by_round": fixtures_by_round,
+                "available_rounds": available_rounds,
+            }
+        )
+    except Exception as e:
+        import logging
+        logging.error(f"League hub error for league_id={league_id}: {e}", exc_info=True)
+        return HTMLResponse(
+            content=f"<h1>Error loading league</h1><p>{type(e).__name__}: {str(e)}</p><p><a href='/'>← Back</a></p>",
+            status_code=500
+        )
 
 
 # =============================================================================

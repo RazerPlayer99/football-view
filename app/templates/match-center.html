@@ -300,6 +300,16 @@
             gap: 5px;
         }
 
+        .match-info-link {
+            text-decoration: none;
+            color: inherit;
+            transition: color 0.15s;
+        }
+
+        .match-info-link:hover {
+            color: var(--accent-purple);
+        }
+
         /* ========== CONTENT ========== */
         .content {
             padding: 20px;
@@ -408,12 +418,176 @@
             text-transform: uppercase;
         }
 
-        /* xG placeholder - hidden until feature enabled */
-        .xg-stat {
-            display: none;
+        /* ========== MOMENTUM WAVE CHART ========== */
+        .momentum-chart-container {
+            height: 140px;
+            position: relative;
+            margin-bottom: 16px;
+            background: var(--bg-elevated);
+            border-radius: 12px;
+            overflow: hidden;
+            padding: 8px 0;
         }
-        .xg-stat.enabled {
+        .momentum-chart-wrapper {
+            position: relative;
+            height: 100px;
+        }
+        .momentum-chart {
+            width: 100%;
+            height: 100%;
+        }
+        .momentum-chart .home-area {
+            fill: var(--home-primary);
+            opacity: 0.7;
+        }
+        .momentum-chart .away-area {
+            fill: var(--away-primary);
+            opacity: 0.7;
+        }
+        .momentum-chart .center-line {
+            stroke: rgba(255,255,255,0.2);
+            stroke-width: 1;
+        }
+        .momentum-team-labels {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 12px;
+            margin-bottom: 4px;
+        }
+        .momentum-team-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .momentum-team-label.home { color: var(--home-primary); }
+        .momentum-team-label.away { color: var(--away-primary); }
+        .momentum-timeline {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text-muted);
+            padding: 4px 12px 0;
+        }
+        .momentum-no-data {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* ========== XG DROPDOWN SECTION ========== */
+        .xg-section {
+            margin-top: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+        .xg-dropdown {
+            background: var(--bg-elevated);
+            border-radius: 12px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+        }
+        .xg-header {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .xg-header:hover {
+            background: rgba(255,255,255,0.03);
+        }
+        .xg-header-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            min-width: 100px;
+        }
+        .xg-header-values {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            gap: 12px;
+        }
+        .xg-value {
+            font-size: 15px;
+            font-weight: 700;
+            min-width: 45px;
+        }
+        .xg-value.home { color: var(--home-primary); }
+        .xg-value.away { color: var(--away-primary); text-align: right; }
+        .xg-bar-container {
+            flex: 1;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+            background: var(--bg-glass);
+        }
+        .xg-bar-home {
+            background: var(--home-primary);
+            transition: width 0.3s;
+        }
+        .xg-bar-away {
+            background: var(--away-primary);
+            transition: width 0.3s;
+        }
+        .xg-toggle-icon {
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-left: 12px;
+            transition: transform 0.2s;
+        }
+        .xg-dropdown.expanded .xg-toggle-icon {
+            transform: rotate(180deg);
+        }
+        .xg-dropdown-content {
+            display: none;
+            padding: 0 16px 16px;
+        }
+        .xg-dropdown.expanded .xg-dropdown-content {
             display: block;
+        }
+        .xg-stat-row {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .xg-stat-row:last-child {
+            border-bottom: none;
+        }
+        .xg-stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            min-width: 80px;
+        }
+        .xg-stat-values {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            gap: 12px;
+        }
+        .xg-stat-value {
+            font-size: 14px;
+            font-weight: 600;
+            min-width: 45px;
+        }
+        .xg-stat-value.home { color: var(--home-primary); }
+        .xg-stat-value.away { color: var(--away-primary); text-align: right; }
+        .xg-stat-bar {
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            overflow: hidden;
+            display: flex;
+            background: var(--bg-glass);
         }
 
         /* ========== KEY EVENTS TIMELINE ========== */
@@ -1086,7 +1260,11 @@
             </div>
 
             <div class="match-info">
+                {% if match.league.id %}
+                <a href="/league/{{ match.league.id }}" class="match-info-item match-info-link">🏆 {{ match.league.name or 'League' }}</a>
+                {% else %}
                 <span class="match-info-item">🏆 {{ match.league.name or 'League' }}</span>
+                {% endif %}
                 {% if match.venue %}
                 <span class="match-info-item">📍 {{ match.venue.name }}</span>
                 {% if match.venue.capacity %}
@@ -1099,50 +1277,223 @@
 
     <!-- Content -->
     <main class="content">
-        <!-- Match Pressure / Momentum (using attacks as fallback) -->
+        <!-- Match Momentum Chart -->
         <section class="card" id="momentumSection">
             <div class="section-header">
-                <span class="section-title">Match Pressure</span>
+                <span class="section-title">Match Momentum</span>
                 <span class="section-link" id="dominantTeam">
                     {% if momentum.dominant == 'home' %}{{ match.home_team.name }} Dominant
                     {% elif momentum.dominant == 'away' %}{{ match.away_team.name }} Dominant
                     {% else %}Balanced{% endif %}
                 </span>
             </div>
-            <div class="momentum-section">
-                <div class="momentum-bar-container">
-                    <div class="momentum-labels">
-                        <span class="momentum-label home" id="homeMomentum">{{ momentum.home_percent }}%</span>
-                        <span class="momentum-label away" id="awayMomentum">{{ momentum.away_percent }}%</span>
+
+            <!-- Momentum Wave Chart -->
+            <div class="momentum-chart-container" id="momentumChartContainer">
+                {% if trends and trends.minutes %}
+                <!-- Team labels -->
+                <div class="momentum-team-labels">
+                    <span class="momentum-team-label home">{{ match.home_team.short_code or match.home_team.name[:3]|upper }}</span>
+                    <span class="momentum-team-label away">{{ match.away_team.short_code or match.away_team.name[:3]|upper }}</span>
+                </div>
+                <div class="momentum-chart-wrapper">
+                    <svg class="momentum-chart" id="momentumChart" viewBox="0 0 400 100" preserveAspectRatio="none">
+                        <!-- Center line at 50% -->
+                        <line class="center-line" x1="0" y1="50" x2="400" y2="50" />
+                        <!-- Home area (above center) - blue -->
+                        <path class="home-area" id="homeAreaPath" d="" />
+                        <!-- Away area (below center) - red -->
+                        <path class="away-area" id="awayAreaPath" d="" />
+                    </svg>
+                </div>
+                <div class="momentum-timeline">
+                    <span>0'</span>
+                    <span>15'</span>
+                    <span>30'</span>
+                    <span>45'</span>
+                    <span>60'</span>
+                    <span>75'</span>
+                    <span>90'</span>
+                </div>
+                {% else %}
+                <div class="momentum-no-data">
+                    <span>Momentum data available during live matches</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- xG Stats Dropdown -->
+            <div class="xg-section">
+                <!-- Main xG Dropdown -->
+                <div class="xg-dropdown" id="xgDropdown">
+                    <div class="xg-header" onclick="toggleXgDropdown('xgDropdown')">
+                        <span class="xg-header-label">xG</span>
+                        <div class="xg-header-values">
+                            <span class="xg-value home" id="homeXgMain">{{ "%.2f"|format(xg.home_xg) if xg else '-' }}</span>
+                            <div class="xg-bar-container">
+                                {% set home_xg = xg.home_xg if xg else 0 %}
+                                {% set away_xg = xg.away_xg if xg else 0 %}
+                                {% set total_xg = home_xg + away_xg %}
+                                {% set home_pct = (home_xg / total_xg * 100) if total_xg > 0 else 50 %}
+                                <div class="xg-bar-home" style="width: {{ home_pct }}%;"></div>
+                                <div class="xg-bar-away" style="width: {{ 100 - home_pct }}%;"></div>
+                            </div>
+                            <span class="xg-value away" id="awayXgMain">{{ "%.2f"|format(xg.away_xg) if xg else '-' }}</span>
+                        </div>
+                        <span class="xg-toggle-icon">▼</span>
                     </div>
-                    <div class="momentum-bar">
-                        <div class="momentum-fill home" id="homeMomentumBar" style="width: {{ momentum.home_percent }}%;"></div>
-                        <div class="momentum-fill away" id="awayMomentumBar" style="width: {{ momentum.away_percent }}%;"></div>
+                    <div class="xg-dropdown-content">
+                        <!-- xGoT -->
+                        <div class="xg-stat-row">
+                            <span class="xg-stat-label">xGoT</span>
+                            <div class="xg-stat-values">
+                                <span class="xg-stat-value home">{{ "%.2f"|format(xg.home_xgot) if xg else '-' }}</span>
+                                <div class="xg-stat-bar">
+                                    {% set home_xgot = xg.home_xgot if xg else 0 %}
+                                    {% set away_xgot = xg.away_xgot if xg else 0 %}
+                                    {% set total_xgot = home_xgot + away_xgot %}
+                                    {% set home_xgot_pct = (home_xgot / total_xgot * 100) if total_xgot > 0 else 50 %}
+                                    <div class="xg-bar-home" style="width: {{ home_xgot_pct }}%;"></div>
+                                    <div class="xg-bar-away" style="width: {{ 100 - home_xgot_pct }}%;"></div>
+                                </div>
+                                <span class="xg-stat-value away">{{ "%.2f"|format(xg.away_xgot) if xg else '-' }}</span>
+                            </div>
+                        </div>
+                        <!-- npxG -->
+                        <div class="xg-stat-row">
+                            <span class="xg-stat-label">npxG</span>
+                            <div class="xg-stat-values">
+                                <span class="xg-stat-value home">{{ "%.2f"|format(xg.home_npxg) if xg else '-' }}</span>
+                                <div class="xg-stat-bar">
+                                    {% set home_npxg = xg.home_npxg if xg else 0 %}
+                                    {% set away_npxg = xg.away_npxg if xg else 0 %}
+                                    {% set total_npxg = home_npxg + away_npxg %}
+                                    {% set home_npxg_pct = (home_npxg / total_npxg * 100) if total_npxg > 0 else 50 %}
+                                    <div class="xg-bar-home" style="width: {{ home_npxg_pct }}%;"></div>
+                                    <div class="xg-bar-away" style="width: {{ 100 - home_npxg_pct }}%;"></div>
+                                </div>
+                                <span class="xg-stat-value away">{{ "%.2f"|format(xg.away_npxg) if xg else '-' }}</span>
+                            </div>
+                        </div>
+                        <!-- xGP (xG For) -->
+                        <div class="xg-stat-row">
+                            <span class="xg-stat-label">xGP</span>
+                            <div class="xg-stat-values">
+                                <span class="xg-stat-value home">{{ "%.2f"|format(xg.home_xgp) if xg else '-' }}</span>
+                                <div class="xg-stat-bar">
+                                    {% set home_xgp = xg.home_xgp if xg else 0 %}
+                                    {% set away_xgp = xg.away_xgp if xg else 0 %}
+                                    {% set total_xgp = home_xgp + away_xgp %}
+                                    {% set home_xgp_pct = (home_xgp / total_xgp * 100) if total_xgp > 0 else 50 %}
+                                    <div class="xg-bar-home" style="width: {{ home_xgp_pct }}%;"></div>
+                                    <div class="xg-bar-away" style="width: {{ 100 - home_xgp_pct }}%;"></div>
+                                </div>
+                                <span class="xg-stat-value away">{{ "%.2f"|format(xg.away_xgp) if xg else '-' }}</span>
+                            </div>
+                        </div>
+                        <!-- xGA (xG Against) -->
+                        <div class="xg-stat-row">
+                            <span class="xg-stat-label">xGA</span>
+                            <div class="xg-stat-values">
+                                <span class="xg-stat-value home">{{ "%.2f"|format(xg.home_xga) if xg else '-' }}</span>
+                                <div class="xg-stat-bar">
+                                    {% set home_xga = xg.home_xga if xg else 0 %}
+                                    {% set away_xga = xg.away_xga if xg else 0 %}
+                                    {% set total_xga = home_xga + away_xga %}
+                                    {% set home_xga_pct = (home_xga / total_xga * 100) if total_xga > 0 else 50 %}
+                                    <div class="xg-bar-home" style="width: {{ home_xga_pct }}%;"></div>
+                                    <div class="xg-bar-away" style="width: {{ 100 - home_xga_pct }}%;"></div>
+                                </div>
+                                <span class="xg-stat-value away">{{ "%.2f"|format(xg.away_xga) if xg else '-' }}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="momentum-stats">
-                    <!-- xG stats - hidden until premium feature enabled -->
-                    <div class="momentum-stat xg-stat" id="homeXgStat">
-                        <div class="momentum-stat-value" id="homeXg">-</div>
-                        <div class="momentum-stat-label">xG Home</div>
+
+                <!-- Chance Quality Dropdown -->
+                <div class="xg-dropdown" id="chanceQualityDropdown">
+                    <div class="xg-header" onclick="toggleXgDropdown('chanceQualityDropdown')">
+                        <span class="xg-header-label">Chance Quality</span>
+                        <div class="xg-header-values">
+                            <span class="xg-value home" id="homeChanceMain">{{ "%.2f"|format(xg.home_xgsp + xg.home_xgop) if xg else '-' }}</span>
+                            <div class="xg-bar-container">
+                                {% set home_cq = (xg.home_xgsp + xg.home_xgop) if xg else 0 %}
+                                {% set away_cq = (xg.away_xgsp + xg.away_xgop) if xg else 0 %}
+                                {% set total_cq = home_cq + away_cq %}
+                                {% set home_cq_pct = (home_cq / total_cq * 100) if total_cq > 0 else 50 %}
+                                <div class="xg-bar-home" style="width: {{ home_cq_pct }}%;"></div>
+                                <div class="xg-bar-away" style="width: {{ 100 - home_cq_pct }}%;"></div>
+                            </div>
+                            <span class="xg-value away" id="awayChanceMain">{{ "%.2f"|format(xg.away_xgsp + xg.away_xgop) if xg else '-' }}</span>
+                        </div>
+                        <span class="xg-toggle-icon">▼</span>
                     </div>
-                    <div class="momentum-stat xg-stat" id="awayXgStat">
-                        <div class="momentum-stat-value" id="awayXg">-</div>
-                        <div class="momentum-stat-label">xG Away</div>
+                    <div class="xg-dropdown-content">
+                        <!-- xGSP (Set Piece) -->
+                        <div class="xg-stat-row">
+                            <span class="xg-stat-label">xGSP</span>
+                            <div class="xg-stat-values">
+                                <span class="xg-stat-value home">{{ "%.2f"|format(xg.home_xgsp) if xg else '-' }}</span>
+                                <div class="xg-stat-bar">
+                                    {% set home_xgsp = xg.home_xgsp if xg else 0 %}
+                                    {% set away_xgsp = xg.away_xgsp if xg else 0 %}
+                                    {% set total_xgsp = home_xgsp + away_xgsp %}
+                                    {% set home_xgsp_pct = (home_xgsp / total_xgsp * 100) if total_xgsp > 0 else 50 %}
+                                    <div class="xg-bar-home" style="width: {{ home_xgsp_pct }}%;"></div>
+                                    <div class="xg-bar-away" style="width: {{ 100 - home_xgsp_pct }}%;"></div>
+                                </div>
+                                <span class="xg-stat-value away">{{ "%.2f"|format(xg.away_xgsp) if xg else '-' }}</span>
+                            </div>
+                        </div>
+                        <!-- xGOP (Open Play) -->
+                        <div class="xg-stat-row">
+                            <span class="xg-stat-label">xGOP</span>
+                            <div class="xg-stat-values">
+                                <span class="xg-stat-value home">{{ "%.2f"|format(xg.home_xgop) if xg else '-' }}</span>
+                                <div class="xg-stat-bar">
+                                    {% set home_xgop = xg.home_xgop if xg else 0 %}
+                                    {% set away_xgop = xg.away_xgop if xg else 0 %}
+                                    {% set total_xgop = home_xgop + away_xgop %}
+                                    {% set home_xgop_pct = (home_xgop / total_xgop * 100) if total_xgop > 0 else 50 %}
+                                    <div class="xg-bar-home" style="width: {{ home_xgop_pct }}%;"></div>
+                                    <div class="xg-bar-away" style="width: {{ 100 - home_xgop_pct }}%;"></div>
+                                </div>
+                                <span class="xg-stat-value away">{{ "%.2f"|format(xg.away_xgop) if xg else '-' }}</span>
+                            </div>
+                        </div>
+                        <!-- xGC (Conceded) -->
+                        <div class="xg-stat-row">
+                            <span class="xg-stat-label">xGC</span>
+                            <div class="xg-stat-values">
+                                <span class="xg-stat-value home">{{ "%.2f"|format(xg.home_xgc) if xg else '-' }}</span>
+                                <div class="xg-stat-bar">
+                                    {% set home_xgc = xg.home_xgc if xg else 0 %}
+                                    {% set away_xgc = xg.away_xgc if xg else 0 %}
+                                    {% set total_xgc = home_xgc + away_xgc %}
+                                    {% set home_xgc_pct = (home_xgc / total_xgc * 100) if total_xgc > 0 else 50 %}
+                                    <div class="xg-bar-home" style="width: {{ home_xgc_pct }}%;"></div>
+                                    <div class="xg-bar-away" style="width: {{ 100 - home_xgc_pct }}%;"></div>
+                                </div>
+                                <span class="xg-stat-value away">{{ "%.2f"|format(xg.away_xgc) if xg else '-' }}</span>
+                            </div>
+                        </div>
                     </div>
-                    <!-- Attacks stats - shown as fallback -->
-                    <div class="momentum-stat">
-                        <div class="momentum-stat-value" id="homeAttacks">{{ momentum.home_attacks or 0 }}</div>
-                        <div class="momentum-stat-label">Attacks</div>
-                    </div>
-                    <div class="momentum-stat">
-                        <div class="momentum-stat-value" id="dangerousAttacks">{{ (momentum.home_dangerous or 0) + (momentum.away_dangerous or 0) }}</div>
-                        <div class="momentum-stat-label">Dangerous</div>
-                    </div>
-                    <div class="momentum-stat">
-                        <div class="momentum-stat-value" id="awayAttacks">{{ momentum.away_attacks or 0 }}</div>
-                        <div class="momentum-stat-label">Attacks</div>
-                    </div>
+                </div>
+            </div>
+
+            <!-- Attack Stats (fallback when no trends) -->
+            <div class="momentum-stats" style="margin-top: 16px;">
+                <div class="momentum-stat">
+                    <div class="momentum-stat-value" id="homeAttacks">{{ momentum.home_attacks or 0 }}</div>
+                    <div class="momentum-stat-label">Attacks</div>
+                </div>
+                <div class="momentum-stat">
+                    <div class="momentum-stat-value" id="dangerousAttacks">{{ (momentum.home_dangerous or 0) + (momentum.away_dangerous or 0) }}</div>
+                    <div class="momentum-stat-label">Dangerous</div>
+                </div>
+                <div class="momentum-stat">
+                    <div class="momentum-stat-value" id="awayAttacks">{{ momentum.away_attacks or 0 }}</div>
+                    <div class="momentum-stat-label">Attacks</div>
                 </div>
             </div>
         </section>
@@ -1821,7 +2172,142 @@
 
             if (homeLineup) organizeFormation(homeLineup, false);
             if (awayLineup) organizeFormation(awayLineup, true);
+
+            // Initialize momentum chart if data exists
+            initMomentumChart();
         });
+
+        // =============================================================================
+        // XG DROPDOWN TOGGLE
+        // =============================================================================
+        function toggleXgDropdown(dropdownId) {
+            const dropdown = document.getElementById(dropdownId);
+            if (dropdown) {
+                dropdown.classList.toggle('expanded');
+            }
+        }
+
+        // =============================================================================
+        // MOMENTUM WAVE CHART
+        // =============================================================================
+        const TRENDS_DATA = {{ trends | tojson | safe if trends else 'null' }};
+
+        function initMomentumChart() {
+            if (!TRENDS_DATA || !TRENDS_DATA.minutes || TRENDS_DATA.minutes.length === 0) {
+                return;
+            }
+            drawMomentumChart(TRENDS_DATA.minutes);
+        }
+
+        function drawMomentumChart(minutes) {
+            const svg = document.getElementById('momentumChart');
+            if (!svg || minutes.length === 0) return;
+
+            const homeAreaPath = document.getElementById('homeAreaPath');
+            const awayAreaPath = document.getElementById('awayAreaPath');
+            if (!homeAreaPath || !awayAreaPath) return;
+
+            const width = 400;
+            const height = 100;
+            const centerY = height / 2;
+
+            // Determine max minute for scaling
+            const maxMinute = Math.max(90, ...minutes.map(m => m.minute));
+
+            // Generate points for home area (above center line)
+            // and away area (below center line)
+            let homePoints = [];
+            let awayPoints = [];
+
+            minutes.forEach((m, i) => {
+                const x = (m.minute / maxMinute) * width;
+                // Home momentum: 50-100 maps to 0-50 (above center)
+                // So if home_momentum = 70, deviation = 20, y = 50 - 20 = 30
+                const homeDeviation = (m.home_momentum - 50) * (centerY / 50);
+                const homeY = centerY - homeDeviation;
+
+                // Away momentum: 50-100 maps to 50-100 (below center)
+                const awayDeviation = (m.away_momentum - 50) * (centerY / 50);
+                const awayY = centerY + awayDeviation;
+
+                homePoints.push({ x, y: homeY });
+                awayPoints.push({ x, y: awayY });
+            });
+
+            // Create smooth path for home area (from center to top and back)
+            const homePath = createAreaPath(homePoints, centerY, width, true);
+            homeAreaPath.setAttribute('d', homePath);
+
+            // Create smooth path for away area (from center to bottom and back)
+            const awayPath = createAreaPath(awayPoints, centerY, width, false);
+            awayAreaPath.setAttribute('d', awayPath);
+        }
+
+        function createAreaPath(points, centerY, width, isHome) {
+            if (points.length === 0) return '';
+
+            // Start at left edge, center line
+            let path = `M 0 ${centerY}`;
+
+            // Draw line through all points
+            points.forEach((p, i) => {
+                if (i === 0) {
+                    path += ` L ${p.x} ${p.y}`;
+                } else {
+                    // Use curve for smoother lines
+                    const prev = points[i - 1];
+                    const cpx = (prev.x + p.x) / 2;
+                    path += ` Q ${cpx} ${prev.y} ${p.x} ${p.y}`;
+                }
+            });
+
+            // Close path back to center line at right edge
+            path += ` L ${width} ${centerY}`;
+            path += ' Z';
+
+            return path;
+        }
+
+        function updateMomentumChart(trendsData) {
+            if (!trendsData || !trendsData.minutes) return;
+            drawMomentumChart(trendsData.minutes);
+        }
+
+        // Update the updateUI function to include trends
+        const originalUpdateUI = updateUI;
+        updateUI = function(data) {
+            originalUpdateUI(data);
+
+            // Update momentum chart with new trends data
+            if (data.trends) {
+                updateMomentumChart(data.trends);
+            }
+
+            // Update xG values if available
+            if (data.xg) {
+                updateXgDisplay(data.xg);
+            }
+        };
+
+        function updateXgDisplay(xg) {
+            // Main xG values
+            const homeXgMain = document.getElementById('homeXgMain');
+            const awayXgMain = document.getElementById('awayXgMain');
+            if (homeXgMain) homeXgMain.textContent = xg.home_xg?.toFixed(2) || '-';
+            if (awayXgMain) awayXgMain.textContent = xg.away_xg?.toFixed(2) || '-';
+
+            // Chance Quality main values
+            const homeChanceMain = document.getElementById('homeChanceMain');
+            const awayChanceMain = document.getElementById('awayChanceMain');
+            if (homeChanceMain) {
+                const homeTotal = (xg.home_xgsp || 0) + (xg.home_xgop || 0);
+                homeChanceMain.textContent = homeTotal.toFixed(2);
+            }
+            if (awayChanceMain) {
+                const awayTotal = (xg.away_xgsp || 0) + (xg.away_xgop || 0);
+                awayChanceMain.textContent = awayTotal.toFixed(2);
+            }
+        }
     </script>
 </body>
 </html>

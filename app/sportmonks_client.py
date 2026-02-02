@@ -82,6 +82,54 @@ MATCH_STATES = {
     22: {"short": "BT", "long": "Break Time", "is_live": True, "is_finished": False},
 }
 
+# Sportmonks League IDs - All 25 Leagues in Plan
+SUPPORTED_LEAGUES = {
+    # European Competitions
+    2: "Champions League",          # UEFA
+    5: "Europa League",             # UEFA
+
+    # Top 5 European Leagues
+    8: "Premier League",            # England
+    564: "La Liga",                 # Spain
+    82: "Bundesliga",               # Germany
+    384: "Serie A",                 # Italy
+    301: "Ligue 1",                 # France
+
+    # England
+    9: "Championship",              # England 2nd tier
+    24: "FA Cup",                   # England
+    27: "Carabao Cup",              # England
+
+    # Spain
+    567: "La Liga 2",               # Spain 2nd tier
+    570: "Copa Del Rey",            # Spain
+
+    # Italy
+    387: "Serie B",                 # Italy 2nd tier
+    390: "Coppa Italia",            # Italy
+
+    # Other Top European Leagues
+    72: "Eredivisie",               # Netherlands
+    462: "Liga Portugal",           # Portugal
+    208: "Pro League",              # Belgium
+    181: "Admiral Bundesliga",      # Austria
+    591: "Super League",            # Switzerland
+    600: "Super Lig",               # Turkey
+
+    # Scandinavia
+    271: "Superliga",               # Denmark
+    444: "Eliteserien",             # Norway
+    573: "Allsvenskan",             # Sweden
+
+    # Eastern Europe
+    453: "Ekstraklasa",             # Poland
+    244: "1. HNL",                  # Croatia
+    486: "Russian Premier League",  # Russia
+
+    # UK
+    501: "Premiership",             # Scotland
+}
+
 
 def _make_request(
     endpoint: str,
@@ -609,16 +657,164 @@ def get_momentum_data(fixture_id: int) -> Optional[Dict[str, Any]]:
     return None
 
 
+def get_trends_data(fixture_id: int) -> Optional[Dict[str, Any]]:
+    """
+    Get minute-by-minute trends data for momentum chart visualization.
+
+    Returns possession, attacks, dangerous attacks, and shots per minute
+    for building a momentum wave chart.
+    """
+    data = _make_request(f"fixtures/{fixture_id}", include=["trends", "participants"])
+
+    if not data.get("data"):
+        return None
+
+    fixture = data["data"]
+    trends = fixture.get("trends", []) or []
+
+    if not trends:
+        return None
+
+    # Get home and away team IDs
+    participants = fixture.get("participants", [])
+    home_team_id = None
+    away_team_id = None
+    for p in participants:
+        meta = p.get("meta", {})
+        if meta.get("location") == "home":
+            home_team_id = p.get("id")
+        elif meta.get("location") == "away":
+            away_team_id = p.get("id")
+
+    # Group trends by minute
+    # Trends include possession, attacks, dangerous_attacks per minute
+    minutes_data = {}
+
+    for trend in trends:
+        minute = trend.get("minute")
+        participant_id = trend.get("participant_id")
+        type_id = trend.get("type_id")
+        value = trend.get("value", 0)
+
+        if minute is None:
+            continue
+
+        if minute not in minutes_data:
+            minutes_data[minute] = {
+                "minute": minute,
+                "home_possession": 50,
+                "away_possession": 50,
+                "home_attacks": 0,
+                "away_attacks": 0,
+                "home_dangerous": 0,
+                "away_dangerous": 0,
+            }
+
+        # Type IDs: 45=possession, 43=attacks, 44=dangerous_attacks
+        location = "home" if participant_id == home_team_id else "away"
+
+        if type_id == 45:  # Possession
+            minutes_data[minute][f"{location}_possession"] = value
+        elif type_id == 43:  # Attacks
+            minutes_data[minute][f"{location}_attacks"] = value
+        elif type_id == 44:  # Dangerous attacks
+            minutes_data[minute][f"{location}_dangerous"] = value
+
+    # Sort by minute and return as list
+    sorted_minutes = sorted(minutes_data.values(), key=lambda x: x["minute"])
+
+    # Calculate momentum score per minute (weighted: possession + attacks*2 + dangerous*3)
+    for m in sorted_minutes:
+        home_score = m["home_possession"] + (m["home_attacks"] * 2) + (m["home_dangerous"] * 3)
+        away_score = m["away_possession"] + (m["away_attacks"] * 2) + (m["away_dangerous"] * 3)
+        total = home_score + away_score
+        if total > 0:
+            m["home_momentum"] = round((home_score / total) * 100)
+            m["away_momentum"] = 100 - m["home_momentum"]
+        else:
+            m["home_momentum"] = 50
+            m["away_momentum"] = 50
+
+    return {
+        "minutes": sorted_minutes,
+        "total_minutes": len(sorted_minutes),
+    }
+
+
 def get_xg_data(fixture_id: int) -> Optional[Dict[str, Any]]:
     """
     Get expected goals data for a fixture.
 
-    NOTE: Requires Live xG add-on ($230/mo).
-    Returns None if not available.
+    Fetches xG metrics using the xGFixture include.
+    Type IDs:
+        5304: xG (expected goals)
+        5305: xGoT (expected goals on target)
+        7943: npxG (non-penalty xG)
+        9686: xGP (xG for)
+        9687: xGA (xG against)
+        7942: xGC (xG conceded)
+        7944: xGSP (xG set piece)
+        7945: xGOP (xG open play)
     """
-    # TODO: Implement when xG add-on is purchased
-    # For now, return None
-    return None
+    # xG Type ID mapping
+    XG_TYPES = {
+        5304: "xg",
+        5305: "xgot",
+        7943: "npxg",
+        9686: "xgp",
+        9687: "xga",
+        7942: "xgc",
+        7944: "xgsp",
+        7945: "xgop",
+    }
+
+    data = _make_request(f"fixtures/{fixture_id}", include=["xGFixture", "participants"])
+
+    if not data.get("data"):
+        return None
+
+    fixture = data["data"]
+    # API returns lowercase 'xgfixture' not 'xGFixture'
+    xg_fixture = fixture.get("xgfixture", []) or fixture.get("xGFixture", []) or []
+
+    if not xg_fixture:
+        return None
+
+    # Initialize result
+    result = {
+        "home_xg": 0.0, "away_xg": 0.0,
+        "home_xgot": 0.0, "away_xgot": 0.0,
+        "home_npxg": 0.0, "away_npxg": 0.0,
+        "home_xgp": 0.0, "away_xgp": 0.0,
+        "home_xga": 0.0, "away_xga": 0.0,
+        "home_xgc": 0.0, "away_xgc": 0.0,
+        "home_xgsp": 0.0, "away_xgsp": 0.0,
+        "home_xgop": 0.0, "away_xgop": 0.0,
+    }
+
+    # Parse xG data - API uses 'location' field (home/away) and 'data.value'
+    for xg_item in xg_fixture:
+        type_id = xg_item.get("type_id")
+        location = xg_item.get("location")  # 'home' or 'away'
+
+        # Get the actual xG value from data.value
+        data_obj = xg_item.get("data", {})
+        if isinstance(data_obj, dict):
+            xg_val = data_obj.get("value", 0.0)
+        else:
+            xg_val = float(data_obj) if data_obj else 0.0
+
+        # Map type ID to key name
+        key_name = XG_TYPES.get(type_id)
+        if not key_name or not location:
+            continue
+
+        # Use location directly (home/away)
+        # Only use positive values (some metrics like xGP can be negative)
+        if xg_val >= 0:
+            result[f"{location}_{key_name}"] = round(xg_val, 2)
+
+    return result
 
 
 def calculate_attacks_momentum(statistics: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
@@ -1196,3 +1392,237 @@ def get_team_league_info(team_id: int) -> Optional[Dict[str, Any]]:
         }
 
     return None
+
+
+def get_league_fixtures(
+    league_id: int,
+    limit: int = 50
+) -> Dict[str, Any]:
+    """
+    Get fixtures for a league (recent and upcoming).
+    Uses the fixtures/between endpoint to get fixtures filtered by league.
+
+    Returns:
+        Dict with 'fixtures', 'recent_fixtures', and 'current_round'
+    """
+    from datetime import datetime, timedelta
+
+    # Get fixtures - Sportmonks allows max 35 day range per request
+    # We'll make multiple requests to cover sufficient range
+    now = datetime.now()
+
+    # Past fixtures - fetch in 35-day chunks going back ~120 days (half a season)
+    # This ensures historical rounds (like 20-23) have their actual fixture data
+    past_start_4 = (now - timedelta(days=120)).strftime('%Y-%m-%d')
+    past_end_4 = (now - timedelta(days=105)).strftime('%Y-%m-%d')
+
+    past_start_3 = (now - timedelta(days=105)).strftime('%Y-%m-%d')
+    past_end_3 = (now - timedelta(days=70)).strftime('%Y-%m-%d')
+
+    past_start_2 = (now - timedelta(days=70)).strftime('%Y-%m-%d')
+    past_end_2 = (now - timedelta(days=35)).strftime('%Y-%m-%d')
+
+    # Recent fixtures (past 35 days)
+    recent_start = (now - timedelta(days=35)).strftime('%Y-%m-%d')
+    recent_end = now.strftime('%Y-%m-%d')
+
+    # Upcoming fixtures - two 35-day chunks to get ~60 days ahead (2+ weekends guaranteed)
+    upcoming_start = now.strftime('%Y-%m-%d')
+    upcoming_mid = (now + timedelta(days=35)).strftime('%Y-%m-%d')
+    upcoming_end = (now + timedelta(days=60)).strftime('%Y-%m-%d')
+
+    # Fetch fixtures from both date ranges
+    all_raw_fixtures = []
+    seen_ids = set()
+
+    # Helper to fetch from a date range
+    def fetch_range(start, end):
+        page = 1
+        max_pages = 5
+        while page <= max_pages:
+            data = _make_request(
+                f"fixtures/between/{start}/{end}",
+                params={"per_page": 100, "page": page},
+                include=["participants", "scores", "state", "round", "league"]
+            )
+            if not data.get("data"):
+                break
+
+            # Filter for this league
+            for fixture in data["data"]:
+                fid = fixture.get("id")
+                if fid and fid not in seen_ids:
+                    if fixture.get("league_id") == league_id or fixture.get("league", {}).get("id") == league_id:
+                        all_raw_fixtures.append(fixture)
+                        seen_ids.add(fid)
+
+            # Check pagination
+            pagination = data.get("pagination", {})
+            if page >= pagination.get("last_page", 1):
+                break
+            page += 1
+
+    # Fetch past fixtures (4 chunks going back 120 days)
+    fetch_range(past_start_4, past_end_4)
+    fetch_range(past_start_3, past_end_3)
+    fetch_range(past_start_2, past_end_2)
+    fetch_range(recent_start, recent_end)
+
+    # Fetch upcoming fixtures (2 chunks for 60 days ahead)
+    fetch_range(upcoming_start, upcoming_mid)
+    fetch_range(upcoming_mid, upcoming_end)
+
+    if not all_raw_fixtures:
+        return {"fixtures": [], "recent_fixtures": [], "current_round": None}
+
+    all_fixtures = []
+    current_round = None
+
+    for fixture in all_raw_fixtures:
+        # Parse the fixture date
+        starting_at = fixture.get("starting_at")
+        if not starting_at:
+            continue
+
+        try:
+            fixture_dt = datetime.fromisoformat(starting_at.replace("Z", "+00:00"))
+            fixture_date = fixture_dt.date()
+        except:
+            continue
+
+        # Get participants
+        participants = fixture.get("participants", [])
+        home_team = None
+        away_team = None
+        for p in participants:
+            meta = p.get("meta", {})
+            if meta.get("location") == "home":
+                home_team = p
+            else:
+                away_team = p
+
+        if not home_team or not away_team:
+            continue
+
+        # Get scores
+        scores = fixture.get("scores", [])
+        home_score = None
+        away_score = None
+        for score in scores:
+            desc = score.get("description", "")
+            if desc in ["CURRENT", "2ND_HALF", "LIVE"]:
+                participant_id = score.get("participant_id")
+                if participant_id == home_team.get("id"):
+                    home_score = score.get("score", {}).get("goals")
+                elif participant_id == away_team.get("id"):
+                    away_score = score.get("score", {}).get("goals")
+
+        # Get match state
+        state = fixture.get("state", {})
+        state_id = state.get("id") if state else fixture.get("state_id")
+        match_state = MATCH_STATES.get(state_id, {"short": "NS", "is_live": False, "is_finished": False})
+
+        # Get round info
+        round_info = fixture.get("round", {})
+        round_number = round_info.get("name") or round_info.get("id")
+
+        # Track current round (latest round with finished/live matches)
+        if match_state["is_finished"] or match_state["is_live"]:
+            if round_number:
+                try:
+                    round_num = int(round_number)
+                    if current_round is None or round_num > current_round:
+                        current_round = round_num
+                except:
+                    pass
+
+        # Format time
+        time_str = fixture_dt.strftime("%H:%M")
+        time_period = "PM" if fixture_dt.hour >= 12 else "AM"
+
+        # Day name
+        days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        date_str = f"{days[fixture_date.weekday()]}, {months[fixture_date.month - 1]} {fixture_date.day}"
+
+        fixture_data = {
+            "id": fixture.get("id"),
+            "date": fixture_date.isoformat(),
+            "date_str": date_str,
+            "time_str": time_str,
+            "time_period": time_period,
+            "home_id": home_team.get("id"),
+            "home_name": home_team.get("name"),
+            "home_short": home_team.get("short_code") or home_team.get("name", "")[:3].upper(),
+            "home_logo": home_team.get("image_path"),
+            "home_score": home_score,
+            "away_id": away_team.get("id"),
+            "away_name": away_team.get("name"),
+            "away_short": away_team.get("short_code") or away_team.get("name", "")[:3].upper(),
+            "away_logo": away_team.get("image_path"),
+            "away_score": away_score,
+            "status_short": match_state["short"],
+            "is_live": match_state["is_live"],
+            "is_finished": match_state["is_finished"],
+            "round": round_number,
+        }
+
+        all_fixtures.append(fixture_data)
+
+    # Sort by date
+    all_fixtures.sort(key=lambda x: x["date"])
+
+    # Split into recent (finished) and upcoming/all
+    recent_fixtures = [f for f in all_fixtures if f["is_finished"]]
+    recent_fixtures = recent_fixtures[-10:]  # Last 10 finished
+    recent_fixtures.reverse()  # Most recent first
+
+    # Group fixtures by round
+    fixtures_by_round = {}
+    available_rounds = set()
+    for f in all_fixtures:
+        r = f.get("round")
+        if r:
+            try:
+                round_num = int(r)
+                available_rounds.add(round_num)
+                if round_num not in fixtures_by_round:
+                    fixtures_by_round[round_num] = []
+                fixtures_by_round[round_num].append(f)
+            except (ValueError, TypeError):
+                pass
+
+    # Sort available rounds
+    available_rounds = sorted(available_rounds)
+
+    # Fill in missing rounds sequentially between min and max
+    # This ensures navigation goes 19, 20, 21, 22, 23, 24 instead of jumping
+    if available_rounds:
+        min_round = min(available_rounds)
+        max_round = max(available_rounds)
+        # Create sequential list from min to max
+        available_rounds = list(range(min_round, max_round + 1))
+        # Add empty entries for missing rounds in fixtures_by_round
+        for r in available_rounds:
+            if r not in fixtures_by_round:
+                fixtures_by_round[r] = []
+
+    # Determine current round (latest round with any finished or live matches)
+    current_round = None
+    for r in reversed(available_rounds):
+        round_fixtures = fixtures_by_round.get(r, [])
+        if any(f["is_finished"] or f["is_live"] for f in round_fixtures):
+            current_round = r
+            break
+
+    # If no current round found, use the earliest upcoming round
+    if current_round is None and available_rounds:
+        current_round = available_rounds[0]
+
+    return {
+        "fixtures": all_fixtures,
+        "recent_fixtures": recent_fixtures,
+        "current_round": current_round,
+        "fixtures_by_round": fixtures_by_round,
+        "available_rounds": available_rounds,
+    }
